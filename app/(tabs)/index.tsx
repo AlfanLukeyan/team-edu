@@ -1,12 +1,17 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { Platform, Pressable, StyleSheet } from 'react-native';
 
+import { Calendar, type DateType } from '@/components/Calendar';
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
+  const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<DateType>();
+  
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -19,6 +24,30 @@ export default function HomeScreen() {
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
+      </ThemedView>
+      <ThemedView style={styles.stepContainer}>
+        <ThemedText type="subtitle">Date Picker</ThemedText>
+        {selectedDate && (
+          <ThemedText>
+            Selected: {selectedDate.toLocaleString()}
+          </ThemedText>
+        )}
+        <Pressable
+          onPress={() => setIsCalendarVisible(!isCalendarVisible)}>
+          <ThemedText type="defaultSemiBold">
+            {isCalendarVisible ? 'Hide Calendar' : 'Show Calendar'}
+          </ThemedText>
+        </Pressable>
+        {isCalendarVisible && (
+          <ThemedView>
+            <Calendar 
+              selected={selectedDate}
+              onDateChange={(date) => {
+                setSelectedDate(date);
+              }}
+            />
+          </ThemedView>
+        )}
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
