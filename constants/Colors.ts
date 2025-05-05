@@ -8,6 +8,7 @@ const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
+    title: '#000',
     text: '#11181C',
     background: '#fff',
     tint: tintColorLight,
@@ -17,6 +18,7 @@ export const Colors = {
     cardBackground: '#F4F4F4',
   },
   dark: {
+    title: '#fff',
     text: '#ECEDEE',
     background: '#000',
     tint: tintColorDark,

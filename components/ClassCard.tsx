@@ -2,7 +2,7 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 import { IconSymbol } from "./ui/IconSymbol";
@@ -11,12 +11,14 @@ interface ClassCardProps {
   title: string;
   classCode: string;
   description: string;
+  onPress?: () => void;
 }
 
-export function ClassCard({ title, classCode, description }: ClassCardProps) {
+export function ClassCard({ title, classCode, description, onPress }: ClassCardProps) {
   const theme = useColorScheme() ?? "light";
 
   return (
+    <Pressable onPress={onPress}>
     <ThemedView style={{ borderRadius: 15, marginBottom: 16 }} isCard>
       <View
         style={{
@@ -56,6 +58,7 @@ export function ClassCard({ title, classCode, description }: ClassCardProps) {
         </View>
       </View>
     </ThemedView>
+    </Pressable>
   );
 }
 
