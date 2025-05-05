@@ -1,26 +1,17 @@
-import { Image } from 'expo-image';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { Calendar, type DateType } from '@/components/Calendar';
 import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<DateType>();
-  
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
+    <ScrollView style={{ flex: 1 }}>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
@@ -40,7 +31,7 @@ export default function HomeScreen() {
         </Pressable>
         {isCalendarVisible && (
           <ThemedView>
-            <Calendar 
+            <Calendar
               selected={selectedDate}
               onDateChange={(date) => {
                 setSelectedDate(date);
@@ -80,7 +71,7 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
-    </ParallaxScrollView>
+    </ScrollView>
   );
 }
 

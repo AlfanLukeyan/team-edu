@@ -19,6 +19,7 @@ export function Calendar({ selected, onDateChange }: CalendarProps) {
       styles={defaultStyles}
       showOutsideDays={true}
       timePicker={true}
+      use12Hours={true}
     />
   );
 }
