@@ -20,6 +20,8 @@ const MAPPING = {
   'chevron.left': 'chevron-left',
   'chevron.right': 'chevron-right',
   'ellipsis.vertical.bubble': 'more-vert',
+  'circle.fill': 'circle',
+  'bookmark.fill': 'bookmark',
 } as IconMapping;
 
 /**

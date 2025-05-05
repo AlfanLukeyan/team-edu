@@ -1,30 +1,27 @@
-import { StyleSheet } from "react-native";
+import { ClassCard } from "@/components/ClassCard";
+import { ScrollView, StyleSheet } from "react-native";
 
-import ClassCard from "@/components/ClassCard";
-import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { response } from "@/data/response";
 
 export default function ClassesScreen() {
   return (
-    <ThemedView>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
+    <ScrollView 
+      style={{ flex: 1 }} 
+      contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 16 }}
+    >
+      <ThemedView>
+        {response.getAllClasses.data.map((classItem) => (
+          <ClassCard
+            key={classItem.id}
+            title={classItem.title}
+            classCode={classItem.class_code}
+            description={classItem.desc}
+          />
+        ))}
       </ThemedView>
-      <ClassCard />
-    </ThemedView>
-
+    </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  headerImage: {
-    color: "#808080",
-    bottom: -90,
-    left: -35,
-    position: "absolute",
-  },
-  titleContainer: {
-    flexDirection: "row",
-    gap: 8,
-  },
-});
+const styles = StyleSheet.create({});

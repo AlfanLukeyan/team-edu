@@ -22,6 +22,9 @@ export default function TabLayout() {
           backgroundColor: Colors[colorScheme ?? 'light'].background,
         },
         headerTitleAlign: 'center',
+        headerTitleStyle: {
+          fontSize: 16,
+        },
         tabBarStyle: Platform.select({
           ios: {
             // Use a transparent background on iOS to show the blur effect
@@ -40,7 +43,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="classes"
         options={{
-          title: 'Classes',
+          title: 'Assigned Classes',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="book.fill" color={color} />,
         }}
       />
