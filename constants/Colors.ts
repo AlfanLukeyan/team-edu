@@ -10,6 +10,7 @@ export const Colors = {
   light: {
     title: '#000',
     text: '#11181C',
+    subtitle: tintColorLight,
     background: '#fff',
     tint: tintColorLight,
     icon: '#687076',
@@ -20,6 +21,7 @@ export const Colors = {
   dark: {
     title: '#fff',
     text: '#ECEDEE',
+    subtitle: tintColorDark,
     background: '#000',
     tint: tintColorDark,
     icon: '#9BA1A6',

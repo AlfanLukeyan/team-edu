@@ -58,5 +58,90 @@ export const response = {
         "desc": "Learn the principles of economics and its impact on society"
       },
     ]
+  },
+  "getWeeklyContent": {
+    "status": "success",
+    "data": [
+      {
+        "id": "1",
+        "count": 1,
+        "title": "Introduction to Mathematics",
+        "description": "Basic concepts and fundamentals",
+        "videoUrl": "https://www.youtube.com/watch?v=zuFh9lfb4HY",
+        "attachment": {
+          "name": "Week 1 Notes.pdf",
+          "url": "https://example.com/math-week1.pdf"
+        },
+        "assignment": {
+          "title": "Math Assignment 1",
+          "dueDate": "2023-10-15",
+          "description": "Solve the problems in the attached worksheet.",
+        }
+      },
+      {
+        "id": "2",
+        "count": 2,
+        "title": "Algebra Fundamentals",
+        "description": "Working with variables and equations",
+        "videoUrl": "https://www.youtube.com/watch?v=zuFh9lfb4HY",
+        "attachment": {
+          "name": "Algebra Worksheets.pdf",
+          "url": "https://example.com/algebra-sheets.pdf"
+        },
+        "assignment": {
+          "title": "Algebra Assignment 1",
+          "dueDate": "2023-10-20",
+          "description": "Complete the exercises in the attached document.",
+        }
+      },
+      {
+        "id": "3",
+        "count": 3,
+        "title": "Geometry Basics",
+        "description": "Shapes, angles and measurements",
+        "videoUrl": "https://www.youtube.com/watch?v=zuFh9lfb4HY",
+        "attachment": {
+          "name": "Geometry Practice.pdf",
+          "url": "https://example.com/geometry-practice.pdf"
+        },
+        "assignment": {
+          "title": "Geometry Assignment 1",
+          "dueDate": "2023-10-25",
+          "description": "Solve the problems in the attached worksheet.",
+        }
+      },
+      {
+        "id": "4",
+        "count": 4,
+        "title": "Calculus Introduction",
+        "description": "Understanding limits and derivatives",
+        "videoUrl": "https://www.youtube.com/watch?v=zuFh9lfb4HY",
+        "attachment": {
+          "name": "Calculus Exercises.pdf",
+          "url": "https://example.com/calculus-exercises.pdf"
+        },
+        "assignment": {
+          "title": "Calculus Assignment 1",
+          "dueDate": "2023-10-30",
+          "description": "Complete the exercises in the attached document.",
+        }
+      },
+      {
+        "id": "5",
+        "count": 5,
+        "title": "Statistics Basics",
+        "description": "Data analysis and interpretation",
+        "videoUrl": "https://www.youtube.com/watch?v=zuFh9lfb4HY",
+        "attachment": {
+          "name": "Statistics Guide.pdf",
+          "url": "https://example.com/statistics-guide.pdf"
+        },
+        "assignment": {
+          "title": "Statistics Assignment 1",
+          "dueDate": "2023-11-05",
+          "description": "Analyze the data in the attached file.",
+        }
+      },
+    ],
   }
 };

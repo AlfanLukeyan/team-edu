@@ -22,6 +22,7 @@ const MAPPING = {
   'ellipsis.vertical.bubble': 'more-vert',
   'circle.fill': 'circle',
   'bookmark.fill': 'bookmark',
+  'document.fill': 'description',
 } as IconMapping;
 
 /**

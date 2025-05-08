@@ -15,7 +15,22 @@ export function ThemedText({
   type = 'default',
   ...rest
 }: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, type === 'title' ? 'title' : 'text');
+  
+  const getColorType = (textType: string) => {
+    switch (textType) {
+      case 'title':
+        return 'title';
+      case 'subtitle':
+        return 'subtitle';
+      default:
+        return 'text';
+    }
+  };
+  
+  const color = useThemeColor(
+    { light: lightColor, dark: darkColor }, 
+    getColorType(type)
+  );
 
   return (
     <Text
