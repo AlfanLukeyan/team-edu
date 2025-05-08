@@ -45,7 +45,7 @@ export function ClassCard({ title, classCode, description, onPress }: ClassCardP
         end={{ x: 1, y: 1 }}
       ></LinearGradient>
       <View style={{ padding: 16 }}>
-        <ThemedText type="bold">{title}</ThemedText>
+        <ThemedText type="defaultSemiBold">{title}</ThemedText>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
           <ThemedText type="default">{classCode}</ThemedText>
           <IconSymbol

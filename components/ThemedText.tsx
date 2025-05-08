@@ -37,28 +37,27 @@ export function ThemedText({
 const styles = StyleSheet.create({
   default: {
     fontSize: 14,
-    lineHeight: 24,
+    fontFamily: 'Poppins-Regular',
   },
   bold: {
     fontSize: 16,
-    lineHeight: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
   },
   defaultSemiBold: {
     fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
   title: {
     fontSize: 24,
-    fontWeight: 'regular',
+    fontFamily: 'Poppins-SemiBold',
   },
   subtitle: {
     fontSize: 14,
+    fontFamily: 'Poppins-Regular',
   },
   link: {
-    lineHeight: 30,
     fontSize: 14,
     color: '#0a7ea4',
+    fontFamily: 'Poppins-Regular',
   },
 });
