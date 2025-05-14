@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { TextInput as RNTextInput } from "react-native";
+import { TextInput as RNTextInput, StyleSheet, ViewStyle } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -11,16 +11,23 @@ interface TextInputProps {
     placeholder?: string;
     secureTextEntry?: boolean;
     error?: string;
+    multiline?: boolean;
+    numberOfLines?: number;
+    style?: ViewStyle;
 }
 
 export function TextInput({
     label,
     error,
+    multiline = false,
+    numberOfLines = 4,
+    style,
     ...rest
 }: TextInputProps) {
     const theme = useColorScheme();
+    
     return (
-        <ThemedView>
+        <ThemedView style={style}>
             {label && (
                 <ThemedText
                     style={{
@@ -32,21 +39,37 @@ export function TextInput({
                 </ThemedText>
             )}
             <RNTextInput
-                style={{
-                    borderWidth: 1,
-                    borderColor: error ? "red" : theme === "light" ? Colors.light.border : Colors.dark.border,
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    borderRadius: 15,
-                    color: theme === "light" ? Colors.light.text : Colors.dark.text,
-                    fontFamily: "Poppins-Regular",
-                    textAlignVertical: "bottom",
-                }}
+                style={[
+                    styles.input,
+                    {
+                        borderColor: error ? "red" : theme === "light" ? Colors.light.border : Colors.dark.border,
+                        color: theme === "light" ? Colors.light.text : Colors.dark.text,
+                    },
+                    multiline && styles.multiline
+                ]}
                 placeholderTextColor={theme === "light" ? Colors.light.border : Colors.dark.border}
                 cursorColor={theme === "light" ? Colors.light.tint : Colors.dark.tint}
+                multiline={multiline}
+                numberOfLines={multiline ? numberOfLines : undefined}
+                textAlignVertical={multiline ? "top" : "center"}
                 {...rest}
             />
-            {error && <ThemedText style={{ color: "red" }}>{error}</ThemedText>}
+            {error && <ThemedText style={{ color: "red", marginTop: 4 }}>{error}</ThemedText>}
         </ThemedView>
     );
 }
+
+const styles = StyleSheet.create({
+    input: {
+        borderWidth: 1,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 15,
+        fontFamily: "Poppins-Regular",
+    },
+    multiline: {
+        minHeight: 100,
+        paddingTop: 12,
+        textAlignVertical: "top",
+    }
+});

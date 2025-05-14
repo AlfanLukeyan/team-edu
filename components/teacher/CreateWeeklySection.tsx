@@ -85,7 +85,10 @@ const CreateWeeklySection = forwardRef<
       }}
     >
       <BottomSheetView style={{ flex: 1, padding: 0 }}>
-        <ThemedView style={{ flex: 1, paddingHorizontal: 25, gap: 14 }} isCard={false}>
+        <ThemedView
+          style={{ flex: 1, paddingHorizontal: 25, gap: 14 }}
+          isCard={false}
+        >
           <View
             style={{
               flexDirection: "row",
@@ -100,19 +103,24 @@ const CreateWeeklySection = forwardRef<
             <ThemedText type="default">Weekly Section</ThemedText>
           </View>
           <TextInput
+            label="Title"
             value={title}
             onChangeText={setTitle}
-            placeholder="Enter title"
+            placeholder="Please enter title"
           />
           <TextInput
+            label="Description"
             value={description}
             onChangeText={setDescription}
-            placeholder="Description"
+            placeholder="Please enter description"
+            multiline={true}
+            numberOfLines={4}
           />
           <TextInput
+            label="Video URL"
             value={videoUrl}
             onChangeText={setVideoUrl}
-            placeholder="Video URL"
+            placeholder="Please enter video URL"
           />
 
           <View style={styles.buttonContainer}>
