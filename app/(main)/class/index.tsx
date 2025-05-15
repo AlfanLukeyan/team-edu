@@ -33,7 +33,7 @@ export default function ClassDetailScreen() {
 
   const renderScene = SceneMap({
     weekly: () => (
-      <WeeklyTab onCreatePress={() => createSectionRef.current?.open()} />
+      <WeeklyTab onCreatePress={() => createSectionRef.current?.open()} isModalOpen={isModalOpen} />
     ),
     assessments: AssessmentsTab,
     students: StudentsTab,

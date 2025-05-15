@@ -7,15 +7,17 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 interface WeeklyTabProps {
   onCreatePress: () => void;
+  isModalOpen?: boolean;
 }
 
-export default function WeeklyTab({ onCreatePress }: WeeklyTabProps) {
+export default function WeeklyTab({ onCreatePress, isModalOpen }: WeeklyTabProps) {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedView style={styles.container}>
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 16, gap: 16 }}
+          scrollEnabled={!isModalOpen}
         >
           <Button icon="plus" onPress={onCreatePress}>
             Create Weekly Section

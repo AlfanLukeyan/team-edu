@@ -2,7 +2,9 @@ import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/teacher/Button";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetScrollView
+} from "@gorhom/bottom-sheet";
 import {
   forwardRef,
   useCallback,
@@ -12,7 +14,7 @@ import {
   useState,
 } from "react";
 import { StyleSheet, View } from "react-native";
-import { TextInput } from "../TextInput";
+import ThemedBottomSheetTextInput from "../ThemedBottomSheetTextInput";
 import { ThemedView } from "../ThemedView";
 
 export interface CreateWeeklySectionRef {
@@ -84,9 +86,9 @@ const CreateWeeklySection = forwardRef<
         borderRadius: 24,
       }}
     >
-      <BottomSheetView style={{ flex: 1, padding: 0 }}>
+      <BottomSheetScrollView style={{ flex: 1, padding: 0 }}>
         <ThemedView
-          style={{ flex: 1, paddingHorizontal: 25, gap: 14 }}
+          style={{ flex: 1, paddingHorizontal: 25 }}
           isCard={false}
         >
           <View
@@ -102,53 +104,38 @@ const CreateWeeklySection = forwardRef<
             </ThemedText>
             <ThemedText type="default">Weekly Section</ThemedText>
           </View>
-          <TextInput
+          <ThemedBottomSheetTextInput
             label="Title"
             value={title}
             onChangeText={setTitle}
             placeholder="Please enter title"
           />
-          <TextInput
+
+          <ThemedBottomSheetTextInput
             label="Description"
             value={description}
             onChangeText={setDescription}
             placeholder="Please enter description"
             multiline={true}
-            numberOfLines={4}
           />
-          <TextInput
+
+          <ThemedBottomSheetTextInput
             label="Video URL"
             value={videoUrl}
             onChangeText={setVideoUrl}
             placeholder="Please enter video URL"
           />
-
           <View style={styles.buttonContainer}>
             <Button onPress={handleClose}>Cancel</Button>
             <Button onPress={handleCreate}>Create</Button>
           </View>
         </ThemedView>
-      </BottomSheetView>
+      </BottomSheetScrollView>
     </BottomSheet>
   );
 });
 
 const styles = StyleSheet.create({
-  inputContainer: {
-    marginBottom: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#DDDDDD",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginTop: 4,
-  },
-  textArea: {
-    minHeight: 100,
-    textAlignVertical: "top",
-  },
   buttonContainer: {
     marginTop: 24,
     flexDirection: "row",
