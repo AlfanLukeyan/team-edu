@@ -1,3 +1,4 @@
+import { DateType } from "@/components/Calendar";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/teacher/Button";
 import { Colors } from "@/constants/Colors";
@@ -19,43 +20,55 @@ import { StyleSheet, View } from "react-native";
 import ThemedBottomSheetTextInput from "../ThemedBottomSheetTextInput";
 import { ThemedView } from "../ThemedView";
 
-export interface CreateWeeklySectionRef {
+export interface CreateAssessmentBottomSheetRef {
   open: () => void;
   close: () => void;
 }
 
-interface CreateWeeklySectionProps {
+interface CreateAssessmentBottomSheetProps {
   onSubmit: (data: {
     title: string;
     description: string;
-    videoUrl: string;
+    start_date: string;
+    end_date: string;
+    duration: string;
   }) => void;
 }
 
-const CreateWeeklySection = forwardRef<
-  CreateWeeklySectionRef,
-  CreateWeeklySectionProps
->(({ onSubmit }, ref) => {
+const CreateAssessmentBottomSheet = forwardRef<
+  CreateAssessmentBottomSheetRef,
+  CreateAssessmentBottomSheetProps
+>(({ onSubmit}, ref) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["25%", "50%", "100%"], []);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
-
+  const [startDate, setStartDate] = useState<DateType>(null);
+  const [endDate, setEndDate] = useState<DateType>(null);
+  const [duration, setDuration] = useState("");
+  // const [isModalVisible, setIsModalVisible] = useState(false);
+  // const [isStartDatePickerVisible, setIsStartDatePickerVisible] = useState(false);
+  // const [isEndDatePickerVisible, setIsEndDatePickerVisible] = useState(false);
   const theme = useColorScheme();
-  
+
   const handleClose = useCallback(() => {
     bottomSheetRef.current?.close();
   }, []);
 
   const handleCreate = useCallback(() => {
-    onSubmit({ title, description, videoUrl });
+    onSubmit({
+      title,
+      description,
+      start_date: startDate instanceof Date ? startDate.toISOString() : "",
+      end_date: endDate instanceof Date ? endDate.toISOString() : "",
+      duration
+    });
     setTitle("");
     setDescription("");
-    setVideoUrl("");
+    setDuration("");
     handleClose();
-  }, [title, description, videoUrl, onSubmit, handleClose]);
+  }, [title, description, startDate, endDate, duration, onSubmit, handleClose]);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -68,6 +81,19 @@ const CreateWeeklySection = forwardRef<
     ),
     []
   );
+
+  const formatDate = (date: DateType) => {
+    if (!date) return "Select date";
+    return new Date(
+      date instanceof Date ? date : (date && typeof date === "object" && "toDate" in date ? date.toDate() : date)
+    ).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -115,38 +141,41 @@ const CreateWeeklySection = forwardRef<
             <ThemedText type="bold" style={{ paddingRight: 3 }}>
               Create
             </ThemedText>
-            <ThemedText type="default">Weekly Section</ThemedText>
+            <ThemedText type="default">Assessment</ThemedText>
           </View>
+
           <ThemedBottomSheetTextInput
             label="Title"
             value={title}
             onChangeText={setTitle}
-            placeholder="Please enter title"
+            placeholder="Enter assessment title"
           />
 
           <ThemedBottomSheetTextInput
             label="Description"
             value={description}
             onChangeText={setDescription}
-            placeholder="Please enter description"
+            placeholder="Enter assessment description"
             multiline={true}
             numberOfLines={4}
           />
+          
 
           <ThemedBottomSheetTextInput
-            label="Video URL"
-            value={videoUrl}
-            onChangeText={setVideoUrl}
-            placeholder="Please enter video URL"
+            label="Duration (minutes)"
+            value={duration}
+            onChangeText={setDuration}
+            placeholder="Enter duration in minutes"
+            keyboardType="numeric"
           />
-            <Button onPress={handleCreate}>Create</Button>
+
+          <Button onPress={handleCreate}>Create Assessment</Button>
         </ThemedView>
       </BottomSheetView>
     </BottomSheet>
-  );
+    );
 });
 
-const styles = StyleSheet.create({
-});
+const styles = StyleSheet.create({});
 
-export default CreateWeeklySection;
+export default CreateAssessmentBottomSheet;

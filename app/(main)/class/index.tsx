@@ -1,3 +1,4 @@
+import CreateAssessmentBottomSheet, { CreateAssessmentBottomSheetRef } from "@/components/teacher/CreateAssessmentBottomSheet";
 import CreateWeeklySection, {
   CreateWeeklySectionRef,
 } from "@/components/teacher/CreateWeeklySection";
@@ -6,10 +7,9 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { response } from "@/data/response";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { BlurView } from "expo-blur";
 import { useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
-import { Platform, StyleSheet, useWindowDimensions } from "react-native";
+import { StyleSheet, useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SceneMap, TabBar, TabBarItem, TabView } from "react-native-tab-view";
 import AssessmentsTab from "./tabs/AssessmentsTab";
@@ -22,7 +22,8 @@ export default function ClassDetailScreen() {
   const layout = useWindowDimensions();
   const theme = useColorScheme();
   const createSectionRef = useRef<CreateWeeklySectionRef>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const createAssessmentRef = useRef<CreateAssessmentBottomSheetRef>(null);
+  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
   const [index, setIndex] = useState(0);
   const [routes] = useState([
@@ -33,9 +34,14 @@ export default function ClassDetailScreen() {
 
   const renderScene = SceneMap({
     weekly: () => (
-      <WeeklyTab onCreatePress={() => createSectionRef.current?.open()} isModalOpen={isModalOpen} />
+      <WeeklyTab onCreatePress={() => { createSectionRef.current?.open(), setIsBottomSheetVisible(true) }} isBottomSheetVisible={isBottomSheetVisible} />
     ),
-    assessments: AssessmentsTab,
+    assessments: () => (
+      <AssessmentsTab
+        createAssessmentRef={createAssessmentRef}
+        setIsBottomSheetVisible={setIsBottomSheetVisible}
+      />
+    ),
     students: StudentsTab,
   });
 
@@ -67,6 +73,16 @@ export default function ClassDetailScreen() {
     console.log("New section created:", data);
   };
 
+  const handleCreateAssessment = (data: {
+    title: string;
+    description: string;
+    start_date: string;
+    end_date: string;
+    duration: string;
+  }) => {
+    console.log("New assessment created:", data);
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedView style={{ flex: 1 }}>
@@ -84,20 +100,14 @@ export default function ClassDetailScreen() {
           renderTabBar={renderTabBar}
           swipeEnabled={true}
         />
-        
-        {isModalOpen && (
-          <BlurView
-            style={StyleSheet.absoluteFill}
-            intensity={50}
-            tint={theme === 'dark' ? 'dark' : 'light'}
-            experimentalBlurMethod={Platform.OS === 'ios' ? 'none' : 'dimezisBlurView'}
-          />
-        )}
-        
         <CreateWeeklySection
           ref={createSectionRef}
           onSubmit={handleCreateSection}
-          onStateChange={setIsModalOpen}
+        />
+
+        <CreateAssessmentBottomSheet
+          ref={createAssessmentRef}
+          onSubmit={handleCreateAssessment}
         />
       </ThemedView>
     </GestureHandlerRootView>

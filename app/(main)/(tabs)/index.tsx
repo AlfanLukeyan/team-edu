@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { Pressable, ScrollView } from "react-native";
 
-import { Calendar, type DateType } from "@/components/Calendar";
-import { HelloWave } from "@/components/HelloWave";
+import { type DateType } from "@/components/Calendar";
+import { CalendarModal } from "@/components/CalendarModal";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+
 
 export default function HomeScreen() {
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
@@ -13,39 +14,18 @@ export default function HomeScreen() {
   return (
     <ThemedView style={{ flex: 1 }}>
       <ScrollView style={{ flex: 1, paddingHorizontal: 24 }}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Welcome!</ThemedText>
-          <HelloWave />
-        </ThemedView>
-        <ThemedView>
-          {selectedDate && (
-            <ThemedText>Selected: {selectedDate.toLocaleString()}</ThemedText>
-          )}
-          <Pressable onPress={() => setIsCalendarVisible(!isCalendarVisible)}>
-            <ThemedText type="defaultSemiBold">
-              {isCalendarVisible ? "Hide Calendar" : "Show Calendar"}
-            </ThemedText>
-          </Pressable>
-          {isCalendarVisible && (
-            <ThemedView>
-              <Calendar
-                selected={selectedDate}
-                onDateChange={(date) => {
-                  setSelectedDate(date);
-                }}
-              />
-            </ThemedView>
-          )}
-        </ThemedView>
+        <Pressable onPress={() => setIsCalendarVisible(true)}>
+          <ThemedText type="defaultSemiBold">
+            Show Calendar
+          </ThemedText>
+        </Pressable>
       </ScrollView>
+      <CalendarModal
+        visible={isCalendarVisible}
+        onClose={() => setIsCalendarVisible(false)}
+        selected={selectedDate}
+        onDateChange={setSelectedDate}
+      />
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-});
