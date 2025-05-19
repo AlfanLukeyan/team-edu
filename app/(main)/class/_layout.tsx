@@ -1,8 +1,7 @@
-import { Stack } from "expo-router";
-import React from "react";
-
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { Stack } from "expo-router";
+import React from "react";
 
 export default function ClassDetailLayout() {
   const colorScheme = useColorScheme();
@@ -19,9 +18,9 @@ export default function ClassDetailLayout() {
         headerTitleAlign: "center",
         headerTitleStyle: {
           fontSize: 16,
+          fontFamily: "Poppins-Medium",
         },
       }}
-    >
-    </Stack>
+    />
   );
 }

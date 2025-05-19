@@ -1,106 +1,83 @@
-import CreateAssessmentBottomSheet, { CreateAssessmentBottomSheetRef } from "@/components/teacher/CreateAssessmentBottomSheet";
-import CreateWeeklySection, {
-  CreateWeeklySectionRef,
-} from "@/components/teacher/CreateWeeklySection";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { Colors } from "@/constants/Colors";
-import { response } from "@/data/response";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { useLocalSearchParams } from "expo-router";
-import { useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SceneMap, TabBar, TabBarItem, TabView } from "react-native-tab-view";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SceneMap, TabView } from "react-native-tab-view";
+
+
+import { ClassHeader } from "@/components/ClassHeader";
+import { CustomTabBar } from "@/components/TabBar";
+import { ThemedView } from "@/components/ThemedView";
+
+import CreateAssessmentBottomSheet, {
+  CreateAssessmentBottomSheetRef
+} from "@/components/teacher/CreateAssessmentBottomSheet";
+import CreateWeeklySectionBottomSheet, {
+  CreateWeeklySectionBottomSheetRef
+} from "@/components/teacher/CreateWeeklySectionBottomSheet";
+
+import { response } from "@/data/response";
+import { useTabNavigation } from "@/hooks/useTabNavigation";
+
+import { AssessmentFormData, WeeklySectionFormData } from "@/types/common";
 import AssessmentsTab from "./tabs/AssessmentsTab";
 import StudentsTab from "./tabs/StudentsTab";
 import WeeklyTab from "./tabs/WeeklyTab";
 
 export default function ClassDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const data = response.getAllClasses.data.find((item) => item.id === id);
+  const classData = response.getAllClasses.data.find(item => item.id === id);
   const layout = useWindowDimensions();
-  const theme = useColorScheme();
-  const createSectionRef = useRef<CreateWeeklySectionRef>(null);
+  const insets = useSafeAreaInsets();
+
+  const createSectionRef = useRef<CreateWeeklySectionBottomSheetRef>(null);
   const createAssessmentRef = useRef<CreateAssessmentBottomSheetRef>(null);
-  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
-  const [index, setIndex] = useState(0);
-  const [routes] = useState([
-    { key: "weekly", title: "Weekly" },
-    { key: "assessments", title: "Assessments" },
-    { key: "students", title: "Students" },
-  ]);
-
-  const renderScene = SceneMap({
-    weekly: () => (
-      <WeeklyTab onCreatePress={() => { createSectionRef.current?.open(), setIsBottomSheetVisible(true) }} isBottomSheetVisible={isBottomSheetVisible} />
-    ),
-    assessments: () => (
-      <AssessmentsTab
-        createAssessmentRef={createAssessmentRef}
-        setIsBottomSheetVisible={setIsBottomSheetVisible}
-      />
-    ),
-    students: StudentsTab,
+  const { index, routes, setIndex } = useTabNavigation({
+    initialRoutes: [
+      { key: "weekly", title: "Weekly" },
+      { key: "assessments", title: "Assessments" },
+      { key: "students", title: "Students" },
+    ],
   });
 
-  const renderTabBar = (props: any) => (
-    <TabBar
-      {...props}
-      indicatorStyle={{ backgroundColor: Colors[theme ?? "light"].tint }}
-      style={{ backgroundColor: Colors[theme ?? "light"].background }}
-      activeColor={Colors[theme ?? "light"].tint}
-      inactiveColor={Colors[theme ?? "light"].text}
-      renderTabBarItem={(tabBarItemProps: any) => {
-        const { key, ...restProps } = tabBarItemProps;
-        return (
-          <TabBarItem
-            key={key}
-            {...restProps}
-            labelStyle={styles.label}
-          />
-        );
-      }}
-    />
-  );
+  const handleOpenWeeklySheet = useCallback(() => createSectionRef.current?.open(), []);
+  const handleOpenAssessmentSheet = useCallback(() => createAssessmentRef.current?.open(), []);
 
-  const handleCreateSection = (data: {
-    title: string;
-    description: string;
-    videoUrl: string;
-  }) => {
+  const handleCreateSection = useCallback((data: WeeklySectionFormData) => {
     console.log("New section created:", data);
-  };
+  }, []);
 
-  const handleCreateAssessment = (data: {
-    title: string;
-    description: string;
-    start_date: string;
-    end_date: string;
-    duration: string;
-  }) => {
+  const handleCreateAssessment = useCallback((data: AssessmentFormData) => {
     console.log("New assessment created:", data);
-  };
+  }, []);
+
+  const renderScene = SceneMap({
+    weekly: () => <WeeklyTab onCreatePress={handleOpenWeeklySheet} />,
+    assessments: () => <AssessmentsTab onCreatePress={handleOpenAssessmentSheet} />,
+    students: () => <StudentsTab />,
+  });
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemedView style={{ flex: 1 }}>
-        <ThemedView style={styles.header}>
-          <ThemedText type="title">{data?.title}</ThemedText>
-          <ThemedText type="default">{data?.class_code}</ThemedText>
-          <ThemedText type="default">{data?.desc}</ThemedText>
-        </ThemedView>
+    <GestureHandlerRootView style={styles.container}>
+      <ThemedView style={styles.container}>
+        <ClassHeader
+          title={classData?.title}
+          classCode={classData?.class_code}
+          description={classData?.desc}
+          style={{ paddingTop: insets.top > 0 ? 0 : 16 }}
+        />
 
         <TabView
           navigationState={{ index, routes }}
           renderScene={renderScene}
           onIndexChange={setIndex}
           initialLayout={{ width: layout.width }}
-          renderTabBar={renderTabBar}
-          swipeEnabled={true}
+          renderTabBar={(props) => <CustomTabBar props={props} />}
         />
-        <CreateWeeklySection
+
+        <CreateWeeklySectionBottomSheet
           ref={createSectionRef}
           onSubmit={handleCreateSection}
         />
@@ -115,11 +92,7 @@ export default function ClassDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    padding: 24,
-    paddingBottom: 16,
-  },
-  label: {
-    fontFamily: "Poppins-Regular",
+  container: {
+    flex: 1,
   },
 });

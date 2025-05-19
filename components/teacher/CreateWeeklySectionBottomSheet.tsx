@@ -1,11 +1,14 @@
-import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/teacher/Button";
+import ThemedBottomSheetTextInput from "@/components/ThemedBottomSheetTextInput";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { WeeklySectionFormData } from "@/types/common";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
-  BottomSheetView
+  BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import {
   forwardRef,
@@ -16,38 +19,31 @@ import {
   useState,
 } from "react";
 import { StyleSheet, View } from "react-native";
-import ThemedBottomSheetTextInput from "../ThemedBottomSheetTextInput";
-import { ThemedView } from "../ThemedView";
 
-export interface CreateWeeklySectionRef {
+export interface CreateWeeklySectionBottomSheetRef {
   open: () => void;
   close: () => void;
 }
 
-interface CreateWeeklySectionProps {
-  onSubmit: (data: {
-    title: string;
-    description: string;
-    videoUrl: string;
-  }) => void;
+interface CreateWeeklySectionBottomSheetProps {
+  onSubmit: (data: WeeklySectionFormData) => void;
+  onClose?: () => void;
 }
 
-const CreateWeeklySection = forwardRef<
-  CreateWeeklySectionRef,
-  CreateWeeklySectionProps
->(({ onSubmit }, ref) => {
+const CreateWeeklySectionBottomSheet = forwardRef<
+  CreateWeeklySectionBottomSheetRef,
+  CreateWeeklySectionBottomSheetProps
+>(({ onSubmit, onClose }, ref) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const theme = useColorScheme() || "light";
   const snapPoints = useMemo(() => ["25%", "50%", "100%"], []);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
 
-  const theme = useColorScheme();
-  
-  const handleClose = useCallback(() => {
-    bottomSheetRef.current?.close();
-  }, []);
+  const handleClose = useCallback(() => bottomSheetRef.current?.close(), []);
+  const handleOpen = useCallback(() => bottomSheetRef.current?.snapToIndex(1), []);
 
   const handleCreate = useCallback(() => {
     onSubmit({ title, description, videoUrl });
@@ -61,62 +57,38 @@ const CreateWeeklySection = forwardRef<
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
         {...props}
-        onPress={handleClose}
         disappearsOnIndex={-1}
         appearsOnIndex={0}
+        pressBehavior="close"
       />
     ),
     []
   );
 
-  useImperativeHandle(ref, () => ({
-    open: () => {
-      bottomSheetRef.current?.snapToIndex(0);
-    },
-    close: () => {
-      bottomSheetRef.current?.close();
-    },
-  }));
+  useImperativeHandle(ref, () => ({ open: handleOpen, close: handleClose }));
 
   return (
     <BottomSheet
       ref={bottomSheetRef}
       index={-1}
       snapPoints={snapPoints}
-      enablePanDownToClose={true}
+      enablePanDownToClose
       backdropComponent={renderBackdrop}
-      animateOnMount={false}
-      animationConfigs={{
-        duration: 300,
-      }}
       handleIndicatorStyle={{
-        backgroundColor:
-          theme === "dark" ? Colors.dark.text : Colors.light.text,
+        backgroundColor: Colors[theme].text,
       }}
       backgroundStyle={{
-        backgroundColor:
-          theme === "dark" ? Colors.dark.background : Colors.light.background,
+        backgroundColor: Colors[theme].background,
         borderRadius: 24,
       }}
     >
-      <BottomSheetView style={{ flex: 1, padding: 0 }}>
-        <ThemedView
-          style={{ flex: 1, paddingHorizontal: 25 }}
-          isCard={false}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 16,
-            }}
-          >
-            <ThemedText type="bold" style={{ paddingRight: 3 }}>
-              Create
-            </ThemedText>
-            <ThemedText type="default">Weekly Section</ThemedText>
+      <BottomSheetView style={styles.contentContainer}>
+        <ThemedView style={styles.innerContainer} isCard={false}>
+          <View style={styles.header}>
+            <ThemedText type="bold">Create</ThemedText>
+            <ThemedText type="default"> Weekly Section</ThemedText>
           </View>
+
           <ThemedBottomSheetTextInput
             label="Title"
             value={title}
@@ -129,7 +101,7 @@ const CreateWeeklySection = forwardRef<
             value={description}
             onChangeText={setDescription}
             placeholder="Please enter description"
-            multiline={true}
+            multiline
             numberOfLines={4}
           />
 
@@ -139,7 +111,8 @@ const CreateWeeklySection = forwardRef<
             onChangeText={setVideoUrl}
             placeholder="Please enter video URL"
           />
-            <Button onPress={handleCreate}>Create</Button>
+
+          <Button onPress={handleCreate}>Create</Button>
         </ThemedView>
       </BottomSheetView>
     </BottomSheet>
@@ -147,6 +120,14 @@ const CreateWeeklySection = forwardRef<
 });
 
 const styles = StyleSheet.create({
+  contentContainer: { flex: 1, padding: 0 },
+  innerContainer: { flex: 1, paddingHorizontal: 25 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
 });
 
-export default CreateWeeklySection;
+export default CreateWeeklySectionBottomSheet;

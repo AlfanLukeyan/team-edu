@@ -1,8 +1,10 @@
-import { DateType } from "@/components/Calendar";
-import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/teacher/Button";
+import ThemedBottomSheetTextInput from "@/components/ThemedBottomSheetTextInput";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { AssessmentFormData } from "@/types/common";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
@@ -17,8 +19,6 @@ import {
   useState,
 } from "react";
 import { StyleSheet, View } from "react-native";
-import ThemedBottomSheetTextInput from "../ThemedBottomSheetTextInput";
-import { ThemedView } from "../ThemedView";
 
 export interface CreateAssessmentBottomSheetRef {
   open: () => void;
@@ -26,156 +26,129 @@ export interface CreateAssessmentBottomSheetRef {
 }
 
 interface CreateAssessmentBottomSheetProps {
-  onSubmit: (data: {
-    title: string;
-    description: string;
-    start_date: string;
-    end_date: string;
-    duration: string;
-  }) => void;
+  onSubmit: (data: AssessmentFormData) => void;
+  onClose?: () => void;
 }
 
 const CreateAssessmentBottomSheet = forwardRef<
   CreateAssessmentBottomSheetRef,
   CreateAssessmentBottomSheetProps
->(({ onSubmit}, ref) => {
+>(({ onSubmit, onClose }, ref) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["25%", "50%", "100%"], []);
+  const theme = useColorScheme() || "light";
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [startDate, setStartDate] = useState<DateType>(null);
-  const [endDate, setEndDate] = useState<DateType>(null);
-  const [duration, setDuration] = useState("");
-  // const [isModalVisible, setIsModalVisible] = useState(false);
-  // const [isStartDatePickerVisible, setIsStartDatePickerVisible] = useState(false);
-  // const [isEndDatePickerVisible, setIsEndDatePickerVisible] = useState(false);
-  const theme = useColorScheme();
+  const [formData, setFormData] = useState<AssessmentFormData>({
+    title: "",
+    description: "",
+    start_date: "",
+    end_date: "",
+    duration: "",
+  });
 
-  const handleClose = useCallback(() => {
-    bottomSheetRef.current?.close();
-  }, []);
+  const snapPoints = useMemo(() => ["25%", "50%", "90%"], []);
 
-  const handleCreate = useCallback(() => {
-    onSubmit({
-      title,
-      description,
-      start_date: startDate instanceof Date ? startDate.toISOString() : "",
-      end_date: endDate instanceof Date ? endDate.toISOString() : "",
-      duration
+  const handleClose = useCallback(() => bottomSheetRef.current?.close(), []);
+  const handleOpen = useCallback(() => bottomSheetRef.current?.snapToIndex(1), []);
+
+  const handleFieldChange = (field: keyof AssessmentFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = () => {
+    onSubmit(formData);
+    setFormData({
+      title: "",
+      description: "",
+      start_date: "",
+      end_date: "",
+      duration: "",
     });
-    setTitle("");
-    setDescription("");
-    setDuration("");
     handleClose();
-  }, [title, description, startDate, endDate, duration, onSubmit, handleClose]);
+  };
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
         {...props}
-        onPress={handleClose}
         disappearsOnIndex={-1}
         appearsOnIndex={0}
+        pressBehavior="close"
       />
     ),
     []
   );
 
-  const formatDate = (date: DateType) => {
-    if (!date) return "Select date";
-    return new Date(
-      date instanceof Date ? date : (date && typeof date === "object" && "toDate" in date ? date.toDate() : date)
-    ).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const handleSheetChanges = useCallback((index: number) => {
+    if (index === -1 && onClose) onClose();
+  }, [onClose]);
 
-  useImperativeHandle(ref, () => ({
-    open: () => {
-      bottomSheetRef.current?.snapToIndex(0);
-    },
-    close: () => {
-      bottomSheetRef.current?.close();
-    },
-  }));
+  useImperativeHandle(ref, () => ({ open: handleOpen, close: handleClose }));
 
   return (
     <BottomSheet
       ref={bottomSheetRef}
       index={-1}
       snapPoints={snapPoints}
-      enablePanDownToClose={true}
+      enablePanDownToClose
       backdropComponent={renderBackdrop}
-      animateOnMount={false}
-      animationConfigs={{
-        duration: 300,
-      }}
-      handleIndicatorStyle={{
-        backgroundColor:
-          theme === "dark" ? Colors.dark.text : Colors.light.text,
-      }}
       backgroundStyle={{
-        backgroundColor:
-          theme === "dark" ? Colors.dark.background : Colors.light.background,
+        backgroundColor: Colors[theme].background,
         borderRadius: 24,
       }}
+      handleIndicatorStyle={{
+        backgroundColor: Colors[theme].text,
+        width: 40,
+      }}
+      onChange={handleSheetChanges}
     >
-      <BottomSheetView style={{ flex: 1, padding: 0 }}>
-        <ThemedView
-          style={{ flex: 1, paddingHorizontal: 25 }}
-          isCard={false}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 16,
-            }}
-          >
-            <ThemedText type="bold" style={{ paddingRight: 3 }}>
-              Create
-            </ThemedText>
-            <ThemedText type="default">Assessment</ThemedText>
+      <BottomSheetView style={styles.contentContainer}>
+        <ThemedView style={styles.innerContainer} isCard={false}>
+          <View style={styles.header}>
+            <ThemedText type="bold">Create Assessment</ThemedText>
           </View>
 
           <ThemedBottomSheetTextInput
             label="Title"
-            value={title}
-            onChangeText={setTitle}
+            value={formData.title}
+            onChangeText={(value) => handleFieldChange("title", value)}
             placeholder="Enter assessment title"
           />
 
           <ThemedBottomSheetTextInput
             label="Description"
-            value={description}
-            onChangeText={setDescription}
+            value={formData.description}
+            onChangeText={(value) => handleFieldChange("description", value)}
             placeholder="Enter assessment description"
-            multiline={true}
+            multiline
             numberOfLines={4}
           />
-          
 
           <ThemedBottomSheetTextInput
             label="Duration (minutes)"
-            value={duration}
-            onChangeText={setDuration}
+            value={formData.duration}
+            onChangeText={(value) => handleFieldChange("duration", value)}
             placeholder="Enter duration in minutes"
             keyboardType="numeric"
           />
 
-          <Button onPress={handleCreate}>Create Assessment</Button>
+          <Button onPress={handleSubmit}>
+            Create Assessment
+          </Button>
         </ThemedView>
       </BottomSheetView>
     </BottomSheet>
-    );
+  );
 });
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  contentContainer: { flex: 1, padding: 0 },
+  innerContainer: { flex: 1, paddingHorizontal: 25 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+});
 
 export default CreateAssessmentBottomSheet;
