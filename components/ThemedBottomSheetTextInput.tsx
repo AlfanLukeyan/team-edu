@@ -52,6 +52,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
+    fontSize: 14,
+    fontFamily: "Poppins-SemiBold",
     marginBottom: 4,
   },
 });

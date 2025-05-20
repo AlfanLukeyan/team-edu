@@ -19,7 +19,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { DateType } from "../Calendar";
+import CalendarBottomSheet, { CalendarBottomSheetRef } from "./CalendarBottomSheet";
 
 export interface CreateAssessmentBottomSheetRef {
   open: () => void;
@@ -35,6 +37,8 @@ const CreateAssessmentBottomSheet = forwardRef<
   CreateAssessmentBottomSheetRef,
   CreateAssessmentBottomSheetProps
 >(({ onSubmit, onClose }, ref) => {
+  const startDateRef = useRef<CalendarBottomSheetRef>(null);
+  const endDateRef = useRef<CalendarBottomSheetRef>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const { dismiss } = useBottomSheetModal();
   const theme = useColorScheme() || "light";
@@ -52,7 +56,7 @@ const CreateAssessmentBottomSheet = forwardRef<
     if (onClose) onClose();
     dismiss();
   }, [onClose, dismiss]);
-  
+
   const handleOpen = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
@@ -85,73 +89,131 @@ const CreateAssessmentBottomSheet = forwardRef<
     []
   );
 
+  const handleStartDateChange = (date: DateType) => {
+    if (date) {
+      const dateObj = date instanceof Date ? date : new Date(date as any);
+      setFormData(prev => ({
+        ...prev,
+        start_date: dateObj.toISOString()
+      }));
+    }
+  };
+
+  const handleEndDateChange = (date: DateType) => {
+    if (date) {
+      const dateObj = date instanceof Date ? date : new Date(date as any);
+      setFormData(prev => ({
+        ...prev,
+        end_date: dateObj.toISOString()
+      }));
+    }
+  };
+
+  const formatDate = (date: string | Date) => {
+    if (!date) return '';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   useImperativeHandle(ref, () => ({ open: handleOpen, close: handleClose }));
 
   return (
-    <BottomSheetModal
-      ref={bottomSheetModalRef}
-      index={1}
-      snapPoints={snapPoints}
-      backdropComponent={renderBackdrop}
-      enablePanDownToClose
-      handleIndicatorStyle={{
-        backgroundColor: Colors[theme].text,
-        opacity: 0.5,
-      }}
-      backgroundStyle={{
-        backgroundColor: Colors[theme].background,
-      }}
-    >
-      <BottomSheetView style={styles.contentContainer}>
-        <View style={styles.innerContainer}>
-          <View style={styles.header}>
-            <ThemedText style={{ fontSize: 20, fontFamily: "Poppins-Bold" }}>
-              Create Assessment
-            </ThemedText>
+    <>
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={1}
+        snapPoints={snapPoints}
+        backdropComponent={renderBackdrop}
+        enablePanDownToClose
+        handleIndicatorStyle={{
+          backgroundColor: Colors[theme].text,
+          opacity: 0.5,
+        }}
+        backgroundStyle={{
+          backgroundColor: Colors[theme].background,
+        }}
+      >
+        <BottomSheetView style={styles.contentContainer}>
+          <View style={styles.innerContainer}>
+            <View style={styles.header}>
+              <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Bold" }}>
+                Create
+              </ThemedText>
+              <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Regular" }}>Assessment</ThemedText>
+            </View>
+
+            <ThemedBottomSheetTextInput
+              label="Title"
+              placeholder="Enter assessment title"
+              value={formData.title}
+              onChangeText={(value) => handleFieldChange("title", value)}
+            />
+
+            <ThemedBottomSheetTextInput
+              label="Description"
+              placeholder="Enter assessment description"
+              multiline
+              numberOfLines={4}
+              value={formData.description}
+              onChangeText={(value) => handleFieldChange("description", value)}
+            />
+
+            <View style={styles.fieldContainer}>
+              <ThemedText style={styles.label}>Start Date</ThemedText>
+              <Pressable
+                style={{borderColor: theme === "light" ? Colors.light.border : Colors.dark.border, borderWidth: 1, borderRadius: 15, paddingVertical: 10, paddingHorizontal: 16}}
+                onPress={() => startDateRef.current?.open()}
+              >
+                <ThemedText type="placeholder">
+                  {formData.start_date ? formatDate(formData.start_date) : 'Select start date'}
+                </ThemedText>
+              </Pressable>
+            </View>
+
+            <View style={styles.fieldContainer}>
+              <ThemedText style={styles.label}>End Date</ThemedText>
+              <Pressable
+                style={{borderColor: theme === "light" ? Colors.light.border : Colors.dark.border, borderWidth: 1, borderRadius: 15, paddingVertical: 10, paddingHorizontal: 16}}
+                onPress={() => endDateRef.current?.open()}
+              >
+                <ThemedText type="placeholder">
+                  {formData.end_date ? formatDate(formData.end_date) : 'Empty'}
+                </ThemedText>
+              </Pressable>
+            </View>
+
+            <ThemedBottomSheetTextInput
+              label="Duration (minutes)"
+              placeholder="Enter duration in minutes"
+              keyboardType="numeric"
+              value={formData.duration}
+              onChangeText={(value) => handleFieldChange("duration", value)}
+            />
+
+            <Button onPress={handleSubmit}>Create Assessment</Button>
           </View>
+        </BottomSheetView>
+      </BottomSheetModal>
+      <CalendarBottomSheet
+        ref={startDateRef}
+        title="Select Start Date & Time"
+        selected={formData.start_date ? new Date(formData.start_date) : new Date()}
+        onDateChange={handleStartDateChange}
+      />
 
-          <ThemedBottomSheetTextInput
-            label="Title"
-            placeholder="Enter assessment title"
-            value={formData.title}
-            onChangeText={(value) => handleFieldChange("title", value)}
-          />
-
-          <ThemedBottomSheetTextInput
-            label="Description"
-            placeholder="Enter assessment description"
-            multiline
-            numberOfLines={4}
-            value={formData.description}
-            onChangeText={(value) => handleFieldChange("description", value)}
-          />
-
-          <ThemedBottomSheetTextInput
-            label="Start Date"
-            placeholder="YYYY-MM-DD"
-            value={formData.start_date}
-            onChangeText={(value) => handleFieldChange("start_date", value)}
-          />
-
-          <ThemedBottomSheetTextInput
-            label="End Date"
-            placeholder="YYYY-MM-DD"
-            value={formData.end_date}
-            onChangeText={(value) => handleFieldChange("end_date", value)}
-          />
-
-          <ThemedBottomSheetTextInput
-            label="Duration (minutes)"
-            placeholder="Enter duration in minutes"
-            keyboardType="numeric"
-            value={formData.duration}
-            onChangeText={(value) => handleFieldChange("duration", value)}
-          />
-
-          <Button onPress={handleSubmit}>Create Assessment</Button>
-        </View>
-      </BottomSheetView>
-    </BottomSheetModal>
+      <CalendarBottomSheet
+        ref={endDateRef}
+        title="Select End Date & Time"
+        selected={formData.end_date ? new Date(formData.end_date) : new Date()}
+        onDateChange={handleEndDateChange}
+      />
+    </>
   );
 });
 
@@ -163,6 +225,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
+    gap: 4,
+  },
+  fieldContainer: {
+    marginBottom: 16,
+  },
+  label: {
+    marginBottom: 4,
+  },
+  dateButton: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
 });
 

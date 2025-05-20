@@ -1,4 +1,5 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Colors } from '@/constants/Colors';
 import { response } from '@/data/response';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -14,12 +15,8 @@ type RouteParams = {
 export default function ClassDetailLayout() {
   const { id } = useLocalSearchParams();
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const router = useRouter();
   const [className, setClassName] = useState('Class Details');
-
-  const headerBackground = isDark ? '#1f2937' : '#ffffff';
-  const headerTintColor = isDark ? '#f3f4f6' : '#111827';
 
   useEffect(() => {
     if (id) {
@@ -37,28 +34,29 @@ export default function ClassDetailLayout() {
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: headerBackground,
+          backgroundColor: Colors[colorScheme ?? 'light'].background,
         },
-        headerTintColor: headerTintColor,
-        headerShadowVisible: false,
+        headerTitleAlign: 'center',
         headerTitleStyle: {
-          fontSize: 18,
+          fontFamily: 'Poppins-Regular',
+          fontSize: 16,
         },
+        headerShadowVisible: false,
         animation: 'slide_from_right',
       }}
     >
       <Stack.Screen
         name="index"
         options={{
-          title: className,
+          title: "Class Details",
           headerShown: true,
           headerLeft: () => (
             <TouchableOpacity 
               onPress={() => {
-                router.push('/(main)/(tabs)/classes');
+                router.navigate('/(main)/(tabs)/classes');
               }}
             >
-              <IconSymbol name="chevron.left" size={24} color={headerTintColor}/>
+              <IconSymbol name="chevron.left" size={24} color={Colors[colorScheme ?? 'light'].tint} />
             </TouchableOpacity>
           ),
         }}

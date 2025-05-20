@@ -48,7 +48,7 @@ const CreateWeeklySectionBottomSheet = forwardRef<
     if (onClose) onClose();
     dismiss();
   }, [onClose, dismiss]);
-  
+
   const handleOpen = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
@@ -93,9 +93,10 @@ const CreateWeeklySectionBottomSheet = forwardRef<
       <BottomSheetView style={styles.contentContainer}>
         <View style={styles.innerContainer}>
           <View style={styles.header}>
-            <ThemedText style={{ fontSize: 20, fontFamily: "Poppins-Bold" }}>
-              Create Weekly Section
+            <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Bold" }}>
+              Create
             </ThemedText>
+            <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Regular" }}>Weekly Section</ThemedText>
           </View>
 
           <ThemedBottomSheetTextInput
@@ -134,6 +135,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
+    gap: 4,
   },
 });
 
