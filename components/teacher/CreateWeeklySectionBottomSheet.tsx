@@ -1,14 +1,15 @@
 import { Button } from "@/components/teacher/Button";
 import ThemedBottomSheetTextInput from "@/components/ThemedBottomSheetTextInput";
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { WeeklySectionFormData } from "@/types/common";
-import BottomSheet, {
+import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
+  BottomSheetModal,
   BottomSheetView,
+  useBottomSheetModal,
 } from "@gorhom/bottom-sheet";
 import {
   forwardRef,
@@ -34,16 +35,23 @@ const CreateWeeklySectionBottomSheet = forwardRef<
   CreateWeeklySectionBottomSheetRef,
   CreateWeeklySectionBottomSheetProps
 >(({ onSubmit, onClose }, ref) => {
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const { dismiss } = useBottomSheetModal();
   const theme = useColorScheme() || "light";
-  const snapPoints = useMemo(() => ["25%", "50%", "100%"], []);
+  const snapPoints = useMemo(() => ["25%", "50%", "95"], []);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
 
-  const handleClose = useCallback(() => bottomSheetRef.current?.close(), []);
-  const handleOpen = useCallback(() => bottomSheetRef.current?.snapToIndex(1), []);
+  const handleClose = useCallback(() => {
+    if (onClose) onClose();
+    dismiss();
+  }, [onClose, dismiss]);
+  
+  const handleOpen = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
 
   const handleCreate = useCallback(() => {
     onSubmit({ title, description, videoUrl });
@@ -59,7 +67,7 @@ const CreateWeeklySectionBottomSheet = forwardRef<
         {...props}
         disappearsOnIndex={-1}
         appearsOnIndex={0}
-        pressBehavior="close"
+        opacity={0.5}
       />
     ),
     []
@@ -68,54 +76,53 @@ const CreateWeeklySectionBottomSheet = forwardRef<
   useImperativeHandle(ref, () => ({ open: handleOpen, close: handleClose }));
 
   return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={-1}
+    <BottomSheetModal
+      ref={bottomSheetModalRef}
+      index={1}
       snapPoints={snapPoints}
-      enablePanDownToClose
       backdropComponent={renderBackdrop}
+      enablePanDownToClose
       handleIndicatorStyle={{
-        backgroundColor: Colors[theme].text,
+        backgroundColor: theme === "dark" ? Colors.dark.text : Colors.light.text,
+        opacity: 0.5,
       }}
       backgroundStyle={{
-        backgroundColor: Colors[theme].background,
-        borderRadius: 24,
+        backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background,
       }}
     >
       <BottomSheetView style={styles.contentContainer}>
-        <ThemedView style={styles.innerContainer} isCard={false}>
+        <View style={styles.innerContainer}>
           <View style={styles.header}>
-            <ThemedText type="bold">Create</ThemedText>
-            <ThemedText type="default"> Weekly Section</ThemedText>
+            <ThemedText style={{ fontSize: 20, fontFamily: "Poppins-Bold" }}>
+              Create Weekly Section
+            </ThemedText>
           </View>
 
           <ThemedBottomSheetTextInput
             label="Title"
+            placeholder="Title"
             value={title}
             onChangeText={setTitle}
-            placeholder="Please enter title"
           />
-
           <ThemedBottomSheetTextInput
             label="Description"
+            placeholder="Description"
+            multiline
+            numberOfLines={3}
             value={description}
             onChangeText={setDescription}
-            placeholder="Please enter description"
-            multiline
-            numberOfLines={4}
           />
-
           <ThemedBottomSheetTextInput
             label="Video URL"
+            placeholder="Video URL (optional)"
             value={videoUrl}
             onChangeText={setVideoUrl}
-            placeholder="Please enter video URL"
           />
 
           <Button onPress={handleCreate}>Create</Button>
-        </ThemedView>
+        </View>
       </BottomSheetView>
-    </BottomSheet>
+    </BottomSheetModal>
   );
 });
 

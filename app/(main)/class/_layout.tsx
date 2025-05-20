@@ -1,26 +1,34 @@
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { Stack } from "expo-router";
 import React from "react";
 
-export default function ClassDetailLayout() {
+export default function ClassLayout() {
   const colorScheme = useColorScheme();
-
+  
   return (
     <Stack
       screenOptions={{
-        headerShown: true,
-        headerTitle: "Class Detail",
-        headerBackTitle: "Back",
         headerStyle: {
           backgroundColor: Colors[colorScheme ?? "light"].background,
         },
-        headerTitleAlign: "center",
+        headerTintColor: Colors[colorScheme ?? "light"].text,
         headerTitleStyle: {
-          fontSize: 16,
-          fontFamily: "Poppins-Medium",
+          fontFamily: "Poppins-SemiBold",
+        },
+        contentStyle: {
+          backgroundColor: Colors[colorScheme ?? "light"].background,
         },
       }}
-    />
+    >
+      {/* <Stack.Screen 
+        name="index" 
+        options={{ title: "Classes", headerTitleAlign: "center" }} 
+      /> */}
+      <Stack.Screen 
+        name="[id]" 
+        options={{ headerShown: false }} 
+      />
+    </Stack>
   );
 }

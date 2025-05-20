@@ -1,10 +1,8 @@
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useRef } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SceneMap, TabView } from "react-native-tab-view";
-
 
 import { ClassHeader } from "@/components/ClassHeader";
 import { CustomTabBar } from "@/components/TabBar";
@@ -60,8 +58,7 @@ export default function ClassDetailScreen() {
   });
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <ThemedView style={styles.container}>
+    <ThemedView style={styles.container}>
         <ClassHeader
           title={classData?.title}
           classCode={classData?.class_code}
@@ -69,25 +66,24 @@ export default function ClassDetailScreen() {
           style={{ paddingTop: insets.top > 0 ? 0 : 16 }}
         />
 
-        <TabView
-          navigationState={{ index, routes }}
-          renderScene={renderScene}
-          onIndexChange={setIndex}
-          initialLayout={{ width: layout.width }}
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{ width: layout.width }}
           renderTabBar={(props) => <CustomTabBar props={props} />}
-        />
+      />
 
-        <CreateWeeklySectionBottomSheet
-          ref={createSectionRef}
-          onSubmit={handleCreateSection}
-        />
+      <CreateWeeklySectionBottomSheet
+        ref={createSectionRef}
+        onSubmit={handleCreateSection}
+      />
 
-        <CreateAssessmentBottomSheet
-          ref={createAssessmentRef}
-          onSubmit={handleCreateAssessment}
-        />
-      </ThemedView>
-    </GestureHandlerRootView>
+      <CreateAssessmentBottomSheet
+        ref={createAssessmentRef}
+        onSubmit={handleCreateAssessment}
+      />
+    </ThemedView>
   );
 }
 
