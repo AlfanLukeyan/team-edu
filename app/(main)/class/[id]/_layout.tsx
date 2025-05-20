@@ -63,18 +63,10 @@ export default function ClassDetailLayout() {
       />
       <Stack.Screen
         name="assessment/[assessmentId]/index"
-        options={({ route }: { route: RouteParams }) => {
-          const assessmentId = route?.params?.assessmentId;
-          const assessmentData = assessmentId ?
-            response.getAllAssessments.data.find(
-              (assessment) => assessment.id === assessmentId
-            ) : null;
-
-          return {
-            title: assessmentData?.title || 'Assessment',
+        options={{
+            title: 'Assessment Details',
             headerShown: true,
-            presentation: 'modal',
-          };
+            animation: 'slide_from_right',
         }}
       />
       <Stack.Screen

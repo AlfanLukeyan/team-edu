@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/teacher/Button";
 import { response } from "@/data/response";
 import { TabContentProps } from "@/types/common";
+import { useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
 
@@ -17,6 +18,7 @@ function formatDate(isoString: string): string {
 }
 
 export default function AssessmentsTab({ onCreatePress }: TabContentProps) {
+  const router = useRouter();
   return (
     <ThemedView style={styles.container}>
       <ScrollView
@@ -36,6 +38,13 @@ export default function AssessmentsTab({ onCreatePress }: TabContentProps) {
             title={assessment.title}
             startDate={formatDate(assessment.start_date)}
             endDate={formatDate(assessment.end_date)}
+            onPress={() => router.push({
+              pathname: "/(main)/class/[id]/assessment/[assessmentId]",
+              params: {
+                id: assessment.class_id,
+                assessmentId: assessment.id,
+              },
+            })}
           />
         ))}
       </ScrollView>

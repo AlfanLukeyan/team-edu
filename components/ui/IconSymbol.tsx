@@ -23,6 +23,9 @@ const MAPPING = {
   'circle.fill': 'circle',
   'bookmark.fill': 'bookmark',
   'document.fill': 'description',
+  'calendar.circle.fill': 'calendar-today',
+  'trash.circle.fill': 'delete',
+  'pencil.circle.fill': 'edit',
 } as IconMapping;
 
 /**

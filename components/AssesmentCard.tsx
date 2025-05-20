@@ -3,24 +3,21 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "./ThemedText";
 
 interface AssignmentCardProps {
   title: string;
   startDate: string;
   endDate: string;
+  onPress?: () => void;
 }
 
-export function AssessmentCard({ title, startDate, endDate }: AssignmentCardProps) {
+export function AssessmentCard({ title, startDate, endDate, onPress }: AssignmentCardProps) {
   const theme = useColorScheme() ?? "light";
 
-  const handlePress = () => {
-    console.log("Assessment pressed");
-  };
-
   return (
-    <Pressable onPress={handlePress}>
+    <TouchableOpacity onPress={onPress}>
       <View style={styles.container}>
         <View style={styles.gradientContainer}>
           <LinearGradient
@@ -48,7 +45,7 @@ export function AssessmentCard({ title, startDate, endDate }: AssignmentCardProp
           </View>
         </View>
       </View>
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 

@@ -1,15 +1,38 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { response } from '@/data/response';
-import { useLocalSearchParams } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CompletedCountCard } from "@/components/CompletedCountCard";
+import { DueDateCard } from "@/components/DueDateCard";
+import { CustomTabBar } from "@/components/TabBar";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { TimeRemainingCard } from "@/components/TimeRemainingCard";
+import { response } from "@/data/response";
+import { useTabNavigation } from "@/hooks/useTabNavigation";
+import { useLocalSearchParams } from "expo-router";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SceneMap, TabView } from "react-native-tab-view";
+import QuestionsTab from "./(tabs)/QuestionsTab";
+import SubmissionsTab from "./(tabs)/SubmissionsTab";
+import ToDoTab from "./(tabs)/ToDoTab";
 
 export default function AssessmentDetailScreen() {
   const { assessmentId } = useLocalSearchParams<{ assessmentId: string }>();
   const insets = useSafeAreaInsets();
-  
-  // Find the assessment
+  const layout = useWindowDimensions();
+
+  const { index, routes, setIndex } = useTabNavigation({
+    initialRoutes: [
+      { key: "submissions", title: "Submissions" },
+      { key: "questions", title: "Questions" },
+      { key: "todo", title: "Todo" },
+    ],
+  });
+
+  const renderScene = SceneMap({
+    submissions: () => <SubmissionsTab />,
+    questions: () => <QuestionsTab />,
+    todo: () => <ToDoTab />,
+  });
+
   const assessment = response.getAllAssessments.data.find(
     (item) => item.id === assessmentId
   );
@@ -21,31 +44,47 @@ export default function AssessmentDetailScreen() {
       </ThemedView>
     );
   }
+  const formatDate = (date: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(date).toLocaleString("en-US", options);
+  };
 
-  // Format dates
-  const startDate = new Date(assessment.start_date).toLocaleString();
-  const endDate = new Date(assessment.end_date).toLocaleString();
+  const startDate = formatDate(assessment.start_date);
+  const endDate = formatDate(assessment.end_date);
 
   return (
-    <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.section}>
-        <View style={styles.typeContainer}>
-          <ThemedText type="bold" style={styles.type}>{assessment.type}</ThemedText>
-        </View>
-        <ThemedText type="bold" style={styles.title}>{assessment.title}</ThemedText>
-        <ThemedText style={styles.marks}>Total Marks: {assessment.total_marks}</ThemedText>
+    <ThemedView style={styles.container}>
+      <ThemedText type="title">{assessment.title}</ThemedText>
+      <ThemedText type="default">
+        Description: {assessment.description}
+      </ThemedText>
+      <View
+        style={{
+          flexDirection: "row",
+          paddingVertical: 16,
+          gap: 12,
+          height: 200,
+        }}
+      >
+        <DueDateCard startDate={startDate} endDate={endDate} />
+        <CompletedCountCard comletedCount={20} totalCount={13} />
       </View>
-      
-      <View style={styles.section}>
-        <ThemedText type="bold" style={styles.sectionTitle}>Description</ThemedText>
-        <ThemedText>{assessment.description}</ThemedText>
+      <View>
+        <TimeRemainingCard duration={assessment.duration} />
       </View>
-      
-      <View style={styles.section}>
-        <ThemedText type="bold" style={styles.sectionTitle}>Schedule</ThemedText>
-        <ThemedText>Start: {startDate}</ThemedText>
-        <ThemedText>End: {endDate}</ThemedText>
-      </View>
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{ width: layout.width }}
+        renderTabBar={(props) => <CustomTabBar props={props} />}
+      />
     </ThemedView>
   );
 }
@@ -53,32 +92,6 @@ export default function AssessmentDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  typeContainer: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    
-    borderRadius: 16,
-    marginBottom: 8,
-  },
-  type: {
-    fontSize: 14,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 4,
-  },
-  marks: {
-    opacity: 0.7,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    marginBottom: 8,
+    paddingHorizontal: 24,
   },
 });
