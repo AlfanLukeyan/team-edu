@@ -22,3 +22,19 @@ export interface ClassData {
   export interface TabContentProps {
     onCreatePress: () => void;
   }
+  export interface Choice {
+    id: string;
+    choice_text: string;
+    is_correct: boolean;
+  }
+  
+  export interface Question {
+    id: string;
+    question_text: string;
+    choices: Choice[];
+  }
+  
+  export interface QuestionsFormData {
+    questions: Question[];
+    assessment_id?: string;
+  }

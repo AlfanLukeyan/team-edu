@@ -26,6 +26,9 @@ const MAPPING = {
   'calendar.circle.fill': 'calendar-today',
   'trash.circle.fill': 'delete',
   'pencil.circle.fill': 'edit',
+  'minus.circle.fill': 'remove-circle',
+  'checkmark.circle.fill': 'check-circle',
+  'plus.circle.fill': 'add-circle',
 } as IconMapping;
 
 /**

@@ -1,11 +1,10 @@
 import { StudentCard } from "@/components/StudentCard";
 import { ThemedView } from "@/components/ThemedView";
 import { response } from "@/data/response";
-import { TabContentProps } from "@/types/common";
 import { useState } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 
-export default function StudentsTab({ onCreatePress }: TabContentProps) {
+export default function StudentsTab() {
   const [students, setStudents] = useState(response.getAllStudentsByClassId.data);
   
   return (

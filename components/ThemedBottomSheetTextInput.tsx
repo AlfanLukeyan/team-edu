@@ -6,7 +6,7 @@ import React from "react";
 import { StyleSheet, TextInputProps, View } from "react-native";
 
 interface ThemedBottomSheetTextInputProps extends TextInputProps {
-  label: string;
+  label?: string;
   multiline?: boolean;
 }
 
@@ -36,7 +36,9 @@ const ThemedBottomSheetTextInput: React.FC<ThemedBottomSheetTextInputProps> = ({
 
   return (
     <View style={styles.container}>
-      <ThemedText style={styles.label}>{label}</ThemedText>
+      {label && (
+        <ThemedText style={styles.label}>{label}</ThemedText>
+      )}
       <BottomSheetTextInput
         style={multiline ? multilineInputStyle : inputStyle}
         multiline={multiline}
@@ -49,7 +51,7 @@ const ThemedBottomSheetTextInput: React.FC<ThemedBottomSheetTextInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    flex: 1,
   },
   label: {
     fontSize: 14,

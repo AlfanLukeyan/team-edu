@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SceneMap, TabView } from "react-native-tab-view";
@@ -18,7 +18,8 @@ import CreateWeeklySectionBottomSheet, {
 import { response } from "@/data/response";
 import { useTabNavigation } from "@/hooks/useTabNavigation";
 
-import { AssessmentFormData, WeeklySectionFormData } from "@/types/common";
+import CreateQuestionsBottomSheet, { CreateQuestionsBottomSheetRef } from "@/components/teacher/CreateQuestionsBottomSheet";
+import { AssessmentFormData, QuestionsFormData, WeeklySectionFormData } from "@/types/common";
 import AssessmentsTab from "./tabs/AssessmentsTab";
 import StudentsTab from "./tabs/StudentsTab";
 import WeeklyTab from "./tabs/WeeklyTab";
@@ -28,9 +29,11 @@ export default function ClassDetailScreen() {
   const classData = response.getAllClasses.data.find(item => item.id === id);
   const layout = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
 
   const createSectionRef = useRef<CreateWeeklySectionBottomSheetRef>(null);
   const createAssessmentRef = useRef<CreateAssessmentBottomSheetRef>(null);
+  const createQuestionsRef = useRef<CreateQuestionsBottomSheetRef>(null);
 
   const { index, routes, setIndex } = useTabNavigation({
     initialRoutes: [
@@ -49,6 +52,22 @@ export default function ClassDetailScreen() {
 
   const handleCreateAssessment = useCallback((data: AssessmentFormData) => {
     console.log("New assessment created:", data);
+    
+    // Create an ID for the assessment (in a real app this would come from your API)
+    const newAssessmentId = `assessment_${Date.now()}`;
+    setCurrentAssessmentId(newAssessmentId);
+    
+    // Open the questions bottom sheet
+    createQuestionsRef.current?.open();
+  }, []);
+  
+  // Update your questions handler to use the assessment ID
+  const handleCreateQuestions = useCallback((data: QuestionsFormData) => {
+    console.log("Questions created for assessment:", data.assessment_id);
+    console.log("Questions:", data.questions);
+    
+    // Clear the current assessment ID
+    setCurrentAssessmentId(null);
   }, []);
 
   const renderScene = SceneMap({
@@ -82,6 +101,12 @@ export default function ClassDetailScreen() {
       <CreateAssessmentBottomSheet
         ref={createAssessmentRef}
         onSubmit={handleCreateAssessment}
+      />
+
+      <CreateQuestionsBottomSheet
+        ref={createQuestionsRef}
+        onSubmit={handleCreateQuestions}
+        assessmentId={currentAssessmentId || undefined}
       />
     </ThemedView>
   );

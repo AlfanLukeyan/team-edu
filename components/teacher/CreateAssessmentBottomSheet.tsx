@@ -219,7 +219,7 @@ const CreateAssessmentBottomSheet = forwardRef<
 
 const styles = StyleSheet.create({
   contentContainer: { flex: 1, padding: 0 },
-  innerContainer: { flex: 1, paddingHorizontal: 25 },
+  innerContainer: {paddingHorizontal: 25 },
   header: {
     flexDirection: "row",
     alignItems: "center",

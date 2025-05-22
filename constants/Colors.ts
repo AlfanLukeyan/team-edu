@@ -20,6 +20,7 @@ export const Colors = {
     tabIconSelected: tintColorLight,
     cardBackground: '#F4F4F4',
     border: 'gray',
+    error: '#FF3B30',
   },
   dark: {
     title: '#fff',
@@ -34,5 +35,6 @@ export const Colors = {
     tabIconSelected: tintColorDark,
     cardBackground: '#151515',
     border: 'gray',
+    error: '#FF3B30',
   },
 };

@@ -38,7 +38,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                             alignItems: 'center',
                             paddingHorizontal: 8
                     }}>
-                        <IconSymbol name="pencil.circle.fill" size={24} color="white" />
+                        <IconSymbol name="pencil.circle.fill" size={24} color={Colors[theme].icon} />
                     </ThemedView>
                 </TouchableOpacity>
                 <TouchableOpacity
