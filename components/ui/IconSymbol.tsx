@@ -29,6 +29,8 @@ const MAPPING = {
   'minus.circle.fill': 'remove-circle',
   'checkmark.circle.fill': 'check-circle',
   'plus.circle.fill': 'add-circle',
+  'calendar.and.person': 'event',
+  'calendar.badge.checkmark': 'event-note',
 } as IconMapping;
 
 /**

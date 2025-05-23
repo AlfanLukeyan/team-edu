@@ -8,12 +8,13 @@ import { IconSymbol } from './ui/IconSymbol';
 interface CompletedCountCardProps {
     comletedCount: number;
     totalCount: number;
+    style?: object;
 }
 
-export const CompletedCountCard: React.FC<CompletedCountCardProps > = ({ comletedCount, totalCount }) => {
+export const CompletedCountCard: React.FC<CompletedCountCardProps> = ({ comletedCount, totalCount, style }) => {
     const theme = useColorScheme() || "light";
     return (
-        <ThemedView isCard={true} style={styles.container}>
+        <ThemedView isCard={true} style={[styles.container, style]}>
             <ThemedText type="defaultSemiBold">Completed</ThemedText>
             <IconSymbol
                 name="person.fill"
@@ -29,10 +30,7 @@ export const CompletedCountCard: React.FC<CompletedCountCardProps > = ({ comlete
 }
 const styles = StyleSheet.create({
     container: {
-        height: "100%",
-        flex: 1,
         gap: 18,
-        padding: 18,
         borderRadius: 15,
         justifyContent: "center",
         alignItems: "center",

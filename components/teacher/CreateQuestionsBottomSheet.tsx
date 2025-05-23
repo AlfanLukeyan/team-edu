@@ -19,7 +19,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { ButtonWithDescription } from "../ButtonWithDescription";
 import { ThemedView } from "../ThemedView";
 
@@ -89,38 +95,67 @@ const CreateQuestionsBottomSheet = forwardRef<
   const handleCreate = useCallback(() => {
     // Validate questions before submitting
     if (questions.some((q) => !q.question_text.trim())) {
-      alert("Please enter text for all questions");
+      Alert.alert("Validation Error", "Please enter text for all questions", [
+        { text: "OK", style: "default" },
+      ]);
       return;
     }
 
     if (questions.some((q) => q.choices.length < 2)) {
-      alert("Each question must have at least 2 choices");
+      Alert.alert(
+        "Validation Error",
+        "Each question must have at least 2 choices",
+        [{ text: "OK", style: "default" }]
+      );
       return;
     }
 
     if (questions.some((q) => q.choices.some((c) => !c.choice_text.trim()))) {
-      alert("Please enter text for all choices");
+      Alert.alert("Validation Error", "Please enter text for all choices", [
+        { text: "OK", style: "default" },
+      ]);
       return;
     }
 
     if (questions.some((q) => !q.choices.some((c) => c.is_correct))) {
-      alert("Each question must have at least one correct answer");
+      Alert.alert(
+        "Validation Error",
+        "Each question must have at least one correct answer",
+        [{ text: "OK", style: "default" }]
+      );
       return;
     }
 
-    onSubmit({ questions, assessment_id: assessmentId });
-    // Reset form
-    setQuestions([
-      {
-        id: generateId(),
-        question_text: "",
-        choices: [
-          { id: generateId(), choice_text: "", is_correct: false },
-          { id: generateId(), choice_text: "", is_correct: false },
-        ],
-      },
-    ]);
-    handleClose();
+    // Show confirmation dialog before submitting
+    Alert.alert(
+      "Submit Questions",
+      "Are you sure you want to submit these questions?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Submit",
+          style: "default",
+          onPress: () => {
+            onSubmit({ questions, assessment_id: assessmentId });
+            // Reset form
+            setQuestions([
+              {
+                id: generateId(),
+                question_text: "",
+                choices: [
+                  { id: generateId(), choice_text: "", is_correct: false },
+                  { id: generateId(), choice_text: "", is_correct: false },
+                ],
+              },
+            ]);
+            handleClose();
+          },
+        },
+      ]
+    );
   }, [questions, onSubmit, handleClose, assessmentId]);
 
   const renderBackdrop = useCallback(
@@ -399,10 +434,19 @@ const CreateQuestionsBottomSheet = forwardRef<
             </View>
           ))}
 
-          <Button type="secondary" onPress={() => handleAddQuestion()} icon={{name: "plus.circle.fill"}}>New Question</Button>
+          <Button
+            type="secondary"
+            onPress={() => handleAddQuestion()}
+            icon={{ name: "plus.circle.fill" }}
+          >
+            New Question
+          </Button>
 
           <View style={styles.buttonContainer}>
-            <ButtonWithDescription description="Please make sure all question and option configure perfectly!">
+            <ButtonWithDescription
+              description="Please make sure all question and option configure perfectly!"
+              onPress={handleCreate}
+            >
               Submit
             </ButtonWithDescription>
           </View>

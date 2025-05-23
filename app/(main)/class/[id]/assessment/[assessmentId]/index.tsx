@@ -44,19 +44,27 @@ export default function AssessmentDetailScreen() {
       </ThemedView>
     );
   }
-  const formatDate = (date: string) => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: "numeric",
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const dateOptions: Intl.DateTimeFormatOptions = {
       month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
+      day: "2-digit", 
+      year: "numeric"
     };
-    return new Date(date).toLocaleString("en-US", options);
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    };
+    
+    return {
+      date: date.toLocaleDateString("en-US", dateOptions),
+      time: date.toLocaleTimeString("en-US", timeOptions)
+    };
   };
 
-  const startDate = formatDate(assessment.start_date);
-  const endDate = formatDate(assessment.end_date);
+  const startDateTime = formatDateTime(assessment.start_date);
+  const endDateTime = formatDateTime(assessment.end_date);
 
   return (
     <ThemedView style={styles.container}>
@@ -69,11 +77,16 @@ export default function AssessmentDetailScreen() {
           flexDirection: "row",
           paddingVertical: 16,
           gap: 12,
-          height: 200,
         }}
       >
-        <DueDateCard startDate={startDate} endDate={endDate} />
-        <CompletedCountCard comletedCount={20} totalCount={13} />
+        <DueDateCard 
+          startTime={startDateTime.time}
+          startDate={startDateTime.date}
+          endTime={endDateTime.time}
+          endDate={endDateTime.date}
+          style={{ flex: 1 }}
+        />
+        <CompletedCountCard comletedCount={20} totalCount={13} style={{flex: 1}} />
       </View>
       <View>
         <TimeRemainingCard duration={assessment.duration} />

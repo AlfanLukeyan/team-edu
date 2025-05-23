@@ -2,7 +2,7 @@ import { SubmissionCard } from "@/components/SubmissionCard";
 import { ThemedView } from "@/components/ThemedView";
 import { response } from "@/data/response";
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { FlatList, StyleSheet } from "react-native";
 
 export default function SubmissionsTab() {
   const [submissions, setSubmissions] = useState(response.getAllSubmissions.data);
@@ -11,26 +11,41 @@ export default function SubmissionsTab() {
     setSubmissions(submissions.filter(submission => submission.id !== id));
   };
 
+  type Submission = {
+    id: string;
+    user_profile_url: string;
+    user_name: string;
+    user_id: string;
+    time_remaining: number;
+    status: string;
+    score: number;
+    total_score: number;
+  };
+
+  const renderSubmission = ({ item }: { item: Submission }) => (
+    <SubmissionCard
+      id={item.id}
+      user_profile_url={item.user_profile_url}
+      user_name={item.user_name}
+      user_id={item.user_id}
+      time_remaining={item.time_remaining}
+      status={item.status}
+      score={item.score}
+      total_score={item.total_score}
+      onDelete={handleDeleteSubmission}
+    />
+  );
+
   return (
     <ThemedView style={styles.container}>
-      <ScrollView style={{ flex: 1 }}>
-        <View style={{ gap: 8, paddingVertical: 8 }}>
-          {submissions.map((submission) => (
-            <SubmissionCard
-              key={submission.id}
-              id={submission.id}
-              user_profile_url={submission.user_profile_url}
-              user_name={submission.user_name}
-              user_id={submission.user_id}
-              time_remaining={submission.time_remaining}
-              status={submission.status}
-              score={submission.score}
-              total_score={submission.total_score}
-              onDelete={handleDeleteSubmission}
-            />
-          ))}
-        </View>
-      </ScrollView>
+      <FlatList
+        data={submissions}
+        renderItem={renderSubmission}
+        keyExtractor={(item) => item.id}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      />
     </ThemedView>
   );
 }
@@ -38,5 +53,13 @@ export default function SubmissionsTab() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    gap: 8,
+    paddingVertical: 8,
+    paddingBottom: 20,
   },
 });
