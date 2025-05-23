@@ -1,4 +1,4 @@
-import { Button } from "@/components/teacher/Button";
+import { Button } from "@/components/Button";
 import ThemedBottomSheetTextInput from "@/components/ThemedBottomSheetTextInput";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
@@ -147,56 +147,58 @@ const CreateAssessmentBottomSheet = forwardRef<
               </ThemedText>
               <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Regular" }}>Assessment</ThemedText>
             </View>
+            <View style={{ gap: 8 }}>
+              <ThemedBottomSheetTextInput
+                label="Title"
+                placeholder="Enter assessment title"
+                value={formData.title}
+                onChangeText={(value) => handleFieldChange("title", value)}
+              />
 
-            <ThemedBottomSheetTextInput
-              label="Title"
-              placeholder="Enter assessment title"
-              value={formData.title}
-              onChangeText={(value) => handleFieldChange("title", value)}
-            />
+              <ThemedBottomSheetTextInput
+                label="Description"
+                placeholder="Enter assessment description"
+                multiline
+                numberOfLines={4}
+                value={formData.description}
+                onChangeText={(value) => handleFieldChange("description", value)}
+              />
 
-            <ThemedBottomSheetTextInput
-              label="Description"
-              placeholder="Enter assessment description"
-              multiline
-              numberOfLines={4}
-              value={formData.description}
-              onChangeText={(value) => handleFieldChange("description", value)}
-            />
+              <View>
+                <ThemedText style={styles.label}>Start Date</ThemedText>
+                <Pressable
+                  style={{ borderColor: theme === "light" ? Colors.light.border : Colors.dark.border, borderWidth: 1, borderRadius: 15, paddingVertical: 10, paddingHorizontal: 16 }}
+                  onPress={() => startDateRef.current?.open()}
+                >
+                  <ThemedText type="placeholder">
+                    {formData.start_date ? formatDate(formData.start_date) : 'Select start date'}
+                  </ThemedText>
+                </Pressable>
+              </View>
 
-            <View style={styles.fieldContainer}>
-              <ThemedText style={styles.label}>Start Date</ThemedText>
-              <Pressable
-                style={{borderColor: theme === "light" ? Colors.light.border : Colors.dark.border, borderWidth: 1, borderRadius: 15, paddingVertical: 10, paddingHorizontal: 16}}
-                onPress={() => startDateRef.current?.open()}
-              >
-                <ThemedText type="placeholder">
-                  {formData.start_date ? formatDate(formData.start_date) : 'Select start date'}
-                </ThemedText>
-              </Pressable>
+              <View>
+                <ThemedText style={styles.label}>End Date</ThemedText>
+                <Pressable
+                  style={{ borderColor: theme === "light" ? Colors.light.border : Colors.dark.border, borderWidth: 1, borderRadius: 15, paddingVertical: 10, paddingHorizontal: 16 }}
+                  onPress={() => endDateRef.current?.open()}
+                >
+                  <ThemedText type="placeholder">
+                    {formData.end_date ? formatDate(formData.end_date) : 'Empty'}
+                  </ThemedText>
+                </Pressable>
+              </View>
+
+              <ThemedBottomSheetTextInput
+                label="Duration (minutes)"
+                placeholder="Enter duration in minutes"
+                keyboardType="numeric"
+                value={formData.duration}
+                onChangeText={(value) => handleFieldChange("duration", value)}
+              />
+
+              <Button onPress={handleSubmit}>Create Assessment</Button>
             </View>
 
-            <View style={styles.fieldContainer}>
-              <ThemedText style={styles.label}>End Date</ThemedText>
-              <Pressable
-                style={{borderColor: theme === "light" ? Colors.light.border : Colors.dark.border, borderWidth: 1, borderRadius: 15, paddingVertical: 10, paddingHorizontal: 16}}
-                onPress={() => endDateRef.current?.open()}
-              >
-                <ThemedText type="placeholder">
-                  {formData.end_date ? formatDate(formData.end_date) : 'Empty'}
-                </ThemedText>
-              </Pressable>
-            </View>
-
-            <ThemedBottomSheetTextInput
-              label="Duration (minutes)"
-              placeholder="Enter duration in minutes"
-              keyboardType="numeric"
-              value={formData.duration}
-              onChangeText={(value) => handleFieldChange("duration", value)}
-            />
-
-            <Button onPress={handleSubmit}>Create Assessment</Button>
           </View>
         </BottomSheetView>
       </BottomSheetModal>
@@ -219,7 +221,7 @@ const CreateAssessmentBottomSheet = forwardRef<
 
 const styles = StyleSheet.create({
   contentContainer: { flex: 1, padding: 0 },
-  innerContainer: {paddingHorizontal: 25 },
+  innerContainer: { paddingHorizontal: 25 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -227,10 +229,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     gap: 4,
   },
-  fieldContainer: {
-    marginBottom: 16,
-  },
   label: {
+    fontFamily: "Poppins-SemiBold",
     marginBottom: 4,
   },
   dateButton: {

@@ -1,4 +1,4 @@
-import { Button } from "@/components/teacher/Button";
+import { Button } from "@/components/Button";
 import { ThemedView } from "@/components/ThemedView";
 import { WeeklyCard } from "@/components/WeeklyCard";
 import { response } from "@/data/response";
@@ -15,7 +15,6 @@ export default function WeeklyTab({ onCreatePress }: TabContentProps) {
         contentContainerStyle={styles.contentContainer}
       >
         <Button
-          icon="plus"
           onPress={onCreatePress}
         >
           Create Weekly Section

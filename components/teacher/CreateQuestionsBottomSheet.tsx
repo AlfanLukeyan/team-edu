@@ -1,4 +1,4 @@
-import { Button } from "@/components/teacher/Button";
+import { Button } from "@/components/Button";
 import ThemedBottomSheetTextInput from "@/components/ThemedBottomSheetTextInput";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -20,6 +20,7 @@ import {
   useState,
 } from "react";
 import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ButtonWithDescription } from "../ButtonWithDescription";
 import { ThemedView } from "../ThemedView";
 
 const generateId = () => {
@@ -153,11 +154,11 @@ const CreateQuestionsBottomSheet = forwardRef<
       prevQuestions.map((q) =>
         q.id === questionId
           ? {
-            ...q,
-            choices: q.choices.map((c) =>
-              c.id === choiceId ? { ...c, choice_text: text } : c
-            ),
-          }
+              ...q,
+              choices: q.choices.map((c) =>
+                c.id === choiceId ? { ...c, choice_text: text } : c
+              ),
+            }
           : q
       )
     );
@@ -169,13 +170,13 @@ const CreateQuestionsBottomSheet = forwardRef<
       prevQuestions.map((q) =>
         q.id === questionId
           ? {
-            ...q,
-            choices: q.choices.map((c) =>
-              c.id === choiceId
-                ? { ...c, is_correct: true }
-                : { ...c, is_correct: false }
-            ),
-          }
+              ...q,
+              choices: q.choices.map((c) =>
+                c.id === choiceId
+                  ? { ...c, is_correct: true }
+                  : { ...c, is_correct: false }
+              ),
+            }
           : q
       )
     );
@@ -187,12 +188,12 @@ const CreateQuestionsBottomSheet = forwardRef<
       prevQuestions.map((q) =>
         q.id === questionId
           ? {
-            ...q,
-            choices: [
-              ...q.choices,
-              { id: generateId(), choice_text: "", is_correct: false },
-            ],
-          }
+              ...q,
+              choices: [
+                ...q.choices,
+                { id: generateId(), choice_text: "", is_correct: false },
+              ],
+            }
           : q
       )
     );
@@ -204,9 +205,9 @@ const CreateQuestionsBottomSheet = forwardRef<
       prevQuestions.map((q) =>
         q.id === questionId
           ? {
-            ...q,
-            choices: q.choices.filter((c) => c.id !== choiceId),
-          }
+              ...q,
+              choices: q.choices.filter((c) => c.id !== choiceId),
+            }
           : q
       )
     );
@@ -273,34 +274,35 @@ const CreateQuestionsBottomSheet = forwardRef<
                 <View
                   style={{ flexDirection: "row", alignItems: "flex-start" }}
                 >
-                  <View
-                    style={{
-                      backgroundColor:
-                        theme === "dark"
-                          ? Colors.light.background
-                          : Colors.dark.background,
-                      borderRadius: 12,
-                      paddingHorizontal: 14,
-                      paddingTop: 4,
-                      marginTop: 2,
-                      marginRight: 16,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <ThemedText
-                      type="defaultSemiBold"
+                  <View style={{ paddingRight: 4 }}>
+                    <View
                       style={{
-                        textAlign: "center",
-                        alignItems: "center",
-                        color:
+                        backgroundColor:
                           theme === "dark"
-                            ? Colors.light.text
-                            : Colors.dark.text,
+                            ? Colors.light.background
+                            : Colors.dark.background,
+                        borderRadius: 12,
+                        paddingHorizontal: 14,
+                        paddingTop: 4,
+                        marginTop: 2,
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      {questionIndex + 1}
-                    </ThemedText>
+                      <ThemedText
+                        type="defaultSemiBold"
+                        style={{
+                          textAlign: "center",
+                          alignItems: "center",
+                          color:
+                            theme === "dark"
+                              ? Colors.light.text
+                              : Colors.dark.text,
+                        }}
+                      >
+                        {questionIndex + 1}
+                      </ThemedText>
+                    </View>
                   </View>
                   <ThemedBottomSheetTextInput
                     placeholder="Enter your question"
@@ -319,9 +321,13 @@ const CreateQuestionsBottomSheet = forwardRef<
                       <Pressable
                         style={[
                           styles.checkboxContainer,
-                          choice.is_correct ? styles.checkedContainer : styles.checkbox
+                          choice.is_correct
+                            ? styles.checkedContainer
+                            : styles.checkbox,
                         ]}
-                        onPress={() => handleToggleCorrect(question.id, choice.id)}
+                        onPress={() =>
+                          handleToggleCorrect(question.id, choice.id)
+                        }
                       >
                         {choice.is_correct && (
                           <IconSymbol
@@ -358,7 +364,9 @@ const CreateQuestionsBottomSheet = forwardRef<
                         // Not last choice and more than minimum - show delete button
                         <TouchableOpacity
                           style={styles.actionButton}
-                          onPress={() => handleRemoveChoice(question.id, choice.id)}
+                          onPress={() =>
+                            handleRemoveChoice(question.id, choice.id)
+                          }
                         >
                           <IconSymbol
                             name="minus.circle.fill"
@@ -379,16 +387,24 @@ const CreateQuestionsBottomSheet = forwardRef<
                     </View>
                   ))}
                 </View>
+                <Button
+                  type="delete"
+                  disabled={questions.length <= 1}
+                  icon={{ name: "trash.circle.fill" }}
+                  onPress={() => handleRemoveQuestion(question.id)}
+                >
+                  Delete
+                </Button>
               </ThemedView>
             </View>
           ))}
 
-          <Button
-            onPress={() => handleAddQuestion()}
-          >Add New Questions</Button>
+          <Button type="secondary" onPress={() => handleAddQuestion()} icon={{name: "plus.circle.fill"}}>New Question</Button>
 
           <View style={styles.buttonContainer}>
-            <Button onPress={handleCreate}>Save Questions</Button>
+            <ButtonWithDescription description="Please make sure all question and option configure perfectly!">
+              Submit
+            </ButtonWithDescription>
           </View>
         </View>
       </BottomSheetScrollView>

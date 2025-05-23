@@ -1,6 +1,6 @@
 import { AssessmentCard } from "@/components/AssesmentCard";
+import { Button } from "@/components/Button";
 import { ThemedView } from "@/components/ThemedView";
-import { Button } from "@/components/teacher/Button";
 import { response } from "@/data/response";
 import { TabContentProps } from "@/types/common";
 import { useRouter } from "expo-router";
@@ -26,7 +26,6 @@ export default function AssessmentsTab({ onCreatePress }: TabContentProps) {
         contentContainerStyle={styles.contentContainer}
       >
         <Button 
-          icon="plus" 
           onPress={onCreatePress}
         >
           Create Assessment

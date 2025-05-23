@@ -1,4 +1,4 @@
-import { Button } from "@/components/teacher/Button";
+import { Button } from "@/components/Button";
 import ThemedBottomSheetTextInput from "@/components/ThemedBottomSheetTextInput";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
@@ -83,11 +83,13 @@ const CreateWeeklySectionBottomSheet = forwardRef<
       backdropComponent={renderBackdrop}
       enablePanDownToClose
       handleIndicatorStyle={{
-        backgroundColor: theme === "dark" ? Colors.dark.text : Colors.light.text,
+        backgroundColor:
+          theme === "dark" ? Colors.dark.text : Colors.light.text,
         opacity: 0.5,
       }}
       backgroundStyle={{
-        backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background,
+        backgroundColor:
+          theme === "dark" ? Colors.dark.background : Colors.light.background,
       }}
     >
       <BottomSheetView style={styles.contentContainer}>
@@ -96,31 +98,33 @@ const CreateWeeklySectionBottomSheet = forwardRef<
             <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Bold" }}>
               Create
             </ThemedText>
-            <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Regular" }}>Weekly Section</ThemedText>
+            <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Regular" }}>
+              Weekly Section
+            </ThemedText>
           </View>
-
-          <ThemedBottomSheetTextInput
-            label="Title"
-            placeholder="Title"
-            value={title}
-            onChangeText={setTitle}
-          />
-          <ThemedBottomSheetTextInput
-            label="Description"
-            placeholder="Description"
-            multiline
-            numberOfLines={3}
-            value={description}
-            onChangeText={setDescription}
-          />
-          <ThemedBottomSheetTextInput
-            label="Video URL"
-            placeholder="Video URL (optional)"
-            value={videoUrl}
-            onChangeText={setVideoUrl}
-          />
-
+          <View style={{ gap: 8}}>
+            <ThemedBottomSheetTextInput
+              label="Title"
+              placeholder="Title"
+              value={title}
+              onChangeText={setTitle}
+            />
+            <ThemedBottomSheetTextInput
+              label="Description"
+              placeholder="Description"
+              multiline
+              numberOfLines={3}
+              value={description}
+              onChangeText={setDescription}
+            />
+            <ThemedBottomSheetTextInput
+              label="Video URL"
+              placeholder="Video URL (optional)"
+              value={videoUrl}
+              onChangeText={setVideoUrl}
+            />
           <Button onPress={handleCreate}>Create</Button>
+          </View>
         </View>
       </BottomSheetView>
     </BottomSheetModal>
@@ -129,7 +133,7 @@ const CreateWeeklySectionBottomSheet = forwardRef<
 
 const styles = StyleSheet.create({
   contentContainer: { flex: 1, padding: 0 },
-  innerContainer: { flex: 1, paddingHorizontal: 25 },
+  innerContainer: { paddingHorizontal: 25 },
   header: {
     flexDirection: "row",
     alignItems: "center",
