@@ -32,6 +32,12 @@ const MAPPING = {
   'calendar.and.person': 'event',
   'calendar.badge.checkmark': 'event-note',
   'arrow.right': 'arrow-forward',
+  'eye.slash.circle.fill': 'visibility-off',
+  'eye.circle.fill': 'visibility',
+  'left.circle.fill': 'arrow-back',
+  'lock.circle.fill': 'lock',
+  'phone.fill': 'phone',
+  'mail.fill': 'email',
 } as IconMapping;
 
 /**

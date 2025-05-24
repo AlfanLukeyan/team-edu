@@ -93,14 +93,12 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    flex: 1,
     padding: 8,
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
   },
   content: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
   },

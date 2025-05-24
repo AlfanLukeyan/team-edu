@@ -3,9 +3,10 @@ import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { ErrorModalEmitter } from "@/services/api_services";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import PagerView from 'react-native-pager-view';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -33,6 +34,10 @@ export default function OnboardingScreen() {
     const theme = useColorScheme() || "light";
     const [currentIndex, setCurrentIndex] = useState(0);
     const router = useRouter();
+
+    const testErrorModal = useCallback(() => {
+        ErrorModalEmitter.emit("SHOW_ERROR", "This is a test error message for the modal!");
+    }, []);
 
     const renderSlide = (slide: typeof ONBOARDING_SLIDES[0], key: string) => (
         <View key={key} style={styles.slide}>
@@ -65,13 +70,13 @@ export default function OnboardingScreen() {
     return (
         <ThemedView style={[styles.container, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}>
             <ThemedView isCard style={styles.card}>
-                <PagerView 
-                    style={styles.pagerView} 
+                <PagerView
+                    style={styles.pagerView}
                     onPageSelected={(e) => setCurrentIndex(e.nativeEvent.position)}
                 >
                     {ONBOARDING_SLIDES.map((slide, i) => renderSlide(slide, String(i + 1)))}
                 </PagerView>
-                
+
                 <View style={styles.pagination}>
                     {ONBOARDING_SLIDES.map((_, i) => renderDot(i))}
                 </View>
@@ -104,7 +109,7 @@ const styles = StyleSheet.create({
     card: {
         flex: 1,
         padding: 16,
-        borderRadius: 15,
+        borderRadius: 30,
         alignItems: "center",
         justifyContent: "center",
     },
