@@ -31,6 +31,7 @@ const MAPPING = {
   'plus.circle.fill': 'add-circle',
   'calendar.and.person': 'event',
   'calendar.badge.checkmark': 'event-note',
+  'arrow.right': 'arrow-forward',
 } as IconMapping;
 
 /**
