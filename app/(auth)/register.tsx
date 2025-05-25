@@ -1,5 +1,4 @@
 import { useAuth } from "@/hooks/useAuth";
-import { ErrorModalEmitter } from "@/services/api_services";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -32,30 +31,31 @@ export default function RegisterScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!name || !phone || !email || !password || !confirmPassword) {
-      ErrorModalEmitter.emit("SHOW_ERROR", "Please fill in all fields");
-      return;
-    }
+    router.push("/(auth)/face_registration");
+    // if (!name || !phone || !email || !password || !confirmPassword) {
+    //   ErrorModalEmitter.emit("SHOW_ERROR", "Please fill in all fields");
+    //   return;
+    // }
 
-    if (password !== confirmPassword) {
-      ErrorModalEmitter.emit("SHOW_ERROR", "Passwords do not match");
-      return;
-    }
+    // if (password !== confirmPassword) {
+    //   ErrorModalEmitter.emit("SHOW_ERROR", "Passwords do not match");
+    //   return;
+    // }
 
-    if (password.length < 6) {
-      ErrorModalEmitter.emit("SHOW_ERROR", "Password must be at least 6 characters");
-      return;
-    }
+    // if (password.length < 6) {
+    //   ErrorModalEmitter.emit("SHOW_ERROR", "Password must be at least 6 characters");
+    //   return;
+    // }
 
-    setIsLoading(true);
-    try {
-      // await registerUser(email, password);
-      router.push("/(auth)/face_registration");
-    } catch (error) {
-      ErrorModalEmitter.emit("SHOW_ERROR", "Registration failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    // setIsLoading(true);
+    // try {
+    //   // await registerUser(email, password);
+    //   router.push("/(auth)/face_registration");
+    // } catch (error) {
+    //   ErrorModalEmitter.emit("SHOW_ERROR", "Registration failed. Please try again.");
+    // } finally {
+    //   setIsLoading(false);
+    // }
   };
 
   return (

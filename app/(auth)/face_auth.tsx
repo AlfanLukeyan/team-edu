@@ -3,9 +3,14 @@ import { ButtonWithDescription } from "@/components/ButtonWithDescription";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ErrorModalEmitter } from "@/services/api_services";
+import {
+  restoreBrightness,
+  setMaxBrightness,
+  simulateSuccessWithDelay
+} from "@/utils/utils";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -16,6 +21,38 @@ export default function FaceAuthScreen() {
   
   const [permission, requestPermission] = useCameraPermissions();
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setMaxBrightness();
+    
+    return () => {
+      restoreBrightness();
+    };
+  }, []);
+
+  const handleVerify = async () => {
+    if (!cameraRef.current) return;
+
+    setIsLoading(true);
+    try {
+      const photo = await cameraRef.current.takePictureAsync({
+        shutterSound: false,
+      });
+      
+      console.log("Photo taken:", photo);
+
+      simulateSuccessWithDelay(() => {
+        ErrorModalEmitter.emit("SHOW_ERROR", "Face verification successful!");
+        setIsLoading(false);
+        router.replace("/(main)/(tabs)");
+      });
+      
+    } catch (error) {
+      console.error("Error taking picture:", error);
+      ErrorModalEmitter.emit("SHOW_ERROR", "Failed to capture image. Please try again.");
+      setIsLoading(false);
+    }
+  };
 
   if (!permission?.granted) {
     return (
@@ -35,29 +72,6 @@ export default function FaceAuthScreen() {
     );
   }
 
-  const handleVerify = async () => {
-    if (!cameraRef.current) return;
-
-    setIsLoading(true);
-    try {
-      const photo = await cameraRef.current.takePictureAsync({
-        shutterSound: false,
-      });
-      console.log("Photo taken:", photo);
-
-      
-      setTimeout(() => {
-        ErrorModalEmitter.emit("SHOW_ERROR", "Face verification successful!");
-        setIsLoading(false);
-        router.replace("/(main)/(tabs)");
-      }, 1000);
-      
-    } catch (error) {
-      ErrorModalEmitter.emit("SHOW_ERROR", "Failed to capture image. Please try again.");
-      setIsLoading(false);
-    }
-  };
-
   return (
     <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -65,21 +79,32 @@ export default function FaceAuthScreen() {
       </View>
 
       <View style={styles.cameraContainer}>
-        <CameraView ref={cameraRef} style={styles.camera} facing="front" flash="on" focusable={true}>
-          <View style={styles.overlay}>
-            <View style={styles.faceOutline} />
-          </View>
-        </CameraView>
+        <CameraView 
+          ref={cameraRef} 
+          style={styles.camera} 
+          facing="front" 
+          ratio="1:1" 
+          pictureSize="1088x1088"
+          autofocus="on" 
+        />
+        <View style={styles.overlay}>
+          <View style={styles.faceOutline} />
+        </View>
       </View>
 
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 20 }]}>
-      <ButtonWithDescription description="Ready for the flash, then tap the verify button!" onPress={handleVerify} disabled={isLoading}>
-        {isLoading ? "Verifying..." : "Verify"}
-      </ButtonWithDescription>
+        <ButtonWithDescription 
+          description="Ready for the flash, then tap the verify button!" 
+          onPress={handleVerify} 
+          disabled={isLoading}
+        >
+          {isLoading ? "Verifying..." : "Verify"}
+        </ButtonWithDescription>
       </View>
     </ThemedView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -99,28 +124,31 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   header: {
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     padding: 20,
   },
   cameraContainer: {
-    flex: 1,
-    margin: 20,
+    aspectRatio: 1,
+    marginHorizontal: 20,
     borderRadius: 20,
     overflow: "hidden",
+    position: "relative",
   },
   camera: {
     flex: 1,
   },
   overlay: {
-    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: "center",
     alignItems: "center",
   },
   faceOutline: {
-    width: 200,
-    height: 250,
+    width: 150,
+    height: 200,
     borderRadius: 100,
     borderWidth: 3,
     borderColor: "white",
@@ -128,10 +156,5 @@ const styles = StyleSheet.create({
   },
   bottom: {
     padding: 20,
-    gap: 20,
-  },
-  instruction: {
-    textAlign: "center",
-    opacity: 0.8,
   },
 });

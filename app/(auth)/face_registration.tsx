@@ -1,23 +1,102 @@
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Button } from "@/components/Button";
 import { ButtonWithDescription } from "@/components/ButtonWithDescription";
+import { RegistrationProgress } from "@/components/RegistrationProgress";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ErrorModalEmitter } from "@/services/api_services";
-import { CameraView, useCameraPermissions } from "expo-camera";
-import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { restoreBrightness, setMaxBrightness, simulateSuccessWithDelay } from "@/utils/utils";
+
+const FACE_REGISTRATION_CONFIG = {
+  TOTAL_STEPS: 3,
+  PROCESSING_DELAY: 500,
+} as const;
+
+const STEP_INSTRUCTIONS = [
+  {
+    image: require('@/assets/images/step_1_instruction.png'),
+    desc: "Look straight at the camera"
+  },
+  {
+    image: require('@/assets/images/step_2_instruction.png'),
+    desc: "Turn your head slightly to the left"
+  },
+  {
+    image: require('@/assets/images/step_3_instruction.png'),
+    desc: "Turn your head slightly to the right"
+  }
+];
 
 export default function FaceRegistrationScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const cameraRef = useRef<CameraView>(null);
-  
+  const [optimalPictureSize, setOptimalPictureSize] = useState<string>('medium');
+
   const [permission, requestPermission] = useCameraPermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
+
+  useEffect(() => {
+    setMaxBrightness();
+    return () => {
+      restoreBrightness();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (capturedPhotos.length === FACE_REGISTRATION_CONFIG.TOTAL_STEPS) {
+      handleRegistrationComplete();
+    }
+  }, [capturedPhotos]);
+
+  const handleRegistrationComplete = useCallback(() => {
+    simulateSuccessWithDelay(() => {
+      ErrorModalEmitter.emit("SHOW_ERROR", "Face registration completed successfully!");
+      router.replace("/(auth)/login");
+    }, FACE_REGISTRATION_CONFIG.PROCESSING_DELAY);
+  }, [router]);
+
+  const handleTakePicture = useCallback(async () => {
+    if (!cameraRef.current || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const photo = await cameraRef.current.takePictureAsync({
+        shutterSound: false,
+      });
+      console.log("Photo taken:", photo);
+
+      const newPhotos = [...capturedPhotos, photo.uri];
+      setCapturedPhotos(newPhotos);
+
+      if (currentStep < FACE_REGISTRATION_CONFIG.TOTAL_STEPS) {
+        setCurrentStep(prev => prev + 1);
+        ErrorModalEmitter.emit("SHOW_ERROR",
+          `Photo ${currentStep} captured! Now step ${currentStep + 1} of ${FACE_REGISTRATION_CONFIG.TOTAL_STEPS}`
+        );
+      } else {
+        ErrorModalEmitter.emit("SHOW_ERROR", "Processing images...");
+      }
+    } catch (error) {
+      console.error("Error taking picture:", error);
+      ErrorModalEmitter.emit("SHOW_ERROR", "Failed to capture image. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cameraRef, isLoading, currentStep, capturedPhotos, optimalPictureSize]);
+
+  const resetRegistration = useCallback(() => {
+    setCurrentStep(1);
+    setCapturedPhotos([]);
+    setIsLoading(false);
+  }, []);
 
   if (!permission?.granted) {
     return (
@@ -37,104 +116,55 @@ export default function FaceRegistrationScreen() {
     );
   }
 
-  const getStepInstruction = () => {
-    switch (currentStep) {
-      case 1:
-        return "Look straight at the camera";
-      case 2:
-        return "Turn your head slightly to the left";
-      case 3:
-        return "Turn your head slightly to the right";
-      default:
-        return "Position your face in the circle";
-    }
-  };
-
-  const handleTakePicture = async () => {
-    if (!cameraRef.current) return;
-
-    setIsLoading(true);
-    try {
-      const photo = await cameraRef.current.takePictureAsync({
-        shutterSound: false,
-        quality: 0.8,
-      });
-      
-      console.log(`Photo ${currentStep} taken:`, photo.uri);
-      
-      const newPhotos = [...capturedPhotos, photo.uri];
-      setCapturedPhotos(newPhotos);
-      
-      if (currentStep < 3) {
-        setCurrentStep(currentStep + 1);
-        ErrorModalEmitter.emit("SHOW_ERROR", `Photo ${currentStep} captured! Now step ${currentStep + 1} of 3`);
-      } else {
-        ErrorModalEmitter.emit("SHOW_ERROR", "Face registration completed successfully!");
-        console.log("All photos captured:", newPhotos);
-        
-        setTimeout(() => {
-          router.replace("/(auth)/login");
-        }, 2000);
-      }
-      
-    } catch (error) {
-      console.error("Error taking picture:", error);
-      ErrorModalEmitter.emit("SHOW_ERROR", "Failed to capture image. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header */}
       <View style={styles.header}>
         <ThemedText type="title">Face Registration</ThemedText>
       </View>
 
-      {/* <View style={styles.stepContainer}>
-        <ThemedText type="defaultSemiBold" style={styles.stepText}>
-          Step {currentStep} of 3
-        </ThemedText>
-        <ThemedText style={styles.instructionText}>
-          {getStepInstruction()}
-        </ThemedText>
-      </View>
+      {/* Progress Indicator */}
+      <RegistrationProgress 
+        steps={STEP_INSTRUCTIONS}
+        currentStep={currentStep}
+        completedSteps={capturedPhotos.length}
+      />
 
-      <View style={styles.progressContainer}>
-        {[1, 2, 3].map((step) => (
-          <View
-            key={step}
-            style={[
-              styles.progressDot,
-              {
-                backgroundColor: step <= currentStep 
-                  ? capturedPhotos.length >= step 
-                    ? "#4CAF50" // Green for completed
-                    : "#2196F3" // Blue for current
-                  : "#E0E0E0" // Gray for pending
-              }
-            ]}
-          />
-        ))}
-      </View> */}
-
+      {/* Camera Section */}
       <View style={styles.cameraContainer}>
-        <CameraView ref={cameraRef} style={styles.camera} facing="front" />
-        
-        {/* Overlay positioned absolutely over the camera */}
+        <CameraView
+          ref={cameraRef}
+          style={styles.camera}
+          facing="front"
+          ratio="1:1"
+          pictureSize='1088x1088'
+        />
         <View style={styles.overlay}>
           <View style={styles.faceOutline} />
         </View>
       </View>
 
+      {/* Bottom Actions */}
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 20 }]}>
-        <ButtonWithDescription 
-          description={`Capture photo ${currentStep} of 3 for face registration`}
-          onPress={handleTakePicture} 
+        <ButtonWithDescription
+          description={`Capture photo ${currentStep} of ${FACE_REGISTRATION_CONFIG.TOTAL_STEPS} for face registration`}
+          onPress={handleTakePicture}
           disabled={isLoading}
         >
-          {isLoading ? "Taking Picture..." : "Take Picture"}
+          {isLoading ?
+            (capturedPhotos.length === FACE_REGISTRATION_CONFIG.TOTAL_STEPS ? "Processing..." : "Taking Picture...")
+            : "Take Picture"
+          }
         </ButtonWithDescription>
+
+        {capturedPhotos.length > 0 && (
+          <Button
+            onPress={resetRegistration}
+            style={styles.resetButton}
+          >
+            Start Over
+          </Button>
+        )}
       </View>
     </ThemedView>
   );
@@ -161,36 +191,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
   },
-  stepContainer: {
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 10,
-  },
-  stepText: {
-    fontSize: 18,
-    marginBottom: 8,
-  },
-  instructionText: {
-    textAlign: "center",
-    opacity: 0.8,
-    fontSize: 16,
-  },
-  progressContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    gap: 12,
-  },
-  progressDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
   cameraContainer: {
-    flex: 1,
-    margin: 20,
+    marginHorizontal: 20,
+    aspectRatio: 1,
     borderRadius: 20,
     overflow: "hidden",
     position: "relative",
@@ -208,8 +211,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   faceOutline: {
-    width: 200,
-    height: 250,
+    width: 150,
+    height: 200,
     borderRadius: 100,
     borderWidth: 3,
     borderColor: "white",
@@ -219,7 +222,7 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 15,
   },
-  skipButton: {
+  resetButton: {
     marginTop: 10,
   },
 });
