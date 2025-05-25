@@ -21,7 +21,7 @@ export default function ClassesScreen() {
             classCode={classItem.class_code}
             description={classItem.desc}
             onPress={() => router.push({
-              pathname: "/(main)/class/[id]",
+              pathname: "/(class)/(tabs)",
               params: { id: classItem.id },
             })}
           />

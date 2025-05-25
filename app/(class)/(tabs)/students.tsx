@@ -1,12 +1,12 @@
-import { StudentCard } from "@/components/StudentCard";
-import { ThemedView } from "@/components/ThemedView";
+import { StudentCard } from '@/components/StudentCard';
+import { ThemedView } from '@/components/ThemedView';
 import { response } from "@/data/response";
-import { useState } from "react";
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet } from "react-native";
 
-export default function StudentsTab() {
+const StudentsScreen = () => {
   const [students, setStudents] = useState(response.getAllStudentsByClassId.data);
-  
+
   return (
     <ThemedView style={styles.container}>
       <ScrollView
@@ -22,7 +22,7 @@ export default function StudentsTab() {
         ))}
       </ScrollView>
     </ThemedView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -31,6 +31,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    padding: 16,
+    borderRadius: 15,
+    margin: 16,
   },
 });
+
+export default StudentsScreen;

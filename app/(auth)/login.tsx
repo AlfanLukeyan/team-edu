@@ -38,7 +38,7 @@ export default function LoginScreen() {
     try {
       const userData = await loginUser(email, password);
       if (userData) {
-        router.replace("/(main)/(tabs)");
+        router.replace("/(main)");
       } else {
         router.replace("/(auth)/warning_screen");
       }

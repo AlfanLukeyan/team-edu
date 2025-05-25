@@ -25,7 +25,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
     const renderRightActions = () => {
         return (
-            <View style={{ flexDirection: 'row' }}>
+            <View style={{ flexDirection: 'row', marginRight: 16, alignItems: 'center' }}>
                 <TouchableOpacity
                     onPress={() => onEdit?.(id)}
                 >
@@ -80,6 +80,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
 const styles = StyleSheet.create({
     container: {
+        marginHorizontal: 16,
         paddingVertical: 8,
         paddingHorizontal: 16,
         borderRadius: 12,

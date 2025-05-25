@@ -12,7 +12,7 @@ type RouteParams = {
   };
 };
 
-export default function ClassDetailLayout() {
+export default function ClassLayout() {
   const { id } = useLocalSearchParams();
   const colorScheme = useColorScheme();
   const router = useRouter();
@@ -46,43 +46,19 @@ export default function ClassDetailLayout() {
       }}
     >
       <Stack.Screen
-        name="index"
+        name="(tabs)"
         options={{
-          title: "Class Details",
+          title: className,
           headerShown: true,
           headerLeft: () => (
             <TouchableOpacity 
               onPress={() => {
-                router.navigate('/(main)/(tabs)/classes');
+                router.navigate('/(main)/classes');
               }}
             >
               <IconSymbol name="chevron.left" size={24} color={Colors[colorScheme ?? 'light'].tint} />
             </TouchableOpacity>
           ),
-        }}
-      />
-      <Stack.Screen
-        name="assessment/[assessmentId]/index"
-        options={{
-            title: 'Assessment Details',
-            headerShown: true,
-            animation: 'slide_from_right',
-        }}
-      />
-      <Stack.Screen
-        name="assignment/[assignmentId]/index"
-        options={({ route }: { route: RouteParams }) => {
-          const assignmentId = route?.params?.assignmentId;
-          const weekData = assignmentId ?
-            response.getWeeklyContent.data.find(
-              (week) => week.id === assignmentId
-            ) : null;
-
-          return {
-            title: weekData?.assignment?.title || 'Assignment',
-            headerShown: true,
-            presentation: 'modal',
-          };
         }}
       />
     </Stack>

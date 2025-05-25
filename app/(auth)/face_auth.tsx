@@ -44,7 +44,7 @@ export default function FaceAuthScreen() {
       simulateSuccessWithDelay(() => {
         ErrorModalEmitter.emit("SHOW_ERROR", "Face verification successful!");
         setIsLoading(false);
-        router.replace("/(main)/(tabs)");
+        router.replace("/(main)");
       });
       
     } catch (error) {
