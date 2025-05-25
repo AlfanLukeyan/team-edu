@@ -1,11 +1,19 @@
 import { QuestionCard } from "@/components/QuestionCard";
 import { ThemedView } from "@/components/ThemedView";
 import { response } from "@/data/response";
-import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
-export default function QuestionsTab() {
+export default function QuestionsScreen() {
+    const params = useLocalSearchParams();
+    const assessmentId = params.id as string;
+    
     const [questions, setQuestions] = useState(response.getAssessmentById.data);
+    
+    useEffect(() => {
+        console.log('QuestionsScreen mounted with params:', params)
+    }, [params])
     
     const handleDeleteQuestion = (id: string) => {
         setQuestions(questions.filter(question => question.id !== id));
@@ -13,8 +21,8 @@ export default function QuestionsTab() {
 
     return (
         <ThemedView style={styles.container}>
-            <ScrollView style={{ flex: 1 }}>
-                <View style={{ gap: 8, paddingVertical: 8 }}>
+            <ScrollView style={{ flex: 1, borderRadius: 15 }}>
+                <View style={{ gap: 8 }}>
                     {questions.map((question, index) => (
                         <QuestionCard
                             key={question.id}
