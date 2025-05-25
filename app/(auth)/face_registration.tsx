@@ -10,7 +10,7 @@ import { RegistrationProgress } from "@/components/RegistrationProgress";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ErrorModalEmitter } from "@/services/api_services";
-import { restoreBrightness, saveImageToGallery, setMaxBrightness, simulateSuccessWithDelay } from "@/utils/utils";
+import { restoreBrightness, setMaxBrightness, simulateSuccessWithDelay } from "@/utils/utils";
 
 const FACE_REGISTRATION_CONFIG = {
   TOTAL_STEPS: 3,
@@ -72,7 +72,6 @@ export default function FaceRegistrationScreen() {
         shutterSound: false,
       });
       console.log("Photo taken:", photo);
-      saveImageToGallery(photo.uri);
 
       const newPhotos = [...capturedPhotos, photo.uri];
       setCapturedPhotos(newPhotos);

@@ -1,5 +1,5 @@
 import ErrorModal from "@/components/ErrorModal";
-import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { AuthProvider } from "@/hooks/useAuth";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { ErrorModalEmitter } from "@/services/api_services";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -9,35 +9,11 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-
-function InnerLayout() {
-  const { user } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    const inAuthGroup = segments[0] === "(auth)";
-    const inHomeGroup = segments[0] === "(main)";
-
-    console.log("Current segments:", segments, user);
-
-    if (!user && inHomeGroup) {
-      router.replace("/(auth)/onboarding");
-    }
-  }, [user, segments]);
-
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(main)" options={{ headerShown: false }} />
-    </Stack>
-  );
-}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -49,7 +25,6 @@ export default function RootLayout() {
     "Poppins-SemiBold": require("../assets/fonts/Poppins-SemiBold.ttf"),
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
   });
-
 
   useEffect(() => {
     const showError = (message: string) => {
@@ -72,18 +47,15 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-          <StatusBar
-            style={colorScheme === "dark" ? "light" : "dark"}
-          />
+          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
           <AuthProvider>
-            <InnerLayout />
+            <Slot />
           </AuthProvider>
           <ErrorModal
             visible={errorVisible}
             errorMessage={errorMessage}
             onClose={() => setErrorVisible(false)}
           />
-          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </ThemeProvider>

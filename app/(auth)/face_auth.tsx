@@ -5,7 +5,6 @@ import { ThemedView } from "@/components/ThemedView";
 import { ErrorModalEmitter } from "@/services/api_services";
 import {
   restoreBrightness,
-  saveImageToGallery,
   setMaxBrightness,
   simulateSuccessWithDelay
 } from "@/utils/utils";
@@ -41,7 +40,6 @@ export default function FaceAuthScreen() {
       });
       
       console.log("Photo taken:", photo);
-      await saveImageToGallery(photo.uri);
 
       simulateSuccessWithDelay(() => {
         ErrorModalEmitter.emit("SHOW_ERROR", "Face verification successful!");

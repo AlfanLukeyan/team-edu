@@ -36,9 +36,13 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      // await loginUser(email, password);
-      router.push("/(auth)/face_auth");
-    } catch (error) {
+      const userData = await loginUser(email, password);
+      if (userData) {
+        router.replace("/(main)/(tabs)");
+      } else {
+        router.replace("/(auth)/warning_screen");
+      }
+    } catch (error: any) {
       ErrorModalEmitter.emit("SHOW_ERROR", "Invalid email or password");
     } finally {
       setIsLoading(false);
@@ -97,11 +101,11 @@ export default function LoginScreen() {
           </ThemedView>
 
           <Button onPress={handleLogin} disabled={isLoading} style={styles.loginButton}>
-              {isLoading ? "Signing In..." : "Sign In"}
+            {isLoading ? "Signing In..." : "Sign In"}
           </Button>
 
           <ThemedView style={styles.signUpContainer}>
-            <ThemedText style={{textAlignVertical:'bottom'}}>Don't have an account? </ThemedText>
+            <ThemedText style={{ textAlignVertical: 'bottom' }}>Don't have an account? </ThemedText>
             <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
               <ThemedText style={{ color: Colors[theme].tint }}>
                 Sign Up

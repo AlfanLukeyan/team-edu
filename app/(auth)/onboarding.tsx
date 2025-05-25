@@ -1,15 +1,16 @@
+
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { ErrorModalEmitter } from "@/services/api_services";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
-import PagerView from 'react-native-pager-view';
+import { useRef, useState } from "react";
+import { Dimensions, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const { width } = Dimensions.get('window');
 
 const ONBOARDING_SLIDES = [
     {
@@ -34,13 +35,10 @@ export default function OnboardingScreen() {
     const theme = useColorScheme() || "light";
     const [currentIndex, setCurrentIndex] = useState(0);
     const router = useRouter();
+    const scrollViewRef = useRef<ScrollView>(null);
 
-    const testErrorModal = useCallback(() => {
-        ErrorModalEmitter.emit("SHOW_ERROR", "This is a test error message for the modal!");
-    }, []);
-
-    const renderSlide = (slide: typeof ONBOARDING_SLIDES[0], key: string) => (
-        <View key={key} style={styles.slide}>
+    const renderSlide = (slide: typeof ONBOARDING_SLIDES[0], index: number) => (
+        <View key={index} style={[styles.slide, { width: width - 71 }]}>
             <Image source={slide.image} style={styles.image} contentFit="contain" />
             <View style={styles.textContainer}>
                 <ThemedText type="title" style={styles.title}>
@@ -54,28 +52,49 @@ export default function OnboardingScreen() {
     );
 
     const renderDot = (index: number) => (
-        <View
+        <TouchableOpacity
             key={index}
             style={[
                 styles.dot,
                 { backgroundColor: index === currentIndex ? Colors[theme].tint : Colors[theme].tabIconDefault }
             ]}
+            onPress={() => scrollToSlide(index)}
         />
     );
+
+    const scrollToSlide = (index: number) => {
+        const slideWidth = width - 71;
+        scrollViewRef.current?.scrollTo({
+            x: index * slideWidth,
+            animated: true,
+        });
+        setCurrentIndex(index);
+    };
 
     const handleNavigateToLogin = () => {
         router.push("/(auth)/login");
     };
 
+    const handleScroll = (event: any) => {
+        const slideWidth = width - 71;
+        const index = Math.round(event.nativeEvent.contentOffset.x / slideWidth);
+        setCurrentIndex(index);
+    };
+
     return (
         <ThemedView style={[styles.container, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}>
             <ThemedView isCard style={styles.card}>
-                <PagerView
-                    style={styles.pagerView}
-                    onPageSelected={(e) => setCurrentIndex(e.nativeEvent.position)}
+                <ScrollView
+                    ref={scrollViewRef}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onMomentumScrollEnd={handleScroll}
+                    style={styles.scrollView}
+                    contentContainerStyle={styles.scrollContent}
                 >
-                    {ONBOARDING_SLIDES.map((slide, i) => renderSlide(slide, String(i + 1)))}
-                </PagerView>
+                    {ONBOARDING_SLIDES.map((slide, i) => renderSlide(slide, i))}
+                </ScrollView>
 
                 <View style={styles.pagination}>
                     {ONBOARDING_SLIDES.map((_, i) => renderDot(i))}
@@ -113,9 +132,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    pagerView: {
+    scrollView: {
         flex: 1,
-        width: '100%',
+    },
+    scrollContent: {
+        alignItems: 'center',
     },
     slide: {
         flex: 1,
@@ -131,6 +152,7 @@ const styles = StyleSheet.create({
     textContainer: {
         alignItems: "center",
         gap: 12,
+        justifyContent: "center",
     },
     title: {
         textAlign: 'center',

@@ -21,6 +21,7 @@ export const Colors = {
     cardBackground: '#F4F4F4',
     border: 'gray',
     error: '#FF3B30',
+    shadow: '#000',
   },
   dark: {
     title: '#fff',
@@ -36,5 +37,6 @@ export const Colors = {
     cardBackground: '#151515',
     border: 'gray',
     error: '#FF3B30',
+    shadow: '#fff',
   },
 };

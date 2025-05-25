@@ -1,5 +1,4 @@
 import * as Brightness from 'expo-brightness';
-import * as MediaLibrary from 'expo-media-library';
 
 export const setMaxBrightness = async (): Promise<void> => {
   try {
@@ -22,13 +21,4 @@ export const simulateSuccessWithDelay = (
   delay: number = 500
 ): void => {
   setTimeout(onSuccess, delay);
-};
-
-export const saveImageToGallery = async (imageUri: string): Promise<void> => {
-  try {
-    await MediaLibrary.saveToLibraryAsync(imageUri);
-    console.log("Photo saved to gallery for debugging");
-  } catch (error) {
-    console.log("Gallery save failed (no permission?):", error);
-  }
 };
