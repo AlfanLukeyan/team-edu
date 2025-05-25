@@ -4,14 +4,12 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ErrorModalEmitter } from "@/services/api_services";
 import {
-  processAndResizeImage,
   restoreBrightness,
   saveImageToGallery,
   setMaxBrightness,
   simulateSuccessWithDelay
 } from "@/utils/utils";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useImageManipulator } from 'expo-image-manipulator';
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -24,9 +22,6 @@ export default function FaceAuthScreen() {
   
   const [permission, requestPermission] = useCameraPermissions();
   const [isLoading, setIsLoading] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  
-  const context = useImageManipulator(capturedImage || '');
 
   useEffect(() => {
     setMaxBrightness();
@@ -35,32 +30,6 @@ export default function FaceAuthScreen() {
       restoreBrightness();
     };
   }, []);
-
-  useEffect(() => {
-    if (capturedImage) {
-      processImage();
-    }
-  }, [capturedImage]);
-
-  const processImage = async () => {
-    if (!capturedImage) return;
-    
-    try {
-      const resizedResult = await processAndResizeImage(capturedImage, context);
-      await saveImageToGallery(resizedResult.uri);
-
-      simulateSuccessWithDelay(() => {
-        ErrorModalEmitter.emit("SHOW_ERROR", "Face verification successful!");
-        setIsLoading(false);
-        router.replace("/(main)/(tabs)");
-      });
-      
-    } catch (error) {
-      console.error("Error processing image:", error);
-      ErrorModalEmitter.emit("SHOW_ERROR", "Failed to process image. Please try again.");
-      setIsLoading(false);
-    }
-  };
 
   const handleVerify = async () => {
     if (!cameraRef.current) return;
@@ -71,11 +40,17 @@ export default function FaceAuthScreen() {
         shutterSound: false,
       });
       
-      console.log("Original photo:", photo);
-      setCapturedImage(photo.uri);
+      console.log("Photo taken:", photo);
+      await saveImageToGallery(photo.uri);
+
+      simulateSuccessWithDelay(() => {
+        ErrorModalEmitter.emit("SHOW_ERROR", "Face verification successful!");
+        setIsLoading(false);
+        router.replace("/(main)/(tabs)");
+      });
       
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error taking picture:", error);
       ErrorModalEmitter.emit("SHOW_ERROR", "Failed to capture image. Please try again.");
       setIsLoading(false);
     }
@@ -106,7 +81,14 @@ export default function FaceAuthScreen() {
       </View>
 
       <View style={styles.cameraContainer}>
-        <CameraView ref={cameraRef} style={styles.camera} facing="front" ratio="1:1" autofocus="on" />
+        <CameraView 
+          ref={cameraRef} 
+          style={styles.camera} 
+          facing="front" 
+          ratio="1:1" 
+          pictureSize="1088x1088"
+          autofocus="on" 
+        />
         <View style={styles.overlay}>
           <View style={styles.faceOutline} />
         </View>
@@ -124,6 +106,7 @@ export default function FaceAuthScreen() {
     </ThemedView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -147,8 +130,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   cameraContainer: {
-    flex: 1,
-    margin: 20,
+    aspectRatio: 1,
+    marginHorizontal: 20,
     borderRadius: 20,
     overflow: "hidden",
     position: "relative",
@@ -166,8 +149,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   faceOutline: {
-    width: 200,
-    height: 250,       
+    width: 150,
+    height: 200,
     borderRadius: 100,
     borderWidth: 3,
     borderColor: "white",
