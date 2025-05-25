@@ -1,5 +1,5 @@
 import { Redirect, Tabs } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -26,6 +26,13 @@ export default function MainLayout() {
     new Animated.Value(1),
     new Animated.Value(1),
   ]).current;
+
+  useEffect(() => {
+    translateX.setValue(0);
+    scaleValues.forEach((scale, index) => {
+      scale.setValue(index === 0 ? 1.2 : 1);
+    });
+  }, []);
 
   if (!user) {
     return <Redirect href="/(auth)/onboarding" />;
@@ -72,6 +79,7 @@ export default function MainLayout() {
         },
         tabBarStyle: styles.tabBar,
         tabBarShowLabel: false,
+        headerShadowVisible: false,
       }}
       tabBar={({ navigation, state, descriptors }) => (
         <View style={[styles.tabBarContainer, { backgroundColor: Colors[colorScheme ?? 'light'].background, shadowColor: Colors[colorScheme ?? 'light'].tint }]}>

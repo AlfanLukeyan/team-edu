@@ -16,9 +16,19 @@ export default function AboutAssessmentScreen() {
     console.log('AboutAssessmentScreen mounted with params:', params)
   }, [params])
 
-  const assessment = response.getAllAssessments.data.find(
+  let assessment = response.getAllAssessments.data.find(
     (item) => item.id === assessmentId
   );
+
+  if (!assessment) {
+    for (const classObj of response.getUpcomingAssessmentsByClass.data) {
+      const found = classObj.assessments.find((item) => item.id === assessmentId);
+      if (found) {
+        assessment = { ...found, class_id: classObj.class_id };
+        break;
+      }
+    }
+  }
 
   if (!assessment) {
     return (

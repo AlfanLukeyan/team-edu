@@ -219,7 +219,7 @@ export const response = {
         "description": "Online quiz analyzing economic trends",
         "start_date": "2023-10-30T16:00:00.000Z",
         "end_date": "2023-10-30T16:45:00.000Z",
-        "type": "Quiz", 
+        "type": "Quiz",
         "total_marks": 25,
         "class_id": "9",
         "duration": 2700,
@@ -756,83 +756,211 @@ export const response = {
     ]
   },
   "getAllStudentsByClassId": {
+    "status": "success",
+    "data": [
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/men/32.jpg",
+        "user_name": "John Smith",
+        "user_id": "student_001"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/women/44.jpg",
+        "user_name": "Sarah Johnson",
+        "user_id": "student_002"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/men/22.jpg",
+        "user_name": "Michael Brown",
+        "user_id": "student_003"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/women/28.jpg",
+        "user_name": "Emily Davis",
+        "user_id": "student_004"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/men/42.jpg",
+        "user_name": "Robert Wilson",
+        "user_id": "student_005"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/women/15.jpg",
+        "user_name": "Jennifer Martinez",
+        "user_id": "student_006"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/men/67.jpg",
+        "user_name": "David Thompson",
+        "user_id": "student_007"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/women/33.jpg",
+        "user_name": "Lisa Anderson",
+        "user_id": "student_008"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/men/52.jpg",
+        "user_name": "James Taylor",
+        "user_id": "student_009"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/women/26.jpg",
+        "user_name": "Patricia Rodriguez",
+        "user_id": "student_010"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/men/85.jpg",
+        "user_name": "Thomas Martinez",
+        "user_id": "student_011"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/women/63.jpg",
+        "user_name": "Jessica Wilson",
+        "user_id": "student_012"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/men/36.jpg",
+        "user_name": "Christopher Lee",
+        "user_id": "student_013"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/women/57.jpg",
+        "user_name": "Amanda Clark",
+        "user_id": "student_014"
+      },
+      {
+        "user_profile_url": "https://randomuser.me/api/portraits/men/77.jpg",
+        "user_name": "Daniel Wright",
+        "user_id": "student_015"
+      }
+    ]
+  },
+"getUpcomingAssessmentsByClass": {
   "status": "success",
-  "data": [
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/men/32.jpg",
-      "user_name": "John Smith",
-      "user_id": "student_001"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/women/44.jpg",
-      "user_name": "Sarah Johnson",
-      "user_id": "student_002"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/men/22.jpg",
-      "user_name": "Michael Brown",
-      "user_id": "student_003"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/women/28.jpg",
-      "user_name": "Emily Davis",
-      "user_id": "student_004"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/men/42.jpg",
-      "user_name": "Robert Wilson",
-      "user_id": "student_005"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/women/15.jpg",
-      "user_name": "Jennifer Martinez",
-      "user_id": "student_006"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/men/67.jpg",
-      "user_name": "David Thompson",
-      "user_id": "student_007"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/women/33.jpg",
-      "user_name": "Lisa Anderson",
-      "user_id": "student_008"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/men/52.jpg",
-      "user_name": "James Taylor",
-      "user_id": "student_009"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/women/26.jpg",
-      "user_name": "Patricia Rodriguez",
-      "user_id": "student_010"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/men/85.jpg",
-      "user_name": "Thomas Martinez",
-      "user_id": "student_011"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/women/63.jpg",
-      "user_name": "Jessica Wilson",
-      "user_id": "student_012"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/men/36.jpg",
-      "user_name": "Christopher Lee",
-      "user_id": "student_013"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/women/57.jpg",
-      "user_name": "Amanda Clark",
-      "user_id": "student_014"
-    },
-    {
-      "user_profile_url": "https://randomuser.me/api/portraits/men/77.jpg",
-      "user_name": "Daniel Wright",
-      "user_id": "student_015"
-    }
-  ]
-}
+    "data": [
+      {
+        "class_id": "1",
+        "class_title": "Mathematics 101",
+        "class_code": "Class A",
+        "assessments": [
+          {
+            "id": "11",
+            "title": "Trigonometry Quiz",
+            "description": "Quiz on sine, cosine, and tangent functions",
+            "start_date": "2025-05-28T10:00:00.000Z",
+            "end_date": "2025-05-28T11:00:00.000Z",
+            "type": "Quiz",
+            "total_marks": 30,
+            "duration": 3600,
+            "days_remaining": 2
+          },
+          {
+            "id": "12",
+            "title": "Final Mathematics Exam",
+            "description": "Comprehensive final exam covering all topics",
+            "start_date": "2025-06-05T09:00:00.000Z",
+            "end_date": "2025-06-05T12:00:00.000Z",
+            "type": "Exam",
+            "total_marks": 150,
+            "duration": 10800,
+            "days_remaining": 10
+          }
+        ]
+      },
+      {
+        "class_id": "2",
+        "class_title": "Introduction to Physics",
+        "class_code": "Class B",
+        "assessments": [
+          {
+            "id": "13",
+            "title": "Thermodynamics Assignment",
+            "description": "Problem set on heat transfer and energy",
+            "start_date": "2025-05-30T00:00:00.000Z",
+            "end_date": "2025-06-02T23:59:59.000Z",
+            "type": "Assignment",
+            "total_marks": 40,
+            "duration": 259200,
+            "days_remaining": 4
+          }
+        ]
+      },
+      {
+        "class_id": "3",
+        "class_title": "Computer Science Basics",
+        "class_code": "Class C",
+        "assessments": [
+          {
+            "id": "14",
+            "title": "Algorithm Analysis Project",
+            "description": "Implement and analyze sorting algorithms",
+            "start_date": "2025-05-27T00:00:00.000Z",
+            "end_date": "2025-06-10T23:59:59.000Z",
+            "type": "Project",
+            "total_marks": 80,
+            "duration": 1209600,
+            "days_remaining": 1
+          },
+          {
+            "id": "15",
+            "title": "Data Structures Quiz",
+            "description": "Quick assessment on arrays, lists, and trees",
+            "start_date": "2025-06-01T14:00:00.000Z",
+            "end_date": "2025-06-01T15:30:00.000Z",
+            "type": "Quiz",
+            "total_marks": 25,
+            "duration": 5400,
+            "days_remaining": 6
+          }
+        ]
+      },
+      {
+        "class_id": "4",
+        "class_title": "English Literature",
+        "class_code": "Class D",
+        "assessments": [
+          {
+            "id": "16",
+            "title": "Poetry Analysis Essay",
+            "description": "Analyze themes in modern poetry",
+            "start_date": "2025-06-03T08:00:00.000Z",
+            "end_date": "2025-06-10T17:00:00.000Z",
+            "type": "Essay",
+            "total_marks": 50,
+            "duration": 604800,
+            "days_remaining": 8
+          }
+        ]
+      },
+      {
+        "class_id": "6",
+        "class_title": "Biology 101",
+        "class_code": "Class F",
+        "assessments": [
+          {
+            "id": "17",
+            "title": "Genetics Lab Report",
+            "description": "Report on DNA extraction experiment",
+            "start_date": "2025-05-29T00:00:00.000Z",
+            "end_date": "2025-06-05T23:59:59.000Z",
+            "type": "Report",
+            "total_marks": 35,
+            "duration": 604800,
+            "days_remaining": 3
+          },
+          {
+            "id": "18",
+            "title": "Ecology Quiz",
+            "description": "Assessment on ecosystem interactions",
+            "start_date": "2025-06-07T11:00:00.000Z",
+            "end_date": "2025-06-07T12:00:00.000Z",
+            "type": "Quiz",
+            "total_marks": 20,
+            "duration": 3600,
+            "days_remaining": 12
+          }
+        ]
+      }
+    ]
+  },
 };
