@@ -36,7 +36,15 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Team Edu to access your camera",
+          "microphonePermission": "Allow Team Edu to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
