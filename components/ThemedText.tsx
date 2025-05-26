@@ -56,6 +56,7 @@ const styles = StyleSheet.create({
     default: {
         fontSize: 14,
         fontFamily: 'Poppins-Regular',
+        lineHeight: 24,
     },
     bold: {
         fontSize: 16,

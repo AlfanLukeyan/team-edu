@@ -1,16 +1,18 @@
+import { ButtonWithDescription } from "@/components/ButtonWithDescription";
 import { CompletedCountCard } from "@/components/CompletedCountCard";
 import { DueDateCard } from "@/components/DueDateCard";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { TimeRemainingCard } from "@/components/TimeRemainingCard";
 import { response } from "@/data/response";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function AboutAssessmentScreen() {
     const params = useLocalSearchParams();
     const assessmentId = params.id as string;
+    const router = useRouter();
 
     useEffect(() => {
         console.log('AboutAssessmentScreen mounted with params:', params)
@@ -67,28 +69,42 @@ export default function AboutAssessmentScreen() {
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
             >
-                <ThemedText type="title">{assessment.title}</ThemedText>
-                <ThemedText type="default">
-                    Description: {assessment.description}
-                </ThemedText>
-                <View
-                    style={{
-                        flexDirection: "row",
-                        paddingVertical: 16,
-                        gap: 12,
-                    }}
-                >
-                    <DueDateCard
-                        startTime={startDateTime.time}
-                        startDate={startDateTime.date}
-                        endTime={endDateTime.time}
-                        endDate={endDateTime.date}
-                        style={{ flex: 1 }}
-                    />
-                    <CompletedCountCard comletedCount={20} totalCount={13} style={{ flex: 1 }} />
-                </View>
-                <View>
-                    <TimeRemainingCard duration={assessment.duration} />
+                <View style={{ gap: 14 }}>
+                    <ThemedText type="title">{assessment.title}</ThemedText>
+                    <ThemedText type="default">
+                        Description: {assessment.description}
+                    </ThemedText>
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            gap: 12,
+                        }}
+                    >
+                        <DueDateCard
+                            startTime={startDateTime.time}
+                            startDate={startDateTime.date}
+                            endTime={endDateTime.time}
+                            endDate={endDateTime.date}
+                            style={{ flex: 1 }}
+                        />
+                        <CompletedCountCard comletedCount={20} totalCount={13} style={{ flex: 1 }} />
+                    </View>
+                    <View>
+                        <TimeRemainingCard timeRemaining={assessment.duration} />
+                    </View>
+                    <ButtonWithDescription
+                        onPress={() => {
+                            router.push({
+                                pathname: "/(assessment)/session",
+                                params: {
+                                    id: assessment.id,
+                                },
+                            })
+                        }}
+                        description="Please ensure that you are prepared to take the assessment."
+                    >
+                        Start
+                    </ButtonWithDescription>
                 </View>
             </ScrollView>
         </ThemedView>

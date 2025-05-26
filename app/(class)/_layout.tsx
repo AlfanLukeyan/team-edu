@@ -1,3 +1,4 @@
+import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { response } from '@/data/response';
@@ -50,13 +51,23 @@ export default function ClassLayout() {
                 options={{
                     title: className,
                     headerShown: true,
+                    headerBackVisible: false,
+                    headerBackTitle: "Back",
                     headerLeft: () => (
                         <TouchableOpacity
                             onPress={() => {
-                                router.navigate('/(main)/classes');
+                                router.back();
                             }}
+                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
                         >
-                            <IconSymbol name="chevron.left" size={24} color={Colors[colorScheme ?? 'light'].tint} />
+                            <IconSymbol
+                                name="chevron.left"
+                                size={24}
+                                color={Colors[colorScheme ?? 'light'].tint}
+                            />
+                            <ThemedText>
+                                Back
+                            </ThemedText>
                         </TouchableOpacity>
                     ),
                 }}

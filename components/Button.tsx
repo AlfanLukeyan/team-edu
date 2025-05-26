@@ -6,8 +6,7 @@ import React from "react";
 import {
     StyleSheet,
     TouchableOpacity,
-    type TouchableOpacityProps,
-    View,
+    type TouchableOpacityProps
 } from "react-native";
 
 export type ButtonProps = TouchableOpacityProps & {
@@ -43,6 +42,11 @@ export function Button({
         <TouchableOpacity
             style={[
                 styles.base,
+                styles.content,
+                {
+                    justifyContent: icon ? "space-between" : "center",
+                    paddingHorizontal: icon ? 16 : 8,
+                },
                 type === "default"
                     ? { backgroundColor: Colors[theme].button }
                     : undefined,
@@ -66,27 +70,22 @@ export function Button({
             disabled={disabled}
             {...rest}
         >
-            <View style={[
-                styles.content,
-                { justifyContent: icon ? "space-between" : "center", paddingHorizontal: icon ? 8 : 0, width: icon ? "100%" : undefined }
-            ]}>
-                <ThemedText
-                    style={{
-                        color: textColor,
-                        marginRight: icon ? 8 : 0,
-                    }}
-                >
-                    {children}
-                </ThemedText>
+            <ThemedText
+                style={{
+                    color: textColor,
+                    marginRight: icon ? 8 : 0,
+                }}
+            >
+                {children}
+            </ThemedText>
 
-                {icon && (
-                    <IconSymbol
-                        name={icon.name}
-                        size={icon.size || 24}
-                        color={textColor}
-                    />
-                )}
-            </View>
+            {icon && (
+                <IconSymbol
+                    name={icon.name}
+                    size={icon.size || 24}
+                    color={textColor}
+                />
+            )}
         </TouchableOpacity>
     );
 }

@@ -22,6 +22,10 @@ export function ButtonWithDescription({
                     <Button
                         type="default"
                         {...rest}
+                        style={{ 
+                            paddingHorizontal: 16,
+                            flex: 1,
+                        }}
                     >
                         {children}
                     </Button>
@@ -35,7 +39,6 @@ const styles = StyleSheet.create({
     descriptionCard: {
         borderRadius: 15,
         padding: 16,
-        marginVertical: 8,
     },
     container: {
         flexDirection: 'row',

@@ -156,7 +156,7 @@ export const response = {
                 "type": "Exam",
                 "total_marks": 100,
                 "class_id": "1",
-                "duration": 7200,
+                "duration": 10,
             },
             {
                 "id": "2",
@@ -851,7 +851,7 @@ export const response = {
                         "end_date": "2025-05-28T11:00:00.000Z",
                         "type": "Quiz",
                         "total_marks": 30,
-                        "duration": 3600,
+                        "duration": 3675,
                         "days_remaining": 2
                     },
                     {
