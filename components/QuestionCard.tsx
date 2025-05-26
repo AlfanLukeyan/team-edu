@@ -30,13 +30,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                     onPress={() => onEdit?.(id)}
                 >
                     <ThemedView isCard={true} style={{
-                            flex: 1,
-                            marginVertical: 5,
-                            marginHorizontal: 8,
-                            borderRadius: 12,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            paddingHorizontal: 8
+                        flex: 1,
+                        marginVertical: 5,
+                        marginHorizontal: 8,
+                        borderRadius: 12,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 8
                     }}>
                         <IconSymbol name="pencil.circle.fill" size={24} color={Colors[theme].icon} />
                     </ThemedView>

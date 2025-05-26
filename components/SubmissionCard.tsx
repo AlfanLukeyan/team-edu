@@ -47,11 +47,22 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
                         ]
                     );
                 }}
-                style={{marginRight: 8}}
+                style={{ marginRight: 8 }}
             >
-                    <ThemedView isCard={true} style={{ flex: 1, marginVertical: 5, marginHorizontal: 8, borderRadius: 12, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 8 }}>
-                        <IconSymbol name="trash.circle.fill" size={24} color="red" />
-                    </ThemedView>
+                <ThemedView
+                    isCard={true}
+                    style={{
+                        flex: 1,
+                        marginVertical: 5,
+                        marginHorizontal: 8,
+                        borderRadius: 12,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 8
+                    }}
+                >
+                    <IconSymbol name="trash.circle.fill" size={24} color="red" />
+                </ThemedView>
             </TouchableOpacity>
         );
     };

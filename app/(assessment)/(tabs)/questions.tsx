@@ -8,13 +8,13 @@ import { ScrollView, StyleSheet, View } from "react-native";
 export default function QuestionsScreen() {
     const params = useLocalSearchParams();
     const assessmentId = params.id as string;
-    
+
     const [questions, setQuestions] = useState(response.getAssessmentById.data);
-    
+
     useEffect(() => {
         console.log('QuestionsScreen mounted with params:', params)
     }, [params])
-    
+
     const handleDeleteQuestion = (id: string) => {
         setQuestions(questions.filter(question => question.id !== id));
     };

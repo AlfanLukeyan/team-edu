@@ -25,7 +25,7 @@ export function TextInput({
     ...rest
 }: TextInputProps) {
     const theme = useColorScheme();
-    
+
     return (
         <ThemedView style={style}>
             {label && (

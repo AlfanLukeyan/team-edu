@@ -6,61 +6,61 @@ import { useEffect, useState } from 'react';
 import { TouchableOpacity, useColorScheme } from 'react-native';
 
 type AssessmentParams = {
-  id: string;
+    id: string;
 };
 
 export default function AssessmentLayout() {
-  const { id } = useLocalSearchParams<AssessmentParams>();
-  const colorScheme = useColorScheme();
-  const router = useRouter();
-  const [assessmentTitle, setAssessmentTitle] = useState('Assessment Details');
+    const { id } = useLocalSearchParams<AssessmentParams>();
+    const colorScheme = useColorScheme();
+    const router = useRouter();
+    const [assessmentTitle, setAssessmentTitle] = useState('Assessment Details');
 
-  useEffect(() => {
-    if (id) {
-      const assessmentData = response.getAllAssessments.data.find(
-        (assessment) => assessment.id === id.toString()
-      );
-      if (assessmentData?.title) {
-        setAssessmentTitle(assessmentData.title);
-      }
-    }
-  }, [id]);
+    useEffect(() => {
+        if (id) {
+            const assessmentData = response.getAllAssessments.data.find(
+                (assessment) => assessment.id === id.toString()
+            );
+            if (assessmentData?.title) {
+                setAssessmentTitle(assessmentData.title);
+            }
+        }
+    }, [id]);
 
-  return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: Colors[colorScheme ?? 'light'].background,
-        },
-        headerTitleAlign: 'center',
-        headerTitleStyle: {
-          fontFamily: 'Poppins-Regular',
-          fontSize: 16,
-        },
-        headerShadowVisible: false,
-        animation: 'slide_from_right',
-      }}
-    >
-      <Stack.Screen
-        name="(tabs)"
-        options={{
-          title: assessmentTitle,
-          headerShown: true,
-          headerLeft: () => (
-            <TouchableOpacity 
-              onPress={() => {
-                router.back(); // Or navigate to a specific route
-              }}
-            >
-              <IconSymbol 
-                name="chevron.left" 
-                size={24} 
-                color={Colors[colorScheme ?? 'light'].tint} 
-              />
-            </TouchableOpacity>
-          ),
-        }}
-      />
-    </Stack>
-  );
+    return (
+        <Stack
+            screenOptions={{
+                headerStyle: {
+                    backgroundColor: Colors[colorScheme ?? 'light'].background,
+                },
+                headerTitleAlign: 'center',
+                headerTitleStyle: {
+                    fontFamily: 'Poppins-Regular',
+                    fontSize: 16,
+                },
+                headerShadowVisible: false,
+                animation: 'slide_from_right',
+            }}
+        >
+            <Stack.Screen
+                name="(tabs)"
+                options={{
+                    title: assessmentTitle,
+                    headerShown: true,
+                    headerLeft: () => (
+                        <TouchableOpacity
+                            onPress={() => {
+                                router.back(); // Or navigate to a specific route
+                            }}
+                        >
+                            <IconSymbol
+                                name="chevron.left"
+                                size={24}
+                                color={Colors[colorScheme ?? 'light'].tint}
+                            />
+                        </TouchableOpacity>
+                    ),
+                }}
+            />
+        </Stack>
+    );
 }
