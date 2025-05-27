@@ -80,6 +80,7 @@ export default function MainLayout() {
                 tabBarStyle: styles.tabBar,
                 tabBarShowLabel: false,
                 headerShadowVisible: false,
+                animation: 'shift'
             }}
             tabBar={({ navigation, state, descriptors }) => (
                 <View style={[styles.tabBarContainer, { backgroundColor: Colors[colorScheme ?? 'light'].background, shadowColor: Colors[colorScheme ?? 'light'].tint }]}>
