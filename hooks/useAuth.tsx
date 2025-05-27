@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const parsedUserData = JSON.parse(userData);
                 setUser(parsedUserData);
 
-                router.replace("/(main)/(tabs)");
+                router.replace("/(main)");
             }
         } catch (error) {
             console.error("Error checking login state:", error);

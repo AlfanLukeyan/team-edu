@@ -46,7 +46,7 @@ const ErrorModal: React.FC<ErrorModalProps> = ({
         >
             <Animated.View style={[styles.centeredView, { opacity: fadeAnim }]}>
                 <ThemedView isCard={true} style={styles.modalView}>
-                    <ThemedText style={{textAlign: "center"}}>{errorMessage}</ThemedText>
+                    <ThemedText style={{ textAlign: "center" }}>{errorMessage}</ThemedText>
                     <Button onPress={onClose}>Dismiss</Button>
                 </ThemedView>
             </Animated.View>

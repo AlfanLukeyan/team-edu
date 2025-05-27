@@ -3,38 +3,38 @@ export interface ClassData {
     title: string;
     class_code: string;
     desc: string;
-  }
-  
-  export interface AssessmentFormData {
+}
+
+export interface AssessmentFormData {
     title: string;
     description: string;
     start_date: string;
     end_date: string;
     duration: string;
-  }
-  
-  export interface WeeklySectionFormData {
+}
+
+export interface WeeklySectionFormData {
     title: string;
     description: string;
     videoUrl: string;
-  }
-  
-  export interface TabContentProps {
+}
+
+export interface TabContentProps {
     onCreatePress: () => void;
-  }
-  export interface Choice {
+}
+export interface Choice {
     id: string;
     choice_text: string;
     is_correct: boolean;
-  }
-  
-  export interface Question {
+}
+
+export interface Question {
     id: string;
     question_text: string;
     choices: Choice[];
-  }
-  
-  export interface QuestionsFormData {
+}
+
+export interface QuestionsFormData {
     questions: Question[];
     assessment_id?: string;
-  }
+}
