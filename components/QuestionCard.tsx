@@ -44,7 +44,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             >
                 <View style={styles.questionHeader}>
                     <ThemedText type="subtitle">
-                        Question {questionNumber}
+                        {'Question - '}
+                    </ThemedText>
+                    <ThemedText type="subtitle" style={{fontSize: 18, fontFamily: 'Poppins-Bold'}}>
+                        {questionNumber}
                     </ThemedText>
                 </View>
 
@@ -62,8 +65,10 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 12,
         borderWidth: 1,
+        borderColor: 'transparent',
     },
     questionHeader: {
+        flexDirection: 'row',
         marginBottom: 8,
     },
     questionNumber: {

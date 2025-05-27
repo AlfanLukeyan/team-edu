@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         position: 'relative',
         borderWidth: 1,
+        borderColor: 'transparent',
     },
     userInfoContainer: {
         flexDirection: 'row',

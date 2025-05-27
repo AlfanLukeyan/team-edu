@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: 14,
         fontFamily: 'Poppins-Regular',
+        lineHeight: 20,
     },
     link: {
         fontSize: 14,
