@@ -1,9 +1,8 @@
+import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Swipeable, } from 'react-native-gesture-handler';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
-import { IconSymbol } from './ui/IconSymbol';
 
 interface SubmissionCardProps {
     id: string;
@@ -14,7 +13,9 @@ interface SubmissionCardProps {
     status: string;
     score?: number;
     total_score?: number;
-    onDelete?: (id: string) => void;
+    isSelected?: boolean;
+    onLongPress?: (id: string) => void;
+    onPress?: (id: string) => void;
 }
 
 export const SubmissionCard: React.FC<SubmissionCardProps> = ({
@@ -26,57 +27,28 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
     status,
     score,
     total_score,
-    onDelete
+    isSelected = false,
+    onLongPress,
+    onPress
 }) => {
     const theme = useColorScheme() || "light";
-    const isNotStarted = status === "not_started";
-    const renderRightActions = () => {
-        return (
-            <TouchableOpacity
-                onPress={() => {
-                    Alert.alert(
-                        "Delete Submission",
-                        `Are you sure you want to delete ${user_name}'s submission?`,
-                        [
-                            { text: "Cancel", style: "cancel" },
-                            {
-                                text: "Delete",
-                                style: "destructive",
-                                onPress: () => onDelete?.(id)
-                            }
-                        ]
-                    );
-                }}
-                style={{ marginRight: 8 }}
-            >
-                <ThemedView
-                    isCard={true}
-                    style={{
-                        flex: 1,
-                        marginVertical: 5,
-                        marginHorizontal: 8,
-                        borderRadius: 12,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingHorizontal: 8
-                    }}
-                >
-                    <IconSymbol name="trash.circle.fill" size={24} color="red" />
-                </ThemedView>
-            </TouchableOpacity>
-        );
-    };
 
     return (
-        <Swipeable
-            renderRightActions={renderRightActions}
-            friction={2}
-            rightThreshold={40}
-            overshootRight={false}
-            enabled={!isNotStarted}
+        <TouchableOpacity
+            onLongPress={() => onLongPress?.(id)}
+            onPress={() => onPress?.(id)}
+            delayLongPress={500}
         >
-            <ThemedView isCard={true} style={styles.container}>
-                {/* Existing card content */}
+            <ThemedView
+                isCard={true}
+                style={[
+                    styles.container,
+                    isSelected && {
+                        borderColor: Colors[theme].tint,
+                        backgroundColor: theme === "dark" ? 'rgba(190, 27, 182, 0.1)' : 'rgba(30, 206, 206, 0.1)',
+                    },
+                ]}
+            >
                 <View style={styles.userInfoContainer}>
                     <Image
                         source={{ uri: user_profile_url }}
@@ -106,11 +78,11 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
                     )}
                 </View>
             </ThemedView>
-        </Swipeable>
+        </TouchableOpacity>
     );
 }
 
-// Helper functions
+// Helper functions remain the same
 const formatStatus = (status: string): string => {
     switch (status) {
         case "completed": return "Completed";
@@ -122,10 +94,10 @@ const formatStatus = (status: string): string => {
 
 const getStatusColor = (status: string, theme: string): string => {
     switch (status) {
-        case "completed": return "#4CAF50";  // Green
-        case "in_progress": return "#2196F3"; // Blue
-        case "not_started": return theme === "dark" ? "#999" : "#757575"; // Gray
-        default: return "#FF9800"; // Orange for unknown status
+        case "completed": return "#4CAF50";
+        case "in_progress": return "#2196F3";
+        case "not_started": return theme === "dark" ? "#999" : "#757575";
+        default: return "#FF9800";
     }
 }
 
@@ -149,6 +121,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        position: 'relative',
+        borderWidth: 1,
     },
     userInfoContainer: {
         flexDirection: 'row',
@@ -176,12 +150,5 @@ const styles = StyleSheet.create({
         height: 8,
         borderRadius: 4,
         marginRight: 6,
-    },
-    deleteAction: {
-        marginVertical: 8,
-        backgroundColor: '#FF3B30',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexDirection: 'row',
     },
 });

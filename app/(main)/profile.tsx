@@ -1,3 +1,4 @@
+import ActionMenu, { ActionMenuItem } from '@/components/ActionMenu';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
@@ -7,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useNavigation, useRouter } from 'expo-router';
 import { useLayoutEffect, useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
     const { user, logout } = useAuth();
@@ -17,15 +18,12 @@ export default function ProfileScreen() {
     const [showActionMenu, setShowActionMenu] = useState(false);
 
     const handleLogout = () => {
-        setShowActionMenu(false);
         logout();
         router.replace('/(auth)/onboarding');
     };
 
     const handleEditProfile = () => {
-        setShowActionMenu(false);
         console.log('Edit profile pressed');
-        // Add your edit profile navigation here
     };
 
     useLayoutEffect(() => {
@@ -48,6 +46,22 @@ export default function ProfileScreen() {
     const handleChangeFaceReference = () => {
         console.log('Change face reference pressed');
     };
+
+    const actionMenuItems: ActionMenuItem[] = [
+        {
+            id: 'edit-profile',
+            title: 'Edit Profile',
+            icon: 'create-outline',
+            onPress: handleEditProfile,
+        },
+        {
+            id: 'logout',
+            title: 'Log Out',
+            icon: 'log-out-outline',
+            onPress: handleLogout,
+            destructive: true,
+        },
+    ];
 
     return (
         <ThemedView style={styles.container}>
@@ -86,50 +100,13 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* Custom Action Menu Modal */}
-            <Modal
-                animationType="fade"
-                transparent={true}
+            {/* Action Menu */}
+            <ActionMenu
                 visible={showActionMenu}
-                onRequestClose={() => setShowActionMenu(false)}
-            >
-                <Pressable
-                    style={styles.modalOverlay}
-                    onPress={() => setShowActionMenu(false)}
-                >
-                    <View style={styles.menuPositioning}>
-                        <View style={[styles.actionMenuContainer, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={handleEditProfile}
-                            >
-                                <Ionicons
-                                    name="create-outline"
-                                    size={20}
-                                    color={Colors[colorScheme ?? 'light'].text}
-                                    style={styles.menuIcon}
-                                />
-                                <ThemedText type="default">Edit Profile</ThemedText>
-                            </TouchableOpacity>
-
-                            <View style={[styles.separator, { backgroundColor: Colors[colorScheme ?? 'light'].border }]} />
-
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={handleLogout}
-                            >
-                                <Ionicons
-                                    name="log-out-outline"
-                                    size={20}
-                                    color="#FF3B30"
-                                    style={styles.menuIcon}
-                                />
-                                <ThemedText type="default" style={{ color: '#FF3B30' }}>Log Out</ThemedText>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Pressable>
-            </Modal>
+                onClose={() => setShowActionMenu(false)}
+                items={actionMenuItems}
+                position="top-right"
+            />
         </ThemedView>
     );
 }
@@ -174,44 +151,5 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         textAlign: 'center',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    },
-    menuPositioning: {
-        position: 'absolute',
-        top: Platform.OS === 'ios' ? 60 : 50,
-        right: 20,
-        zIndex: 1000,
-    },
-    actionMenuContainer: {
-        borderRadius: 12,
-        padding: 4,
-        minWidth: 180,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-        borderWidth: 1,
-        borderColor: 'rgba(0, 0, 0, 0.1)',
-    },
-    menuItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-    },
-    menuIcon: {
-        marginRight: 12,
-    },
-    separator: {
-        height: 1,
-        marginHorizontal: 8,
     },
 });
