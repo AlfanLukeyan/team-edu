@@ -6,58 +6,58 @@ import React from "react";
 import { StyleSheet, TextInputProps, View } from "react-native";
 
 interface ThemedBottomSheetTextInputProps extends TextInputProps {
-  label?: string;
-  multiline?: boolean;
+    label?: string;
+    multiline?: boolean;
 }
 
 const ThemedBottomSheetTextInput: React.FC<ThemedBottomSheetTextInputProps> = ({
-  label,
-  multiline = false,
-  ...props
+    label,
+    multiline = false,
+    ...props
 }) => {
-  const theme = useColorScheme();
-  
-  const inputStyle = {
-    borderWidth: 1,
-    borderColor: theme === "light" ? Colors.light.border : Colors.dark.border,
-    color: theme === "light" ? Colors.light.text : Colors.dark.text,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 15,
-    fontFamily: "Poppins-Regular",
-  };
+    const theme = useColorScheme();
 
-  const multilineInputStyle = {
-    ...inputStyle,
-    minHeight: 100,
-    paddingTop: 12,
-    textAlignVertical: "top" as const,
-  };
+    const inputStyle = {
+        borderWidth: 1,
+        borderColor: theme === "light" ? Colors.light.border : Colors.dark.border,
+        color: theme === "light" ? Colors.light.text : Colors.dark.text,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 15,
+        fontFamily: "Poppins-Regular",
+    };
 
-  return (
-    <View style={styles.container}>
-      {label && (
-        <ThemedText style={styles.label}>{label}</ThemedText>
-      )}
-      <BottomSheetTextInput
-        style={multiline ? multilineInputStyle : inputStyle}
-        multiline={multiline}
-        placeholderTextColor={theme === "light" ? Colors.light.border : Colors.dark.border}
-        {...props}
-      />
-    </View>
-  );
+    const multilineInputStyle = {
+        ...inputStyle,
+        minHeight: 100,
+        paddingTop: 12,
+        textAlignVertical: "top" as const,
+    };
+
+    return (
+        <View style={styles.container}>
+            {label && (
+                <ThemedText style={styles.label}>{label}</ThemedText>
+            )}
+            <BottomSheetTextInput
+                style={multiline ? multilineInputStyle : inputStyle}
+                multiline={multiline}
+                placeholderTextColor={theme === "light" ? Colors.light.border : Colors.dark.border}
+                {...props}
+            />
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  label: {
-    fontSize: 14,
-    fontFamily: "Poppins-SemiBold",
-    marginBottom: 4,
-  },
+    container: {
+        flex: 1,
+    },
+    label: {
+        fontSize: 14,
+        fontFamily: "Poppins-SemiBold",
+        marginBottom: 4,
+    },
 });
 
 export default ThemedBottomSheetTextInput;

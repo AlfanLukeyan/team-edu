@@ -1,31 +1,47 @@
-import { useState } from "react";
-import { Pressable, ScrollView } from "react-native";
-
-import { type DateType } from "@/components/Calendar";
-import { CalendarModal } from "@/components/CalendarModal";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-
+import { UpcomingAssessmentCard } from "@/components/UpcomingAssessmentCard";
+import { response } from "@/data/response";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { ScrollView } from "react-native";
 
 export default function HomeScreen() {
-  const [isCalendarVisible, setIsCalendarVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<DateType>();
+    const router = useRouter();
+    const [upcomingAssessments, setUpcomingAssessments] = useState(response.getUpcomingAssessmentsByClass.data);
 
-  return (
-    <ThemedView style={{ flex: 1 }}>
-      <ScrollView style={{ flex: 1, paddingHorizontal: 24 }}>
-        <Pressable onPress={() => setIsCalendarVisible(true)}>
-          <ThemedText type="defaultSemiBold">
-            Show Calendar
-          </ThemedText>
-        </Pressable>
-      </ScrollView>
-      <CalendarModal
-        visible={isCalendarVisible}
-        onClose={() => setIsCalendarVisible(false)}
-        selected={selectedDate}
-        onDateChange={setSelectedDate}
-      />
-    </ThemedView>
-  );
+    const handleAssessmentPress = (assessment: any) => {
+        console.log("Assessment pressed:", assessment);
+
+        router.push({
+            pathname: "/(assessment)/(tabs)",
+            params: { id: assessment.id }
+        });
+    };
+
+    return (
+        <ThemedView style={{ flex: 1 }}>
+            <ScrollView style={{ flex: 1, margin: 16 }}>
+                <ThemedText type="title" style={{ marginBottom: 20 }}>
+                    Upcoming Assessments
+                </ThemedText>
+
+                {upcomingAssessments.map((classData) => (
+                    <UpcomingAssessmentCard
+                        key={classData.class_id}
+                        classData={classData}
+                        onAssessmentPress={handleAssessmentPress}
+                    />
+                ))}
+
+                {upcomingAssessments.length === 0 && (
+                    <ThemedView isCard={true} style={{ padding: 20, alignItems: 'center' }}>
+                        <ThemedText type="default" style={{ opacity: 0.7 }}>
+                            No upcoming assessments
+                        </ThemedText>
+                    </ThemedView>
+                )}
+            </ScrollView>
+        </ThemedView>
+    );
 }

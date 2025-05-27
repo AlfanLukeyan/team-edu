@@ -8,20 +8,20 @@ import { ScrollView, StyleSheet, View } from "react-native";
 export default function TodoScreen() {
     const params = useLocalSearchParams();
     const assessmentId = params.id as string;
-    
+
     const [submissions, setSubmissions] = useState(response.getAllTodo.data);
-  
+
     useEffect(() => {
         console.log('TodoScreen mounted with params:', params)
     }, [params])
 
     const handleDeleteSubmission = (id: string) => {
-      setSubmissions(submissions.filter(submission => submission.id !== id));
+        setSubmissions(submissions.filter(submission => submission.id !== id));
     };
 
     return (
         <ThemedView style={styles.container}>
-            <ScrollView 
+            <ScrollView
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
             >

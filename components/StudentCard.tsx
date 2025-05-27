@@ -16,7 +16,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
     user_profile_url,
 }) => {
     const theme = useColorScheme() || "light";
-    
+
     return (
         <ThemedView isCard={true} style={styles.container}>
             <Image
@@ -25,9 +25,9 @@ export const StudentCard: React.FC<StudentCardProps> = ({
             />
             <View style={styles.infoContainer}>
                 <ThemedText type="defaultSemiBold">{user_name}</ThemedText>
-                <ThemedText 
-                    style={{ 
-                        color: theme === "light" ? Colors.light.subtitle : Colors.dark.subtitle 
+                <ThemedText
+                    style={{
+                        color: theme === "light" ? Colors.light.subtitle : Colors.dark.subtitle
                     }}
                 >
                     ID: {user_id}
