@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { HashUtils } from '@/utils/hashUtils';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Image, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { ThemedText } from './ThemedText';
@@ -33,7 +34,7 @@ export function StudentCard({
                 <View style={styles.avatarContainer}>
                     {shouldShowImage ? (
                         <Image
-                            source={{ 
+                            source={{
                                 uri: user_profile_url,
                                 cache: 'reload'
                             }}
@@ -41,10 +42,12 @@ export function StudentCard({
                             onError={handleImageError}
                         />
                     ) : (
-                        <View style={[styles.avatarPlaceholder, {backgroundColor: Colors[theme].tint}]}>
-                            <ThemedText style={styles.avatarText}>
-                                {user_name.charAt(0).toUpperCase()}
-                            </ThemedText>
+                        <View style={[styles.avatarPlaceholder, { backgroundColor: Colors[theme].tint + '20' }]}>
+                            <Ionicons
+                                name="person-outline"
+                                size={24}
+                                color={Colors[theme].text}
+                            />
                         </View>
                     )}
                 </View>
@@ -70,7 +73,7 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+        padding: 8,
         borderRadius: 15
     },
     avatarContainer: {
@@ -84,7 +87,8 @@ const styles = StyleSheet.create({
     avatarPlaceholder: {
         width: 48,
         height: 48,
-        borderRadius: 24,
+
+        borderRadius: 15,
         alignItems: 'center',
         justifyContent: 'center',
     },

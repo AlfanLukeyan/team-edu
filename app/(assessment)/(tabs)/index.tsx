@@ -112,7 +112,7 @@ export default function AboutAssessmentScreen() {
                             style={{ flex: 1 }}
                         />
                         <CompletedCountCard 
-                            comletedCount={assessment.total_submission} 
+                            completedCount={assessment.total_submission} 
                             totalCount={assessment.total_student} 
                             style={{ flex: 1 }} 
                         />
