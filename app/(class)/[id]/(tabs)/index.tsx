@@ -5,33 +5,57 @@ import CreateWeeklySectionBottomSheet, {
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { WeeklyCard } from "@/components/WeeklyCard";
-import { useClassDetail } from "@/hooks/useClassDetail";
+import { useClass } from "@/contexts/ClassContext";
+import { classService } from "@/services/classService";
+import { WeeklySection } from "@/types/api";
 import { WeeklySectionFormData } from "@/types/common";
-import { useLocalSearchParams } from "expo-router";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet } from "react-native";
 
 const WeeklyScreen = () => {
-    const { id } = useLocalSearchParams<{ id: string }>();
-    const { 
-        classDetail, 
-        loading, 
-        refreshing, 
-        error, 
-        refreshClassDetail, 
-        getAllWeeks 
-    } = useClassDetail(id);
+    const { classId } = useClass();
+    const [weeklySections, setWeeklySections] = useState<WeeklySection[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     
     const createSectionRef = useRef<CreateWeeklySectionBottomSheetRef>(null);
+
+    const fetchWeeklySections = async () => {
+        if (!classId) {
+            setLoading(false);
+            return;
+        }
+        
+        try {
+            setError(null);
+            const data = await classService.getWeeklySections(classId);
+            const sortedData = data.sort((a, b) => a.week_number - b.week_number);
+            setWeeklySections(sortedData);
+        } catch (err) {
+            setError('Failed to load weekly sections');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await fetchWeeklySections();
+        setRefreshing(false);
+    };
 
     const handleOpenWeeklySheet = useCallback(() => createSectionRef.current?.open(), []);
     
     const handleCreateSection = useCallback((data: WeeklySectionFormData) => {
-        console.log("New section created:", data);
-        // TODO: Add API call to create weekly section
-        // After successful creation, refresh the data
-        refreshClassDetail();
-    }, [refreshClassDetail]);
+        handleRefresh();
+    }, []);
+
+    useEffect(() => {
+        if (classId) {
+            fetchWeeklySections();
+        }
+    }, [classId]);
 
     if (loading) {
         return (
@@ -42,17 +66,15 @@ const WeeklyScreen = () => {
         );
     }
 
-    if (error || !classDetail) {
+    if (error) {
         return (
             <ThemedView style={styles.centered}>
                 <ThemedText style={styles.errorText}>
-                    {error || 'Failed to load class details'}
+                    {error}
                 </ThemedText>
             </ThemedView>
         );
     }
-
-    const weeks = getAllWeeks();
 
     return (
         <>
@@ -63,20 +85,20 @@ const WeeklyScreen = () => {
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}
-                            onRefresh={refreshClassDetail}
+                            onRefresh={handleRefresh}
                         />
                     }
                 >
                     <Button onPress={handleOpenWeeklySheet}>Create Weekly Section</Button>
 
-                    {weeks.length === 0 ? (
+                    {weeklySections.length === 0 ? (
                         <ThemedView style={styles.emptyState}>
                             <ThemedText style={styles.emptyText}>
                                 No weekly content available yet
                             </ThemedText>
                         </ThemedView>
                     ) : (
-                        weeks.map((week) => (
+                        weeklySections.map((week) => (
                             <WeeklyCard
                                 key={week.id}
                                 count={week.week_number}
