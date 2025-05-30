@@ -84,23 +84,20 @@ export default function ClassesScreen() {
                         </ThemedText>
                     </ThemedView>
                 ) : (
-                    <>
-                        {console.log('Classes:', classes)}
-                        <ThemedView>
-                            {classes.map((classItem) => (
-                                <ClassCard
-                                    key={classItem.id}
-                                    title={classItem.name || 'Untitled Class'}
-                                    classCode={classItem.tag || 'No Code'}
-                                    description={classItem.description || 'No description available'}
-                                    onPress={() => {
-                                        console.log('Navigating to class with ID:', classItem.id);
-                                        router.push(`/(class)/${classItem.id}/(tabs)`);
-                                    }}
-                                />
-                            ))}
-                        </ThemedView>
-                    </>
+                    <ThemedView>
+                        {classes.map((classItem) => (
+                            <ClassCard
+                                key={classItem.id}
+                                title={classItem.name || 'Untitled Class'}
+                                classCode={classItem.tag || 'No Code'}
+                                description={classItem.description || 'No description available'}
+                                onPress={() => {
+                                    console.log('Navigating to class with ID:', classItem.id);
+                                    router.push(`/(class)/${classItem.id}/(tabs)`);
+                                }}
+                            />
+                        ))}
+                    </ThemedView>
                 )}
             </ScrollView>
         </ThemedView>
