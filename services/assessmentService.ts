@@ -1,4 +1,4 @@
-import { AssessmentDetails, AssessmentItem, ClassAssessment, ComponentAssessment } from '@/types/api';
+import { AssessmentDetails, AssessmentItem, AssessmentQuestion, AssessmentSubmission, ClassAssessment, ComponentAssessment } from '@/types/api';
 import { assessmentApi } from './api/assessmentApi';
 import { tokenService } from './tokenService';
 
@@ -12,7 +12,7 @@ class AssessmentService {
         return AssessmentService.instance;
     }
 
-    // Upcoming assessments methods
+    // Upcoming assessments methods (keep existing for home page)
     async getUpcomingAssessments(userID?: string): Promise<ClassAssessment[]> {
         try {
             const rawUserID = userID !== undefined ? userID : tokenService.getUserId();
@@ -30,6 +30,7 @@ class AssessmentService {
     async getAssessmentDetails(assessmentId: string): Promise<AssessmentDetails> {
         try {
             const response = await assessmentApi.getAssessmentDetails(assessmentId);
+            console.log('Assessment details fetched successfully:', response);
             return response.data;
         } catch (error) {
             console.error('Failed to fetch assessment details:', error);
@@ -37,7 +38,29 @@ class AssessmentService {
         }
     }
 
-    // Helper methods for upcoming assessments
+    async getAssessmentSubmissions(assessmentId: string, status?: string): Promise<AssessmentSubmission[]> {
+        try {
+            const response = await assessmentApi.getAssessmentSubmissions(assessmentId, status);
+
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch assessment submissions:', error);
+            throw error;
+        }
+    }
+
+    async getAssessmentQuestions(assessmentId: string): Promise<AssessmentQuestion[]> {
+        try {
+            const response = await assessmentApi.getAssessmentQuestions(assessmentId);
+            console.log('Assessment questions fetched successfully:', response);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch assessment questions:', error);
+            throw error;
+        }
+    }
+
+    // Helper methods for upcoming assessments (keep existing)
     getAllAssessments(classAssessments: ClassAssessment[]): (AssessmentItem & { class_name: string; class_tag: string })[] {
         return classAssessments.flatMap(classData => 
             classData.class_assessment.map(assessment => ({
@@ -109,7 +132,7 @@ class AssessmentService {
         return minutes * 60;
     }
 
-    // Transform data for components
+    // Transform data for components (keep existing for home page)
     transformToComponentFormat(classAssessments: ClassAssessment[]) {
         return classAssessments.map(classData => ({
             classTitle: classData.class_name,

@@ -1,27 +1,52 @@
 import QuestionActionsMenu from "@/components/QuestionActionsMenu";
 import { QuestionCard } from "@/components/QuestionCard";
+import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
-import { response } from "@/data/response";
+import { useAssessment } from "@/contexts/AssessmentContext";
+import { assessmentService } from "@/services/assessmentService";
+import { AssessmentQuestion } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
+import { useFocusEffect, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
-
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 export default function QuestionsScreen() {
-    const params = useLocalSearchParams();
-    const assessmentId = params.id as string;
     const navigation = useNavigation('/(assessment)');
     const theme = useColorScheme();
+    const { assessmentId, assessmentInfo } = useAssessment();
 
-    const [questions, setQuestions] = useState(response.getAssessmentById.data);
+    const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
     const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchQuestions = useCallback(async () => {
+        if (!assessmentId) return;
+
+        try {
+            setError(null);
+            const data = await assessmentService.getAssessmentQuestions(assessmentId);
+            setQuestions(data);
+        } catch (err) {
+            setError('Failed to load questions');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }, [assessmentId]);
+
+    const handleRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchQuestions();
+        setRefreshing(false);
+    }, [fetchQuestions]);
 
     useEffect(() => {
-        console.log('QuestionsScreen mounted with params:', params)
-    }, [params])
+        fetchQuestions();
+    }, [fetchQuestions]);
 
     useFocusEffect(
         useCallback(() => {
@@ -119,6 +144,31 @@ export default function QuestionsScreen() {
         }
     };
 
+    if (loading) {
+        return (
+            <ThemedView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={Colors[theme ?? 'light'].tint} />
+                <ThemedText style={{ marginTop: 16 }}>Loading questions...</ThemedText>
+            </ThemedView>
+        );
+    }
+
+    if (error) {
+        return (
+            <ThemedView style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+                <ThemedText style={{ textAlign: 'center', marginBottom: 16 }}>
+                    {error}
+                </ThemedText>
+                <ThemedText
+                    style={{ color: Colors[theme ?? 'light'].tint, textAlign: 'center' }}
+                    onPress={fetchQuestions}
+                >
+                    Tap to retry
+                </ThemedText>
+            </ThemedView>
+        );
+    }
+
     return (
         <ThemedView style={styles.container}>
             <QuestionActionsMenu
@@ -132,6 +182,14 @@ export default function QuestionsScreen() {
             <ScrollView
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        colors={[Colors[theme ?? 'light'].tint]}
+                        tintColor={Colors[theme ?? 'light'].tint}
+                    />
+                }
             >
                 <View style={styles.questionsList}>
                     {questions.map((question, index) => (

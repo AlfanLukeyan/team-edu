@@ -1,14 +1,16 @@
-import { useClass } from '@/contexts/ClassContext';
+import { useAssessment } from '@/contexts/AssessmentContext';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 
-export default function ClassIdLayout() {
+export default function AssessmentIdLayout() {
     const { id } = useLocalSearchParams<{ id: string }>();
-    const { setClassId, classInfo } = useClass();
+    const { setAssessmentId } = useAssessment();
 
     useEffect(() => {
-            setClassId(id);
-    }, [id, setClassId]);
+        if (id) {
+            setAssessmentId(id);
+        }
+    }, [id, setAssessmentId]);
 
     return (
         <Stack
@@ -19,7 +21,7 @@ export default function ClassIdLayout() {
             <Stack.Screen
                 name="(tabs)"
                 options={{
-                    title: "Class Details",
+                    title: "Assessment Details",
                 }}
             />
         </Stack>

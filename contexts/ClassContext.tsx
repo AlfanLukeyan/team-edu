@@ -49,7 +49,6 @@ export function ClassProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         if (classId) {
-            console.log('ClassContext: Setting classId to:', classId);
             fetchClassInfo(classId);
         }
     }, [classId]);

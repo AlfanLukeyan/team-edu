@@ -125,10 +125,7 @@ const AssessmentsScreen = () => {
                                 title={assessment.name}
                                 startDate={formatDate(assessment.start_time)}
                                 endDate={formatDate(assessment.end_time)}
-                                onPress={() => router.push({
-                                    pathname: "/(assessment)/(tabs)",
-                                    params: { id: assessment.id }
-                                })}
+                                onPress={() => router.push(`/(assessment)/${assessment.id}/(tabs)`)}
                             />
                         ))
                     )}

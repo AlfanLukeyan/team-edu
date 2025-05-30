@@ -5,53 +5,21 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { TimeRemainingCard } from "@/components/TimeRemainingCard";
 import { Colors } from "@/constants/Colors";
+import { useAssessment } from "@/contexts/AssessmentContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { assessmentService } from "@/services/assessmentService";
-import { AssessmentDetails } from "@/types/api";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useCallback } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 export default function AboutAssessmentScreen() {
-    const params = useLocalSearchParams();
-    const assessmentId = params.id as string;
     const router = useRouter();
     const theme = useColorScheme() ?? 'light';
-    
-    const [assessment, setAssessment] = useState<AssessmentDetails | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const fetchAssessmentDetails = useCallback(async () => {
-        if (!assessmentId) {
-            setError('Assessment ID is required');
-            setLoading(false);
-            return;
-        }
-
-        try {
-            setError(null);
-            const data = await assessmentService.getAssessmentDetails(assessmentId);
-            setAssessment(data);
-        } catch (error: any) {
-            console.error('Failed to fetch assessment details:', error);
-            setError(error.message || 'Failed to load assessment details');
-        } finally {
-            setLoading(false);
-        }
-    }, [assessmentId]);
+    const { assessmentInfo, loading, error, refetchAssessmentInfo } = useAssessment();
 
     const handleRefresh = useCallback(async () => {
-        setRefreshing(true);
-        await fetchAssessmentDetails();
-        setRefreshing(false);
-    }, [fetchAssessmentDetails]);
-
-    useEffect(() => {
-        console.log('AboutAssessmentScreen mounted with params:', params);
-        fetchAssessmentDetails();
-    }, [fetchAssessmentDetails]);
+        await refetchAssessmentInfo();
+    }, [refetchAssessmentInfo]);
 
     if (loading) {
         return (
@@ -62,7 +30,7 @@ export default function AboutAssessmentScreen() {
         );
     }
 
-    if (error || !assessment) {
+    if (error || !assessmentInfo) {
         return (
             <ThemedView style={[styles.container, styles.centerContent]}>
                 <ThemedText style={{ textAlign: 'center', marginBottom: 16 }}>
@@ -70,7 +38,7 @@ export default function AboutAssessmentScreen() {
                 </ThemedText>
                 <ThemedText 
                     style={{ color: Colors[theme].tint, textAlign: 'center' }}
-                    onPress={fetchAssessmentDetails}
+                    onPress={refetchAssessmentInfo}
                 >
                     Tap to retry
                 </ThemedText>
@@ -78,9 +46,9 @@ export default function AboutAssessmentScreen() {
         );
     }
 
-    const startDateTime = assessmentService.formatDateTime(assessment.start_time);
-    const endDateTime = assessmentService.formatDateTime(assessment.end_time);
-    const durationInSeconds = assessmentService.convertMinutesToSeconds(assessment.duration);
+    const startDateTime = assessmentService.formatDateTime(assessmentInfo.start_time);
+    const endDateTime = assessmentService.formatDateTime(assessmentInfo.end_time);
+    const durationInSeconds = assessmentService.convertMinutesToSeconds(assessmentInfo.duration);
 
     return (
         <ThemedView style={styles.container}>
@@ -89,7 +57,7 @@ export default function AboutAssessmentScreen() {
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
-                        refreshing={refreshing}
+                        refreshing={loading}
                         onRefresh={handleRefresh}
                         colors={[Colors[theme].tint]}
                         tintColor={Colors[theme].tint}
@@ -97,10 +65,10 @@ export default function AboutAssessmentScreen() {
                 }
             >
                 <View style={styles.content}>
-                    <ThemedText type="title">{assessment.name}</ThemedText>
+                    <ThemedText type="title">{assessmentInfo.name}</ThemedText>
                     
                     <ThemedText type="default" style={styles.description}>
-                        Duration: {assessment.duration} minutes
+                        Duration: {assessmentInfo.duration} minutes
                     </ThemedText>
                     
                     <View style={styles.cardsRow}>
@@ -112,8 +80,8 @@ export default function AboutAssessmentScreen() {
                             style={{ flex: 1 }}
                         />
                         <CompletedCountCard 
-                            completedCount={assessment.total_submission} 
-                            totalCount={assessment.total_student} 
+                            completedCount={assessmentInfo.total_submission} 
+                            totalCount={assessmentInfo.total_student} 
                             style={{ flex: 1 }} 
                         />
                     </View>
@@ -124,12 +92,12 @@ export default function AboutAssessmentScreen() {
                         onPress={() => {
                             router.push({
                                 pathname: "/(assessment)/session",
-                                params: { id: assessment.id },
+                                params: { id: assessmentInfo.id },
                             });
                         }}
                         description="Please ensure that you are prepared to take the assessment."
                     >
-                        Start Assessment
+                        Start
                     </ButtonWithDescription>
                 </View>
             </ScrollView>

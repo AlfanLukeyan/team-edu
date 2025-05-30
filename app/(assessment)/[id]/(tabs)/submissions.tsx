@@ -1,26 +1,52 @@
 import SubmissionActionsMenu from "@/components/SubmissionActionsMenu";
 import { SubmissionCard } from "@/components/SubmissionCard";
+import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
-import { response } from "@/data/response";
+import { useAssessment } from "@/contexts/AssessmentContext";
+import { assessmentService } from "@/services/assessmentService";
+import { AssessmentSubmission } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
+import { useFocusEffect, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 export default function SubmissionsScreen() {
-    const params = useLocalSearchParams();
-    const assessmentId = params.id as string;
     const navigation = useNavigation('/(assessment)');
     const theme = useColorScheme();
+    const { assessmentId } = useAssessment();
 
-    const [submissions, setSubmissions] = useState(response.getAllSubmissions.data);
+    const [submissions, setSubmissions] = useState<AssessmentSubmission[]>([]);
     const [selectedSubmissionIds, setSelectedSubmissionIds] = useState<string[]>([]);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchSubmissions = useCallback(async () => {
+        if (!assessmentId) return;
+
+        try {
+            setError(null);
+            const data = await assessmentService.getAssessmentSubmissions(assessmentId);
+            setSubmissions(data);
+        } catch (err) {
+            setError('Failed to load submissions');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }, [assessmentId]);
+
+    const handleRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchSubmissions();
+        setRefreshing(false);
+    }, [fetchSubmissions]);
 
     useEffect(() => {
-        console.log('SubmissionsScreen mounted with params:', params)
-    }, [params])
+        fetchSubmissions();
+    }, [fetchSubmissions]);
 
     useFocusEffect(
         useCallback(() => {
@@ -69,14 +95,14 @@ export default function SubmissionsScreen() {
     }, [selectedSubmissionIds, showActionsMenu, navigation, theme]);
 
     const handleSelectAllSubmissions = () => {
-        const allSubmissionIds = submissions.map(submission => submission.id);
+        const allSubmissionIds = submissions.filter(s => s.id).map(s => s.id!);
         setSelectedSubmissionIds(allSubmissionIds);
         setShowActionsMenu(false);
     };
 
     const handleDeleteSubmissions = () => {
-        const selectedSubmissions = submissions.filter(s => selectedSubmissionIds.includes(s.id));
-        const submissionNames = selectedSubmissions.map(s => s.user_name).join(', ');
+        const selectedSubmissions = submissions.filter(s => s.id && selectedSubmissionIds.includes(s.id));
+        const submissionNames = selectedSubmissions.map(s => s.username).join(', ');
 
         Alert.alert(
             "Delete Submissions",
@@ -87,7 +113,7 @@ export default function SubmissionsScreen() {
                     text: "Delete",
                     style: "destructive",
                     onPress: () => {
-                        setSubmissions(submissions.filter(submission => !selectedSubmissionIds.includes(submission.id)));
+                        setSubmissions(submissions.filter(submission => !submission.id || !selectedSubmissionIds.includes(submission.id)));
                         setSelectedSubmissionIds([]);
                         setShowActionsMenu(false);
                     }
@@ -114,16 +140,30 @@ export default function SubmissionsScreen() {
         }
     };
 
-    type Submission = {
-        id: string;
-        user_profile_url: string;
-        user_name: string;
-        user_id: string;
-        time_remaining: number;
-        status: string;
-        score: number;
-        total_score: number;
-    };
+    if (loading) {
+        return (
+            <ThemedView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={Colors[theme ?? 'light'].tint} />
+                <ThemedText style={{ marginTop: 16 }}>Loading submissions...</ThemedText>
+            </ThemedView>
+        );
+    }
+
+    if (error) {
+        return (
+            <ThemedView style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+                <ThemedText style={{ textAlign: 'center', marginBottom: 16 }}>
+                    {error}
+                </ThemedText>
+                <ThemedText 
+                    style={{ color: Colors[theme ?? 'light'].tint, textAlign: 'center' }}
+                    onPress={fetchSubmissions}
+                >
+                    Tap to retry
+                </ThemedText>
+            </ThemedView>
+        );
+    }
 
     return (
         <ThemedView style={styles.container}>
@@ -137,22 +177,30 @@ export default function SubmissionsScreen() {
             <ScrollView
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        colors={[Colors[theme ?? 'light'].tint]}
+                        tintColor={Colors[theme ?? 'light'].tint}
+                    />
+                }
             >
                 <View style={styles.submissionsList}>
                     {submissions.map((item) => (
                         <SubmissionCard
-                            key={item.id}
-                            id={item.id}
-                            user_profile_url={item.user_profile_url}
-                            user_name={item.user_name}
-                            user_id={item.user_id}
-                            time_remaining={item.time_remaining}
+                            key={item.id || item.user_user_id}
+                            id={item.id || item.user_user_id}
+                            user_profile_url={`http://20.2.83.17:5002/storage/user_profile_pictures/${item.user_user_id}.jpg`}
+                            user_name={item.username}
+                            user_id={item.user_user_id}
+                            time_remaining={item.time_remaining? item.time_remaining : undefined}
                             status={item.status}
                             score={item.score}
-                            total_score={item.total_score}
-                            isSelected={selectedSubmissionIds.includes(item.id)}
-                            onLongPress={handleSubmissionLongPress}
-                            onPress={handleSubmissionPress}
+                            total_score={100}
+                            isSelected={item.id ? selectedSubmissionIds.includes(item.id) : false}
+                            onLongPress={item.id ? () => handleSubmissionLongPress(item.id!) : undefined}
+                            onPress={item.id ? () => handleSubmissionPress(item.id!) : undefined}
                         />
                     ))}
                 </View>
