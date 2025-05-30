@@ -1,4 +1,4 @@
-import { Class, ClassDetail, Week } from "@/types/class";
+import { Class, ClassDetail, Week } from '@/types/api';
 import { classApi } from "./api/classApi";
 import { tokenService } from "./tokenService";
 

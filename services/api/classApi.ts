@@ -1,4 +1,4 @@
-import { ClassDetailResponse } from '@/types/class';
+import { ClassDetailResponse } from '@/types/api';
 import { httpClient } from '../httpClient';
 import { tokenService } from '../tokenService';
 
