@@ -6,12 +6,12 @@ import { ThemedView } from "./ThemedView";
 import { IconSymbol } from './ui/IconSymbol';
 
 interface CompletedCountCardProps {
-    completedCount: number;
+    comletedCount: number;
     totalCount: number;
     style?: object;
 }
 
-export const CompletedCountCard: React.FC<CompletedCountCardProps> = ({ completedCount, totalCount, style }) => {
+export const CompletedCountCard: React.FC<CompletedCountCardProps> = ({ comletedCount, totalCount, style }) => {
     const theme = useColorScheme() || "light";
     return (
         <ThemedView isCard={true} style={[styles.container, style]}>
@@ -22,7 +22,7 @@ export const CompletedCountCard: React.FC<CompletedCountCardProps> = ({ complete
                 color={Colors[theme].icon}
             />
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <ThemedText type='title'>{completedCount}</ThemedText>
+                <ThemedText type='title'>{comletedCount}</ThemedText>
                 <ThemedText>/{totalCount} Students</ThemedText>
             </View>
         </ThemedView>

@@ -1,26 +1,36 @@
 import { Colors } from "@/constants/Colors";
-import { ComponentAssessment } from "@/types/api";
 import React from "react";
 import { StyleSheet, useColorScheme, View } from "react-native";
 import { AssessmentCard } from "./AssesmentCard";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
-interface UpcomingAssessmentCardProps {
-    classTitle: string;
-    classCode: string;
-    assessments: ComponentAssessment[];
-    onAssessmentPress?: (assessment: ComponentAssessment) => void;
+interface Assessment {
+    id: string;
+    title: string;
+    description: string;
+    start_date: string;
+    end_date: string;
+    type: string;
+    total_marks: number;
+    duration: number;
+    days_remaining: number;
 }
 
-export function UpcomingAssessmentCard({ 
-    classTitle, 
-    classCode, 
-    assessments, 
-    onAssessmentPress 
-}: UpcomingAssessmentCardProps) {
+interface ClassAssessments {
+    class_id: string;
+    class_title: string;
+    class_code: string;
+    assessments: Assessment[];
+}
+
+interface UpcomingAssessmentCardProps {
+    classData: ClassAssessments;
+    onAssessmentPress?: (assessment: Assessment) => void;
+}
+
+export function UpcomingAssessmentCard({ classData, onAssessmentPress }: UpcomingAssessmentCardProps) {
     const theme = useColorScheme();
-    
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -42,15 +52,15 @@ export function UpcomingAssessmentCard({
             <View style={styles.mainContent}>
                 <View style={styles.classInfo}>
                     <ThemedText type="subtitle">
-                        {classCode}
+                        {classData.class_code}
                     </ThemedText>
                     <ThemedText type='defaultSemiBold' style={styles.classTitle}>
-                        {classTitle}
+                        {classData.class_title}
                     </ThemedText>
                 </View>
 
                 <View style={styles.assessmentsList}>
-                    {assessments.map((assessment, index) => (
+                    {classData.assessments.map((assessment, index) => (
                         <View key={assessment.id}>
                             <AssessmentCard
                                 title={assessment.title}
@@ -58,7 +68,7 @@ export function UpcomingAssessmentCard({
                                 endDate={getDaysRemainingText(assessment.days_remaining)}
                                 onPress={() => onAssessmentPress?.(assessment)}
                             />
-                            {index < assessments.length - 1 && (
+                            {index < classData.assessments.length - 1 && (
                                 <View style={[
                                     styles.separator,
                                     { backgroundColor: Colors[theme ?? 'light'].border }

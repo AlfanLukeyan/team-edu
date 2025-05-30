@@ -1,113 +1,58 @@
-import { Colors } from '@/constants/Colors';
-import { HashUtils } from '@/utils/hashUtils';
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { Image, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
-import { ThemedText } from './ThemedText';
-import { ThemedView } from './ThemedView';
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { Image, StyleSheet, View } from 'react-native';
+import { ThemedText } from "./ThemedText";
+import { ThemedView } from "./ThemedView";
 
 interface StudentCardProps {
     user_id: string;
     user_name: string;
-    user_profile_url?: string;
-    onPress?: () => void;
+    user_profile_url: string;
 }
 
-export function StudentCard({
+export const StudentCard: React.FC<StudentCardProps> = ({
     user_id,
     user_name,
     user_profile_url,
-    onPress
-}: StudentCardProps) {
-    const [imageError, setImageError] = useState(false);
-    const theme = useColorScheme() || 'light';
-
-    const handleImageError = () => {
-        setImageError(true);
-    };
-
-    const shouldShowImage = user_profile_url && !imageError;
+}) => {
+    const theme = useColorScheme() || "light";
 
     return (
-        <TouchableOpacity style={styles.container} onPress={onPress}>
-            <ThemedView style={styles.card} isCard={true}>
-                <View style={styles.avatarContainer}>
-                    {shouldShowImage ? (
-                        <Image
-                            source={{
-                                uri: user_profile_url,
-                                cache: 'reload'
-                            }}
-                            style={styles.avatar}
-                            onError={handleImageError}
-                        />
-                    ) : (
-                        <View style={[styles.avatarPlaceholder, { backgroundColor: Colors[theme].tint + '20' }]}>
-                            <Ionicons
-                                name="person-outline"
-                                size={24}
-                                color={Colors[theme].text}
-                            />
-                        </View>
-                    )}
-                </View>
-
-                <View style={styles.content}>
-                    <ThemedText style={styles.name}>
-                        {user_name}
-                    </ThemedText>
-
-                    <ThemedText style={styles.userId}>
-                        {HashUtils.readableHash(user_id, 'STU')}
-                    </ThemedText>
-                </View>
-            </ThemedView>
-        </TouchableOpacity>
+        <ThemedView isCard={true} style={styles.container}>
+            <Image
+                source={{ uri: user_profile_url }}
+                style={styles.profileImage}
+            />
+            <View style={styles.infoContainer}>
+                <ThemedText type="defaultSemiBold">{user_name}</ThemedText>
+                <ThemedText
+                    style={{
+                        color: theme === "light" ? Colors.light.subtitle : Colors.dark.subtitle
+                    }}
+                >
+                    ID: {user_id}
+                </ThemedText>
+            </View>
+        </ThemedView>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
-        marginBottom: 8,
-    },
-    card: {
+        padding: 12,
+        borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 8,
-        borderRadius: 15
+        marginBottom: 8
     },
-    avatarContainer: {
-        marginRight: 12,
-    },
-    avatar: {
+    profileImage: {
         width: 48,
         height: 48,
         borderRadius: 24,
+        marginRight: 12
     },
-    avatarPlaceholder: {
-        width: 48,
-        height: 48,
-
-        borderRadius: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    avatarText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    content: {
+    infoContainer: {
         flex: 1,
-    },
-    name: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-    userId: {
-        fontSize: 12,
-        opacity: 0.7,
-        fontFamily: 'monospace',
-    },
+        justifyContent: 'center'
+    }
 });
