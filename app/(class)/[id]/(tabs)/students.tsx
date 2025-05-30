@@ -9,23 +9,25 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet } from "react
 
 const StudentsScreen = () => {
     const { classId } = useClass();
+    const apiURL = process.env.EXPO_PUBLIC_API_URL;
     const [members, setMembers] = useState<ClassMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const fetchClassMembers = async () => {
-        if (!classId) return;
-        
+        if (!classId) {
+            setLoading(false);
+            return;
+        }
+
         try {
             setError(null);
             const data = await classService.getClassMembers(classId);
-            // Filter only students
             const students = data.filter(member => member.role === 'student');
             setMembers(students);
         } catch (err) {
             setError('Failed to load class members');
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -38,7 +40,6 @@ const StudentsScreen = () => {
     };
 
     useEffect(() => {
-        console.log('Fetching class members for class ID:', classId);
         if (classId) {
             fetchClassMembers();
         }
@@ -86,7 +87,7 @@ const StudentsScreen = () => {
                             key={student.user_user_id}
                             user_id={student.user_user_id}
                             user_name={student.username}
-                            user_profile_url={student.photo_url}
+                            user_profile_url={`${apiURL}/${student.photo_url}`}
                         />
                     ))
                 )}

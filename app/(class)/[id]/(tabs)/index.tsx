@@ -23,19 +23,17 @@ const WeeklyScreen = () => {
 
     const fetchWeeklySections = async () => {
         if (!classId) {
-            console.log('WeeklyScreen: No classId available yet');
+            setLoading(false);
             return;
         }
         
         try {
             setError(null);
-            console.log('WeeklyScreen: Fetching weekly sections for class ID:', classId);
             const data = await classService.getWeeklySections(classId);
             const sortedData = data.sort((a, b) => a.week_number - b.week_number);
             setWeeklySections(sortedData);
         } catch (err) {
             setError('Failed to load weekly sections');
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -50,9 +48,6 @@ const WeeklyScreen = () => {
     const handleOpenWeeklySheet = useCallback(() => createSectionRef.current?.open(), []);
     
     const handleCreateSection = useCallback((data: WeeklySectionFormData) => {
-        console.log("New section created:", data);
-        // TODO: Add API call to create weekly section
-        // After successful creation, refresh the data
         handleRefresh();
     }, []);
 

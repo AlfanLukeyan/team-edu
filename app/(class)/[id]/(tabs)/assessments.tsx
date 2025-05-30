@@ -23,7 +23,7 @@ function formatDate(isoString: string): string {
 }
 
 const AssessmentsScreen = () => {
-    const { classId } = useClass(); // Use context instead of useLocalSearchParams
+    const { classId } = useClass();
     const router = useRouter();
     const [assessments, setAssessments] = useState<Assessment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -36,18 +36,16 @@ const AssessmentsScreen = () => {
 
     const fetchAssessments = async () => {
         if (!classId) {
-            console.log('AssessmentsScreen: No classId available yet');
+            setLoading(false);
             return;
         }
         
         try {
             setError(null);
-            console.log('AssessmentsScreen: Fetching assessments for class ID:', classId);
             const data = await classService.getClassAssessments(classId);
             setAssessments(data);
         } catch (err) {
             setError('Failed to load assessments');
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -62,15 +60,12 @@ const AssessmentsScreen = () => {
     const handleOpenAssessmentSheet = useCallback(() => createAssessmentRef.current?.open(), []);
 
     const handleCreateAssessment = useCallback((data: AssessmentFormData) => {
-        console.log("New assessment created:", data);
         const newAssessmentId = `assessment_${Date.now()}`;
         setCurrentAssessmentId(newAssessmentId);
         createQuestionsRef.current?.open();
     }, []);
 
     const handleCreateQuestions = useCallback((data: QuestionsFormData) => {
-        console.log("Questions created for assessment:", data.assessment_id);
-        console.log("Questions:", data.questions);
         setCurrentAssessmentId(null);
         handleRefresh();
     }, []);

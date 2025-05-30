@@ -1,11 +1,46 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useClass } from '@/contexts/ClassContext';
-import React from 'react';
+import { classService } from '@/services/classService';
+import { ClassInfo } from '@/types/api';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 const AboutClassScreen = () => {
-    const { classInfo, loading, error, refetchClassInfo } = useClass();
+    const { classId } = useClass();
+    const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchClassInfo = async () => {
+        if (!classId) {
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setError(null);
+            const data = await classService.getClassInfo(classId);
+            setClassInfo(data);
+        } catch (err) {
+            setError('Failed to load class information');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await fetchClassInfo();
+        setRefreshing(false);
+    };
+
+    useEffect(() => {
+        if (classId) {
+            fetchClassInfo();
+        }
+    }, [classId]);
 
     if (loading) {
         return (
@@ -32,8 +67,8 @@ const AboutClassScreen = () => {
                 style={styles.scrollView}
                 refreshControl={
                     <RefreshControl
-                        refreshing={loading}
-                        onRefresh={refetchClassInfo}
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
                     />
                 }
             >
@@ -55,19 +90,6 @@ const AboutClassScreen = () => {
                             Teacher
                         </ThemedText>
                         <ThemedText>{classInfo.teacher}</ThemedText>
-                    </View>
-
-                    {/* Class Information */}
-                    <View style={styles.section}>
-                        <ThemedText type='defaultSemiBold' style={styles.sectionTitle}>
-                            Class Information
-                        </ThemedText>
-                        <ThemedText style={styles.classId}>
-                            Class ID: {classInfo.id}
-                        </ThemedText>
-                        <ThemedText style={styles.teacherId}>
-                            Teacher ID: {classInfo.teacher_id}
-                        </ThemedText>
                     </View>
                 </View>
             </ScrollView>
