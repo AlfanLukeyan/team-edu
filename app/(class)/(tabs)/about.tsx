@@ -1,35 +1,26 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { useClassDetail } from '@/hooks/useClassDetail';
-import { useLocalSearchParams } from 'expo-router';
+import { useClass } from '@/contexts/ClassContext';
 import React from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
-const AboutScreen = () => {
-    const { id } = useLocalSearchParams<{ id: string }>();
-    const { 
-        classDetail, 
-        loading, 
-        refreshing, 
-        error, 
-        refreshClassDetail,
-        progress 
-    } = useClassDetail(id);
+const AboutClassScreen = () => {
+    const { classInfo, loading, error, refetchClassInfo } = useClass();
 
     if (loading) {
         return (
             <ThemedView style={styles.centered}>
                 <ActivityIndicator size="large" />
-                <ThemedText style={styles.loadingText}>Loading class details...</ThemedText>
+                <ThemedText style={styles.loadingText}>Loading class information...</ThemedText>
             </ThemedView>
         );
     }
 
-    if (error || !classDetail) {
+    if (error || !classInfo) {
         return (
             <ThemedView style={styles.centered}>
                 <ThemedText style={styles.errorText}>
-                    {error || 'Failed to load class details'}
+                    {error || 'Failed to load class information'}
                 </ThemedText>
             </ThemedView>
         );
@@ -41,20 +32,20 @@ const AboutScreen = () => {
                 style={styles.scrollView}
                 refreshControl={
                     <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={refreshClassDetail}
+                        refreshing={loading}
+                        onRefresh={refetchClassInfo}
                     />
                 }
             >
                 <View style={styles.content}>
                     {/* Class Basic Info */}
                     <View style={styles.headerSection}>
-                        <ThemedText type='title'>{classDetail.name}</ThemedText>
+                        <ThemedText type='title'>{classInfo.name}</ThemedText>
                         <ThemedText type='subtitle' style={styles.classCode}>
-                            {classDetail.tag}
+                            {classInfo.tag}
                         </ThemedText>
                         <ThemedText style={styles.description}>
-                            {classDetail.description}
+                            {classInfo.description}
                         </ThemedText>
                     </View>
 
@@ -63,65 +54,19 @@ const AboutScreen = () => {
                         <ThemedText type='defaultSemiBold' style={styles.sectionTitle}>
                             Teacher
                         </ThemedText>
-                        <ThemedText>{classDetail.teacher}</ThemedText>
+                        <ThemedText>{classInfo.teacher}</ThemedText>
                     </View>
 
-                    {/* Progress Info */}
-                    {progress && (
-                        <View style={styles.section}>
-                            <ThemedText type='defaultSemiBold' style={styles.sectionTitle}>
-                                Course Progress
-                            </ThemedText>
-                            <View style={styles.progressContainer}>
-                                <ThemedText>
-                                    Completed: {progress.completed}/{progress.total} weeks
-                                </ThemedText>
-                                <ThemedText style={styles.progressPercentage}>
-                                    {progress.percentage}% Complete
-                                </ThemedText>
-                            </View>
-                        </View>
-                    )}
-
-                    {/* Class Statistics */}
-                    <View style={styles.section}>
-                        <ThemedText type='defaultSemiBold' style={styles.sectionTitle}>
-                            Statistics
-                        </ThemedText>
-                        <View style={styles.statsContainer}>
-                            <View style={styles.statItem}>
-                                <ThemedText type='defaultSemiBold'>
-                                    {classDetail.week.length}
-                                </ThemedText>
-                                <ThemedText style={styles.statLabel}>Total Weeks</ThemedText>
-                            </View>
-                            <View style={styles.statItem}>
-                                <ThemedText type='defaultSemiBold'>
-                                    {classDetail.week.filter(week => week.assignment).length}
-                                </ThemedText>
-                                <ThemedText style={styles.statLabel}>Assignments</ThemedText>
-                            </View>
-                            <View style={styles.statItem}>
-                                <ThemedText type='defaultSemiBold'>
-                                    {classDetail.week.filter(week => 
-                                        week.item_pembelajaran?.urlVideo
-                                    ).length}
-                                </ThemedText>
-                                <ThemedText style={styles.statLabel}>Videos</ThemedText>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Class ID for Reference */}
+                    {/* Class Information */}
                     <View style={styles.section}>
                         <ThemedText type='defaultSemiBold' style={styles.sectionTitle}>
                             Class Information
                         </ThemedText>
                         <ThemedText style={styles.classId}>
-                            Class ID: {classDetail.id_kelas}
+                            Class ID: {classInfo.id}
                         </ThemedText>
                         <ThemedText style={styles.teacherId}>
-                            Teacher ID: {classDetail.teacher_id}
+                            Teacher ID: {classInfo.teacher_id}
                         </ThemedText>
                     </View>
                 </View>
@@ -170,33 +115,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 4,
     },
-    progressContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-        padding: 12,
-        borderRadius: 8,
-    },
-    progressPercentage: {
-        fontWeight: 'bold',
-        color: '#007AFF',
-    },
-    statsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        backgroundColor: '#f8f9fa',
-        padding: 16,
-        borderRadius: 12,
-    },
-    statItem: {
-        alignItems: 'center',
-        gap: 4,
-    },
-    statLabel: {
-        fontSize: 12,
-        opacity: 0.7,
-    },
     classId: {
         fontSize: 12,
         opacity: 0.6,
@@ -209,4 +127,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AboutScreen;
+export default AboutClassScreen;

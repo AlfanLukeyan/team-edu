@@ -1,25 +1,95 @@
 import { StudentCard } from '@/components/StudentCard';
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { response } from "@/data/response";
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet } from "react-native";
+import { useClass } from '@/contexts/ClassContext';
+import { classService } from '@/services/classService';
+import { ClassMember } from '@/types/api';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet } from "react-native";
 
 const StudentsScreen = () => {
-    const [students, setStudents] = useState(response.getAllStudentsByClassId.data);
+    const { classId } = useClass();
+    const [members, setMembers] = useState<ClassMember[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchClassMembers = async () => {
+        if (!classId) return;
+        
+        try {
+            setError(null);
+            const data = await classService.getClassMembers(classId);
+            // Filter only students
+            const students = data.filter(member => member.role === 'student');
+            setMembers(students);
+        } catch (err) {
+            setError('Failed to load class members');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await fetchClassMembers();
+        setRefreshing(false);
+    };
+
+    useEffect(() => {
+        console.log('Fetching class members for class ID:', classId);
+        if (classId) {
+            fetchClassMembers();
+        }
+    }, [classId]);
+
+    if (loading) {
+        return (
+            <ThemedView style={styles.centered}>
+                <ActivityIndicator size="large" />
+                <ThemedText style={styles.loadingText}>Loading students...</ThemedText>
+            </ThemedView>
+        );
+    }
+
+    if (error) {
+        return (
+            <ThemedView style={styles.centered}>
+                <ThemedText style={styles.errorText}>
+                    {error}
+                </ThemedText>
+            </ThemedView>
+        );
+    }
 
     return (
         <ThemedView style={styles.container}>
             <ScrollView
                 style={styles.scrollView}
-            >
-                {students.map((student) => (
-                    <StudentCard
-                        key={student.user_id}
-                        user_id={student.user_id}
-                        user_name={student.user_name}
-                        user_profile_url={student.user_profile_url}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
                     />
-                ))}
+                }
+            >
+                {members.length === 0 ? (
+                    <ThemedView style={styles.emptyState}>
+                        <ThemedText style={styles.emptyText}>
+                            No students found in this class
+                        </ThemedText>
+                    </ThemedView>
+                ) : (
+                    members.map((student) => (
+                        <StudentCard
+                            key={student.user_user_id}
+                            user_id={student.user_user_id}
+                            user_name={student.username}
+                            user_profile_url={student.photo_url}
+                        />
+                    ))
+                )}
             </ScrollView>
         </ThemedView>
     )
@@ -33,6 +103,30 @@ const styles = StyleSheet.create({
         flex: 1,
         borderRadius: 15,
         margin: 16,
+    },
+    centered: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+    },
+    loadingText: {
+        marginTop: 12,
+        opacity: 0.7,
+    },
+    errorText: {
+        color: 'red',
+        textAlign: 'center',
+    },
+    emptyState: {
+        padding: 24,
+        alignItems: 'center',
+        borderRadius: 12,
+        marginTop: 20,
+    },
+    emptyText: {
+        opacity: 0.7,
+        textAlign: 'center',
     },
 });
 

@@ -1,35 +1,28 @@
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
-import { response } from '@/data/response';
+import { ClassProvider, useClass } from '@/contexts/ClassContext';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { TouchableOpacity, useColorScheme } from 'react-native';
 
-type RouteParams = {
-    params?: {
-        assessmentId?: string;
-        assignmentId?: string;
-    };
-};
-
-export default function ClassLayout() {
-    const { id } = useLocalSearchParams();
+function ClassLayoutContent() {
+    const { id } = useLocalSearchParams<{ id: string }>();
+    const { setClassId, classInfo } = useClass();
     const colorScheme = useColorScheme();
     const router = useRouter();
-    const [className, setClassName] = useState('Class Details');
 
     useEffect(() => {
-        if (id) {
-            const classData = response.getAllClasses.data.find(
-                (classItem) => classItem.id === id.toString()
-            );
-
-            if (classData?.title) {
-                setClassName(classData.title);
-            }
+        console.log('ClassLayout: Received id parameter:', id);
+        if (id && typeof id === 'string') {
+            console.log('ClassLayout: Setting classId to:', id);
+            setClassId(id);
+        } else {
+            console.log('ClassLayout: No valid id parameter received');
         }
-    }, [id]);
+    }, [id, setClassId]);
+
+    const className = classInfo?.name || 'Class Details';
 
     return (
         <Stack
@@ -72,5 +65,13 @@ export default function ClassLayout() {
                 }}
             />
         </Stack>
+    );
+}
+
+export default function ClassLayout() {
+    return (
+        <ClassProvider>
+            <ClassLayoutContent />
+        </ClassProvider>
     );
 }

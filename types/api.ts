@@ -21,30 +21,56 @@ export interface ItemPembelajaran {
     file_link: string;
 }
 
-export interface Week {
+export interface WeeklySection {
     id: number;
     week_number: number;
     class_id: string;
-    assignment: Assignment;
+    assignment: Assignment | null;
     item_pembelajaran: ItemPembelajaran;
 }
 
-export interface ClassDetail {
-    id_kelas: string;
+export interface ClassInfo {
+    id: string;
     name: string;
     tag: string;
     description: string;
     teacher: string;
     teacher_id: string;
-    week: Week[];
 }
 
-export interface ClassDetailResponse {
+export interface Assessment {
+    id: string;
+    name: string;
+    description: string;
+    duration: number;
+    start_time: string;
+    end_time: string;
+    class_id: string;
+    date_created: string;
+    updated_at: string;
+}
+
+export interface ClassMember {
+    user_user_id: string;
+    username: string;
+    photo_url: string;
+    role: 'teacher' | 'student';
+    kelas_kelas_id: string;
+}
+
+// API Response types
+export interface ApiResponse<T> {
     status: string;
     message: string;
-    data: ClassDetail;
+    data: T;
 }
 
+export interface ClassInfoResponse extends ApiResponse<ClassInfo> {}
+export interface WeeklySectionResponse extends ApiResponse<WeeklySection[]> {}
+export interface AssessmentResponse extends ApiResponse<Assessment[]> {}
+export interface ClassMemberResponse extends ApiResponse<ClassMember[]> {}
+
+// Legacy types for compatibility
 export interface Class {
     id: string;
     name?: string;
@@ -54,64 +80,4 @@ export interface Class {
     desc?: string;
     teacher?: string;
     teacher_id?: string;
-}
-
-// Assessment types
-export interface AssessmentItem {
-    class_id: string;
-    end_time: string;
-    id: string;
-    name: string;
-    start_time: string;
-    submission_status: 'todo' | 'in_progress' | 'completed' | 'submitted';
-}
-
-export interface ClassAssessment {
-    class_assessment: AssessmentItem[];
-    class_desc: string;
-    class_id: string;
-    class_name: string;
-    class_tag: string;
-    class_teacher: string;
-    class_teacher_id: string;
-}
-
-export interface UpcomingAssessmentsResponse {
-    data: ClassAssessment[];
-    message: string;
-    status: string;
-}
-
-// Assessment Details types - for the new API
-export interface AssessmentDetails {
-    duration: number; // in minutes
-    end_time: string;
-    id: string;
-    name: string;
-    start_time: string;
-    total_student: number;
-    total_submission: number;
-}
-
-export interface AssessmentDetailsResponse {
-    data: AssessmentDetails;
-    message: string;
-    status: string;
-}
-
-// Component interfaces
-export interface ComponentAssessment {
-    id: string;
-    title: string;
-    start_date: string;
-    end_date: string;
-    days_remaining: number;
-    submission_status: string;
-}
-
-// Common API response types
-export interface ApiResponse<T> {
-    status: string;
-    message: string;
-    data: T;
 }
