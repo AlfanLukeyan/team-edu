@@ -16,9 +16,6 @@ import {
 import { httpClient } from '../httpClient';
 import { tokenService } from '../tokenService';
 
-// Temporary base URL for update assessment
-const TEMP_UPDATE_BASE_URL = 'http://20.2.83.17:8080';
-
 export const assessmentApi = {
     getUpcomingAssessments: async (userID?: string): Promise<UpcomingAssessmentsResponse> => {
         const finalUserID = userID || tokenService.getUserId();
@@ -49,27 +46,11 @@ export const assessmentApi = {
     },
 
     updateAssessment: async (data: UpdateAssessmentRequest): Promise<UpdateAssessmentResponse> => {
-        const token = await tokenService.getValidToken();
-        const response = await fetch(`${TEMP_UPDATE_BASE_URL}/teacher/assessment/`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            const message = errorData.error || errorData.message || `Request failed with status ${response.status}`;
-            throw new Error(message);
-        }
-
-        return response.json();
+        return httpClient.put('/teacher/assessment', data);
     },
 
     deleteAssessment: async (assessmentId: string): Promise<DeleteAssessmentResponse> => {
-        return httpClient.delete(`/teacher/assessment/?id=${assessmentId}`);
+        return httpClient.delete(`/teacher/assessment/delete?id=${assessmentId}`);
     },
 
     createQuestions: async (data: CreateQuestionsRequest): Promise<CreateQuestionsResponse> => {

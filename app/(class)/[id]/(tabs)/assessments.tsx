@@ -70,6 +70,8 @@ const AssessmentsScreen = () => {
             return;
         }
 
+        assessmentBottomSheetRef.current?.close();
+
         try {
             let response;
             if (assessmentId) {
@@ -90,11 +92,12 @@ const AssessmentsScreen = () => {
                 );
 
                 response = await assessmentService.updateAssessment(assessmentId, data);
-
                 await fetchAssessments();
+                ModalEmitter.showSuccess('Assessment updated successfully');
             } else {
                 response = await assessmentService.createAssessment(classId, data);
                 setCurrentAssessmentId(response.data.assessment_id);
+                ModalEmitter.showSuccess('Assessment created successfully');
                 questionBottomSheetRef.current?.open();
             }
         } catch (error) {
