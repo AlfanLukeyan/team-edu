@@ -1,11 +1,14 @@
 import { AssignmentCard } from "@/components/AssignmentCard";
 import { AttachmentCard } from "@/components/AttachmentCard";
+import WeeklySectionActionsMenu from "@/components/WeeklySectionActionsMenu";
+import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { getYoutubeEmbedUrl } from "@/utils/utils";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import React, { useState } from "react";
+import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
@@ -25,6 +28,9 @@ interface WeeklyCardProps {
         dueDate: string;
         description: string;
     };
+    weekId?: number;
+    onEdit?: (weekId: number) => void;
+    onDelete?: (weekId: number) => void;
 }
 
 export function WeeklyCard({
@@ -33,35 +39,68 @@ export function WeeklyCard({
     description,
     videoUrl,
     attachment,
-    assignment
+    assignment,
+    weekId,
+    onEdit,
+    onDelete
 }: WeeklyCardProps) {
     const router = useRouter();
     const theme = useColorScheme() ?? "light";
     const screenWidth = Dimensions.get("window").width;
     const videoHeight = screenWidth * 0.5625;
+    const [showActionsMenu, setShowActionsMenu] = useState(false);
 
     const embedUrl = videoUrl ? getYoutubeEmbedUrl(videoUrl) : "";
 
+    const handleEdit = () => {
+        if (weekId && onEdit) {
+            onEdit(weekId);
+        }
+        setShowActionsMenu(false);
+    };
+
+    const handleDelete = () => {
+        if (weekId && onDelete) {
+            onDelete(weekId);
+        }
+        setShowActionsMenu(false);
+    };
+
     return (
         <ThemedView style={{ borderRadius: 15, marginBottom: 16 }} isCard>
-            <View
-                style={{
-                    zIndex: 2,
-                    position: "absolute",
-                    margin: 18,
-                    right: 0,
-                }}
-            ></View>
-            <LinearGradient
-                colors={["#BE1BB6", "#1ECEFF"]}
-                style={{
-                    height: 30,
-                    borderTopLeftRadius: 15,
-                    borderTopRightRadius: 15,
-                }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            ></LinearGradient>
+            <WeeklySectionActionsMenu
+                visible={showActionsMenu}
+                onClose={() => setShowActionsMenu(false)}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+            />
+
+            <View style={{ position: 'relative' }}>
+                <LinearGradient
+                    colors={["#BE1BB6", "#1ECEFF"]}
+                    style={{
+                        height: 30,
+                        borderTopLeftRadius: 15,
+                        borderTopRightRadius: 15,
+                    }}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                />
+
+                {/* Ellipsis Menu Button */}
+                {weekId && onEdit && onDelete && (
+                    <TouchableOpacity
+                        style={styles.ellipsisButton}
+                        onPress={() => setShowActionsMenu(true)}
+                    >
+                        <Ionicons
+                            name="ellipsis-horizontal"
+                            size={14}
+                            color={Colors[theme].background}
+                        />
+                    </TouchableOpacity>
+                )}
+            </View>
 
             <View style={{ padding: 16 }}>
                 <View>
@@ -131,6 +170,13 @@ export function WeeklyCard({
 }
 
 const styles = StyleSheet.create({
+    ellipsisButton: {
+        position: 'absolute',
+        top: 5,
+        right: 12,
+        zIndex: 2,
+        padding: 5,
+    },
     videoContainer: {
         marginTop: 8,
         borderRadius: 8,

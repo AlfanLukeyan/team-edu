@@ -1,7 +1,7 @@
 import { Button } from "@/components/Button";
-import CreateWeeklySectionBottomSheet, {
-    CreateWeeklySectionBottomSheetRef,
-} from "@/components/teacher/CreateWeeklySectionBottomSheet";
+import WeeklySectionBottomSheet, {
+    WeeklySectionBottomSheetRef,
+} from "@/components/teacher/WeeklySectionBottomSheet";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { WeeklyCard } from "@/components/WeeklyCard";
@@ -21,7 +21,7 @@ const WeeklyScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const createSectionRef = useRef<CreateWeeklySectionBottomSheetRef>(null);
+    const createSectionRef = useRef<WeeklySectionBottomSheetRef>(null);
 
     const fetchWeeklySections = async () => {
         if (!classId) {
@@ -50,27 +50,54 @@ const WeeklyScreen = () => {
 
     const handleOpenWeeklySheet = useCallback(() => createSectionRef.current?.open(), []);
 
-    const handleCreateSection = useCallback(async (data: WeeklySectionFormData) => {
+    const handleCreateOrUpdateSection = useCallback(async (data: WeeklySectionFormData, weekId?: string) => {
         if (!classId) {
             ModalEmitter.showError('Class ID not found');
             return;
         }
 
         try {
-            ModalEmitter.showLoading('Creating weekly section...');
-
-            await classService.createWeeklySection(classId, data);
-
-            ModalEmitter.hideLoading();
-            ModalEmitter.showSuccess('Weekly section created successfully!');
+            if (weekId) {
+                // Edit mode
+                await classService.updateWeeklySection(weekId, data);
+                ModalEmitter.showSuccess('Weekly section updated successfully!');
+            } else {
+                // Create mode
+                await classService.createWeeklySection(classId, data);
+                ModalEmitter.showSuccess('Weekly section created successfully!');
+            }
 
             await handleRefresh();
         } catch (error) {
-            ModalEmitter.hideLoading();
-            console.error('Failed to create weekly section:', error);
-            ModalEmitter.showError('Failed to create weekly section. Please try again.');
+            console.error('Failed to save weekly section:', error);
+            ModalEmitter.showError('Failed to save weekly section. Please try again.');
         }
     }, [classId]);
+
+    const handleEditSection = useCallback((weekId: number) => {
+        const section = weeklySections.find(w => w.week_id === weekId);
+        if (section) {
+            createSectionRef.current?.openForEdit(section);
+        }
+    }, [weeklySections]);
+
+    const handleDeleteSection = useCallback((weekId: number) => {
+        ModalEmitter.showAlert({
+            title: "Delete Weekly Section",
+            message: "Are you sure you want to delete this weekly section?",
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    await classService.deleteWeeklySection(weekId.toString());
+                    ModalEmitter.showSuccess('Weekly section deleted successfully!');
+                    await handleRefresh();
+                } catch (error) {
+                }
+            },
+        });
+    }, [handleRefresh]);
 
     useEffect(() => {
         if (classId) {
@@ -136,14 +163,17 @@ const WeeklyScreen = () => {
                                     dueDate: formatDate(week.assignment.deadline),
                                     description: week.assignment.description,
                                 } : undefined}
-                        />
+                                weekId={week.week_id}
+                                onEdit={handleEditSection}
+                                onDelete={handleDeleteSection}
+                            />
                         ))
                     )}
                 </ScrollView>
             </ThemedView>
-            <CreateWeeklySectionBottomSheet
+            <WeeklySectionBottomSheet
                 ref={createSectionRef}
-                onSubmit={handleCreateSection}
+                onSubmit={handleCreateOrUpdateSection}
             />
         </>
     );

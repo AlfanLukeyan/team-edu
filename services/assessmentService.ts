@@ -101,7 +101,7 @@ class AssessmentService {
             classCode: classData.class_tag,
             classId: classData.class_id,
             assessments: classData.class_assessment.map(assessment => ({
-                id: assessment.id,
+                id: assessment.assessment_id,
                 title: assessment.name,
                 start_date: assessment.start_time,
                 end_date: assessment.end_time,

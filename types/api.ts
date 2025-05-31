@@ -7,7 +7,7 @@ export interface ApiResponse<T> {
 export interface AssessmentItem {
     class_id: string;
     end_time: string;
-    id: string;
+    assessment_id: string;
     name: string;
     start_time: string;
     submission_status: 'todo' | 'in_progress' | 'completed' | 'submitted';
@@ -79,7 +79,7 @@ export interface ClassInfo {
 }
 
 export interface Assessment {
-    id: string;
+    assessment_id: string;
     name: string;
     description: string;
     duration: number;

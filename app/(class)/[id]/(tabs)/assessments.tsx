@@ -91,7 +91,7 @@ const AssessmentsScreen = () => {
     };
 
     const handleSelectAllAssessments = () => {
-        const allAssessmentIds = assessments.map(assessment => assessment.id);
+        const allAssessmentIds = assessments.map(assessment => assessment.assessment_id);
         setSelectedAssessmentIds(allAssessmentIds);
         setShowActionsMenu(false);
     };
@@ -113,7 +113,7 @@ const AssessmentsScreen = () => {
 
     const handleDeleteAssessments = () => {
         const selectedAssessments = assessments.filter(assessment =>
-            selectedAssessmentIds.includes(assessment.id)
+            selectedAssessmentIds.includes(assessment.assessment_id)
         );
         const assessmentNames = selectedAssessments.map(assessment => assessment.name).join(', ');
 
@@ -130,7 +130,7 @@ const AssessmentsScreen = () => {
                     await assessmentService.deleteMultipleAssessments(selectedAssessmentIds);
 
                     setAssessments(assessments.filter(assessment =>
-                        !selectedAssessmentIds.includes(assessment.id)
+                        !selectedAssessmentIds.includes(assessment.assessment_id)
                     ));
                     setSelectedAssessmentIds([]);
                     setShowActionsMenu(false);
@@ -257,13 +257,13 @@ const AssessmentsScreen = () => {
                     ) : (
                         assessments.map((assessment) => (
                             <AssessmentCard
-                                key={assessment.id}
+                                key={assessment.assessment_id}
                                 title={assessment.name}
                                 startDate={formatDate(assessment.start_time)}
                                 endDate={formatDate(assessment.end_time)}
-                                isSelected={selectedAssessmentIds.includes(assessment.id)}
-                                onPress={() => handleAssessmentPress(assessment.id)}
-                                onLongPress={() => handleAssessmentLongPress(assessment.id)}
+                                isSelected={selectedAssessmentIds.includes(assessment.assessment_id)}
+                                onPress={() => handleAssessmentPress(assessment.assessment_id)}
+                                onLongPress={() => handleAssessmentLongPress(assessment.assessment_id)}
                             />
                         ))
                     )}

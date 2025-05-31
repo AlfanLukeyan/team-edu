@@ -52,6 +52,7 @@ export default function HomeScreen() {
     };
 
     const componentData: ClassAssessmentData[] = assessmentService.transformToComponentFormat(upcomingAssessments);
+    console.log('Component Data:', ...componentData);
 
     if (loading) {
         return (
@@ -94,7 +95,8 @@ export default function HomeScreen() {
                 <ThemedText type="title" style={{ marginBottom: 20 }}>
                     Upcoming Assessments
                 </ThemedText>
-
+                <>
+                </>
                 {componentData.map((classData) => (
                     <UpcomingAssessmentCard
                         key={classData.classId}

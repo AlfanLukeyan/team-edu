@@ -3,6 +3,7 @@ import ThemedBottomSheetTextInput from "@/components/ThemedBottomSheetTextInput"
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { WeeklySection } from "@/types/api";
 import { WeeklySectionFormData } from "@/types/common";
 import {
     BottomSheetBackdrop,
@@ -22,36 +23,64 @@ import {
 } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
-export interface CreateWeeklySectionBottomSheetRef {
+export interface WeeklySectionBottomSheetRef {
     open: () => void;
     close: () => void;
+    openForEdit: (section: WeeklySection) => void;
 }
 
-interface CreateWeeklySectionBottomSheetProps {
-    onSubmit: (data: WeeklySectionFormData) => void;
+interface WeeklySectionBottomSheetProps {
+    onSubmit: (data: WeeklySectionFormData, weekId?: string) => void;
     onClose?: () => void;
 }
 
-const CreateWeeklySectionBottomSheet = forwardRef<
-    CreateWeeklySectionBottomSheetRef,
-    CreateWeeklySectionBottomSheetProps
+const WeeklySectionBottomSheet = forwardRef<
+    WeeklySectionBottomSheetRef,
+    WeeklySectionBottomSheetProps
 >(({ onSubmit, onClose }, ref) => {
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const { dismiss } = useBottomSheetModal();
     const theme = useColorScheme() || "light";
-    const snapPoints = useMemo(() => ["25%", "60%", "95"], []);
+    const snapPoints = useMemo(() => ["25%", "60%", "95%"], []);
 
+    // Form state
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [videoUrl, setVideoUrl] = useState("");
     const [selectedFile, setSelectedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
 
+    // Edit mode state
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingWeekId, setEditingWeekId] = useState<string | null>(null);
+
+    const resetForm = useCallback(() => {
+        setTitle("");
+        setDescription("");
+        setVideoUrl("");
+        setSelectedFile(null);
+        setIsEditMode(false);
+        setEditingWeekId(null);
+    }, []);
+
     const handleClose = useCallback(() => {
+        resetForm();
         if (onClose) onClose();
         dismiss();
-    }, [onClose, dismiss]);
+    }, [resetForm, onClose, dismiss]);
 
     const handleOpen = useCallback(() => {
+        resetForm();
+        bottomSheetModalRef.current?.present();
+    }, [resetForm]);
+
+    const handleOpenForEdit = useCallback((section: WeeklySection) => {
+        setIsEditMode(true);
+        setEditingWeekId(section.week_id.toString());
+        setTitle(section.item_pembelajaran?.headingPertemuan || '');
+        setDescription(section.item_pembelajaran?.bodyPertemuan || '');
+        setVideoUrl(section.item_pembelajaran?.urlVideo || '');
+        // Note: We can't pre-load files in edit mode due to security restrictions
+        setSelectedFile(null);
         bottomSheetModalRef.current?.present();
     }, []);
 
@@ -74,7 +103,7 @@ const CreateWeeklySectionBottomSheet = forwardRef<
         setSelectedFile(null);
     }, []);
 
-    const handleCreate = useCallback(() => {
+    const handleSubmit = useCallback(() => {
         const formData: WeeklySectionFormData = {
             title,
             description,
@@ -86,13 +115,9 @@ const CreateWeeklySectionBottomSheet = forwardRef<
             } as any : undefined,
         };
 
-        onSubmit(formData);
-        setTitle("");
-        setDescription("");
-        setVideoUrl("");
-        setSelectedFile(null);
+        onSubmit(formData, isEditMode ? editingWeekId || undefined : undefined);
         handleClose();
-    }, [title, description, videoUrl, selectedFile, onSubmit, handleClose]);
+    }, [title, description, videoUrl, selectedFile, onSubmit, isEditMode, editingWeekId, handleClose]);
 
     const renderBackdrop = useCallback(
         (props: BottomSheetBackdropProps) => (
@@ -106,7 +131,13 @@ const CreateWeeklySectionBottomSheet = forwardRef<
         []
     );
 
-    useImperativeHandle(ref, () => ({ open: handleOpen, close: handleClose }));
+    useImperativeHandle(ref, () => ({
+        open: handleOpen,
+        close: handleClose,
+        openForEdit: handleOpenForEdit
+    }));
+
+    const isFormValid = title.trim() && description.trim();
 
     return (
         <BottomSheetModal
@@ -129,7 +160,7 @@ const CreateWeeklySectionBottomSheet = forwardRef<
                 <View style={styles.innerContainer}>
                     <View style={styles.header}>
                         <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Bold" }}>
-                            Create
+                            {isEditMode ? "Edit" : "Create"}
                         </ThemedText>
                         <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Regular" }}>
                             Weekly Section
@@ -156,7 +187,7 @@ const CreateWeeklySectionBottomSheet = forwardRef<
                             value={videoUrl}
                             onChangeText={setVideoUrl}
                         />
-                        
+
                         {/* File Upload Section */}
                         <View style={styles.fileSection}>
                             <ThemedText style={styles.fileLabel}>Attachment (optional)</ThemedText>
@@ -176,8 +207,8 @@ const CreateWeeklySectionBottomSheet = forwardRef<
                             )}
                         </View>
 
-                        <Button onPress={handleCreate} disabled={!title || !description}>
-                            Create
+                        <Button onPress={handleSubmit} disabled={!isFormValid}>
+                            {isEditMode ? "Update" : "Create"}
                         </Button>
                     </View>
                 </View>
@@ -185,6 +216,8 @@ const CreateWeeklySectionBottomSheet = forwardRef<
         </BottomSheetModal>
     );
 });
+
+WeeklySectionBottomSheet.displayName = 'WeeklySectionBottomSheet';
 
 const styles = StyleSheet.create({
     contentContainer: { flex: 1, padding: 0 },
@@ -237,4 +270,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CreateWeeklySectionBottomSheet;
+export default WeeklySectionBottomSheet;

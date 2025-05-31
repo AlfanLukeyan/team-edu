@@ -75,7 +75,25 @@ class ClassService {
             const response = await classApi.createWeeklySection(classId, nextWeekNumber, data);
             return response;
         } catch (error) {
-            console.error('Failed to create weekly section:', error);
+            throw error;
+        }
+    }
+
+    async updateWeeklySection(weekId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> {
+        try {
+            const response = await classApi.updateWeeklySection(weekId, data);
+            return response;
+        } catch (error) {
+            console.error('Failed to update weekly section:', error);
+            throw error;
+        }
+    }
+
+    async deleteWeeklySection(weekId: string): Promise<{ status: string; message: string; data: string }> {
+        try {
+            const response = await classApi.deleteWeeklySection(weekId);
+            return response;
+        } catch (error) {
             throw error;
         }
     }
