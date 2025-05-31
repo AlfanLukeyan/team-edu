@@ -8,19 +8,10 @@ import { useClass } from '@/contexts/ClassContext';
 import { classService } from '@/services/classService';
 import { Assessment } from '@/types/api';
 import { AssessmentFormData, QuestionsFormData } from '@/types/common';
+import { formatDate } from '@/utils/utils';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet } from "react-native";
-
-function formatDate(isoString: string): string {
-    const date = new Date(isoString);
-    return date.toLocaleDateString("en-US", {
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-}
 
 const AssessmentsScreen = () => {
     const { classId } = useClass();

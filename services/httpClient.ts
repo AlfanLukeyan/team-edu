@@ -1,5 +1,6 @@
 import { ModalEmitter } from "@/services/modalEmitter";
 import { tokenService } from "@/services/tokenService";
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -10,9 +11,17 @@ interface RequestConfig {
 
 class HttpClient {
     private static instance: HttpClient;
+    private axiosInstance: AxiosInstance;
     private defaultTimeout = 10000;
 
-    constructor() { }
+    constructor() {
+        this.axiosInstance = axios.create({
+            baseURL: API_URL,
+            timeout: this.defaultTimeout,
+        });
+
+        this.setupInterceptors();
+    }
 
     static getInstance() {
         if (!HttpClient.instance) {
@@ -21,160 +30,122 @@ class HttpClient {
         return HttpClient.instance;
     }
 
-    private async makeRequest<T = any>(
-        url: string,
-        options: RequestInit & { timeout?: number } = {},
-        includeAuth: boolean = true
-    ): Promise<T> {
-        const { timeout = this.defaultTimeout, ...fetchOptions } = options;
+    private setupInterceptors() {
+        // Request interceptor
+        this.axiosInstance.interceptors.request.use(
+            async (config) => {
+                // Add auth token if needed (unless explicitly disabled)
+                if (config.headers && !config.headers['skipAuth']) {
+                    const token = await tokenService.getValidToken();
+                    if (token) {
+                        config.headers.Authorization = `Bearer ${token}`;
+                    }
+                }
 
-        // Setup headers
-        const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
-            ...(options.headers && typeof options.headers === 'object' && !(options.headers instanceof Headers) && !Array.isArray(options.headers) ? options.headers : {}),
-        };
+                // Remove skipAuth flag
+                if (config.headers) {
+                    delete config.headers['skipAuth'];
+                }
 
-        // Add auth token if needed
-        if (includeAuth) {
-            const token = await tokenService.getValidToken();
-            if (token) {
-                headers.Authorization = `Bearer ${token}`;
-            }
-        }
+                return config;
+            },
+            (error) => Promise.reject(error)
+        );
 
-        // Create abort controller for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        // Response interceptor
+        this.axiosInstance.interceptors.response.use(
+            (response: AxiosResponse) => response,
+            async (error) => {
+                const { response } = error;
 
-        try {
-            const response = await fetch(`${API_URL}${url}`, {
-                ...fetchOptions,
-                headers,
-                signal: controller.signal,
-            });
-
-            clearTimeout(timeoutId);
-
-            // Handle response errors
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-
-                if (response.status === 401) {
+                if (response?.status === 401) {
                     await tokenService.clearTokens();
                     ModalEmitter.unauthorized();
                     throw new Error("Unauthorized");
-                } else if (response.status === 403) {
+                } else if (response?.status === 403) {
+                    const errorData = response.data || {};
+
                     if (errorData.error === "Crucial verification required") {
-                        const error = new Error("Crucial verification required");
-                        (error as any).isCrucialRequired = true;
-                        (error as any).response = { status: response.status, data: errorData };
-                        throw error;
+                        const customError = new Error("Crucial verification required");
+                        (customError as any).isCrucialRequired = true;
+                        (customError as any).response = { status: response.status, data: errorData };
+                        throw customError;
                     } else {
                         // Handle other 403 errors (like another device login)
                         await tokenService.clearTokens();
                         ModalEmitter.anotherDeviceLogin(errorData.msg);
                         throw new Error("Another device login detected");
                     }
-                } else {
-                    // Handle other errors
-                    const message = errorData.error || errorData.message || `Request failed with status ${response.status}`;
+                } else if (response) {
+                    // Handle other HTTP errors
+                    const message = response.data?.error || response.data?.message || `Request failed with status ${response.status}`;
                     ModalEmitter.showError(message);
 
-                    const error = new Error(message);
-                    (error as any).response = { status: response.status, data: errorData };
+                    const customError = new Error(message);
+                    (customError as any).response = { status: response.status, data: response.data };
+                    throw customError;
+                } else if (error.code === 'ECONNABORTED') {
+                    // Handle timeout
+                    ModalEmitter.showError("Request timeout");
+                    throw new Error('Request timeout');
+                } else {
+                    // Handle network errors
+                    const message = error.message || "Network error";
+                    ModalEmitter.showError(message);
                     throw error;
                 }
             }
-
-            // Parse response
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return await response.json();
-            }
-            return await response.text() as any;
-
-        } catch (error: any) {
-            clearTimeout(timeoutId);
-
-            if (error.name === 'AbortError') {
-                const timeoutError = new Error('Request timeout');
-                ModalEmitter.showError("Request timeout");
-                throw timeoutError;
-            }
-
-            if (!error.response && !error.isCrucialRequired) {
-                const message = error.message || "Network error";
-                ModalEmitter.showError(message);
-            }
-
-            throw error;
-        }
+        );
     }
 
     async get<T = any>(url: string, config?: RequestConfig): Promise<T> {
-        return this.makeRequest<T>(url, {
-            method: 'GET',
+        const response = await this.axiosInstance.get<T>(url, {
             headers: config?.headers,
             timeout: config?.timeout,
         });
+        return response.data;
     }
 
     async post<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
-        const isFormData = data instanceof FormData;
-        const headers = { ...config?.headers };
+        const headers: Record<string, string> = { ...config?.headers };
 
-        // Don't set Content-Type for FormData, let browser set it with boundary
-        if (!isFormData) {
-            headers['Content-Type'] = 'application/json';
-        }
-
-        return this.makeRequest<T>(url, {
-            method: 'POST',
-            body: isFormData ? data : JSON.stringify(data),
+        const response = await this.axiosInstance.post<T>(url, data, {
             headers,
             timeout: config?.timeout,
         });
+        return response.data;
     }
 
     async put<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
-        const isFormData = data instanceof FormData;
-        const headers = { ...config?.headers };
+        const headers: Record<string, string> = { ...config?.headers };
 
-        if (!isFormData) {
-            headers['Content-Type'] = 'application/json';
-        }
-
-        return this.makeRequest<T>(url, {
-            method: 'PUT',
-            body: isFormData ? data : JSON.stringify(data),
+        const response = await this.axiosInstance.put<T>(url, data, {
             headers,
             timeout: config?.timeout,
         });
+        return response.data;
     }
 
     async delete<T = any>(url: string, config?: RequestConfig): Promise<T> {
-        return this.makeRequest<T>(url, {
-            method: 'DELETE',
+        const response = await this.axiosInstance.delete<T>(url, {
             headers: config?.headers,
             timeout: config?.timeout,
         });
+        return response.data;
     }
 
     // No auth requests
     async postNoAuth<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
-        const isFormData = data instanceof FormData;
-        const headers = { ...config?.headers };
+        const headers: Record<string, string> = {
+            ...config?.headers,
+            skipAuth: 'true'
+        };
 
-        if (!isFormData) {
-            headers['Content-Type'] = 'application/json';
-        }
-
-        return this.makeRequest<T>(url, {
-            method: 'POST',
-            body: isFormData ? data : JSON.stringify(data),
+        const response = await this.axiosInstance.post<T>(url, data, {
             headers,
             timeout: config?.timeout,
-        }, false); // false = don't include auth
+        });
+        return response.data;
     }
 }
 

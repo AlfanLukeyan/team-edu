@@ -7,7 +7,7 @@ import { TimeRemainingCard } from "@/components/TimeRemainingCard";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { assessmentService } from "@/services/assessmentService";
+import { convertMinutesToSeconds, formatDateTime } from "@/utils/utils";
 import { useRouter } from "expo-router";
 import React, { useCallback } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
@@ -46,9 +46,9 @@ export default function AboutAssessmentScreen() {
         );
     }
 
-    const startDateTime = assessmentService.formatDateTime(assessmentInfo.start_time);
-    const endDateTime = assessmentService.formatDateTime(assessmentInfo.end_time);
-    const durationInSeconds = assessmentService.convertMinutesToSeconds(assessmentInfo.duration);
+    const startDateTime = formatDateTime(assessmentInfo.start_time);
+    const endDateTime = formatDateTime(assessmentInfo.end_time);
+    const durationInSeconds = convertMinutesToSeconds(assessmentInfo.duration);
 
     return (
         <ThemedView style={styles.container}>

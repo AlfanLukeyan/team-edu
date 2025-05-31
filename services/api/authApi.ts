@@ -16,8 +16,6 @@ export const authApi = {
             name: 'face_auth.jpg',
         } as any);
 
-        console.log("Face login form data:", formData);
-
         return simplePostFormData('/auth/login-face', formData, false);
     },
 
@@ -30,9 +28,6 @@ export const authApi = {
             name: 'crucial_auth.jpg',
         } as any);
 
-        console.log("Crucial verify form data:", formData);
-
-        // This uses authenticated request (includes auth token)
         return simplePostFormData('/auth/crucial-verify', formData);
     },
 
@@ -56,8 +51,6 @@ export const authApi = {
                 name: `face_${index + 1}.jpg`,
             } as any);
         });
-
-        console.log("Registration form data:", formData);
 
         return simplePostFormData('/user/register', formData, false);
     },

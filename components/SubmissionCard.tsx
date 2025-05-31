@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { HashUtils } from '@/utils/hashUtils';
+import { readableHash } from "@/utils/utils";
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -87,7 +87,7 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
                             {user_name}
                         </ThemedText>
                         <ThemedText style={styles.userIdText}>
-                            {HashUtils.readableHash(user_id, 'STU')}
+                            {readableHash(user_id, 'STU')}
                         </ThemedText>
                     </View>
                 </View>
@@ -104,8 +104,6 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
                             {formatStatus(status)}
                         </ThemedText>
                     </View>
-                    <>
-                    {console.log("SubmissionCard: score", score, "total_score", total_score, "status", status, "time_remaining", time_remaining)}
                     {status === "submitted" || status === "completed" ? (
                         <ThemedText type="defaultSemiBold" style={styles.scoreText}>
                             {score || 0}/{total_score || 100}
@@ -115,7 +113,6 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
                             {time_remaining != null ? formatTimeRemaining(time_remaining) : "Empty"}
                         </ThemedText>
                     )}
-                    </>
                 </View>
             </ThemedView>
         </TouchableOpacity>

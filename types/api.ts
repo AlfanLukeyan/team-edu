@@ -1,4 +1,9 @@
-// Assessment types
+export interface ApiResponse<T> {
+    status: string;
+    message: string;
+    data: T;
+}
+
 export interface AssessmentItem {
     class_id: string;
     end_time: string;
@@ -18,12 +23,6 @@ export interface ClassAssessment {
     class_teacher_id: string;
 }
 
-export interface UpcomingAssessmentsResponse {
-    data: ClassAssessment[];
-    message: string;
-    status: string;
-}
-
 export interface ComponentAssessment {
     id: string;
     title: string;
@@ -33,15 +32,6 @@ export interface ComponentAssessment {
     submission_status: string;
 }
 
-// Common API response types
-export interface ApiResponse<T> {
-    status: string;
-    message: string;
-    data: T;
-}
-
-
-// Assignment types
 export interface Assignment {
     ID: number;
     CreatedAt: string;
@@ -72,6 +62,15 @@ export interface WeeklySection {
     item_pembelajaran: ItemPembelajaran;
 }
 
+export interface Class {
+    id: string;
+    name: string;
+    tag: string;
+    description: string;
+    teacher: string;
+    teacher_id: string;
+}
+
 export interface ClassInfo {
     id: string;
     name: string;
@@ -93,37 +92,6 @@ export interface Assessment {
     updated_at: string;
 }
 
-export interface ClassMember {
-    user_user_id: string;
-    username: string;
-    photo_url: string;
-    role: 'teacher' | 'student';
-    kelas_kelas_id: string;
-}
-
-// API Response types
-export interface ApiResponse<T> {
-    status: string;
-    message: string;
-    data: T;
-}
-
-export interface ClassInfoResponse extends ApiResponse<ClassInfo> {}
-export interface WeeklySectionResponse extends ApiResponse<WeeklySection[]> {}
-export interface AssessmentResponse extends ApiResponse<Assessment[]> {}
-export interface ClassMemberResponse extends ApiResponse<ClassMember[]> {}
-
-// Legacy types for compatibility
-export interface Class {
-    id: string;
-    name?: string;
-    title?: string;
-    tag: string;
-    description?: string;
-    desc?: string;
-    teacher?: string;
-    teacher_id?: string;
-}
 export interface AssessmentDetails {
     id: string;
     name: string;
@@ -145,16 +113,6 @@ export interface AssessmentSubmission {
     username: string;
 }
 
-export interface AssessmentQuestion {
-    id: string;
-    question_text: string;
-    evaluation_id: string;
-    created_at: string;
-    updated_at: string;
-    deleted_at: string | null;
-    choice: AssessmentChoice[];
-}
-
 export interface AssessmentChoice {
     id: string;
     choice_text: string;
@@ -165,9 +123,30 @@ export interface AssessmentChoice {
     deleted_at: string | null;
 }
 
-// API Response types for assessment
-export interface AssessmentDetailsResponse extends ApiResponse<AssessmentDetails> {}
-export interface AssessmentSubmissionsResponse extends ApiResponse<AssessmentSubmission[]> {}
-export interface AssessmentQuestionsResponse extends ApiResponse<AssessmentQuestion[]> {}
+export interface AssessmentQuestion {
+    id: string;
+    question_text: string;
+    evaluation_id: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    choice: AssessmentChoice[];
+}
 
-// ...existing code...
+export interface ClassMember {
+    user_user_id: string;
+    username: string;
+    photo_url: string;
+    role: 'teacher' | 'student';
+    kelas_kelas_id: string;
+}
+
+export type UpcomingAssessmentsResponse = ApiResponse<ClassAssessment[]>;
+export type ClassResponse = ApiResponse<Class[]>;
+export type ClassInfoResponse = ApiResponse<ClassInfo>;
+export type WeeklySectionResponse = ApiResponse<WeeklySection[]>;
+export type AssessmentResponse = ApiResponse<Assessment[]>;
+export type AssessmentDetailsResponse = ApiResponse<AssessmentDetails>;
+export type AssessmentSubmissionsResponse = ApiResponse<AssessmentSubmission[]>;
+export type AssessmentQuestionsResponse = ApiResponse<AssessmentQuestion[]>;
+export type ClassMemberResponse = ApiResponse<ClassMember[]>;

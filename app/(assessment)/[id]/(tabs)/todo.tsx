@@ -117,6 +117,5 @@ const styles = StyleSheet.create({
     },
     todoList: {
         gap: 8,
-        paddingVertical: 8,
     },
 });

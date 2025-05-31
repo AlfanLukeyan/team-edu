@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/Colors';
-import { HashUtils } from '@/utils/hashUtils';
+import { readableHash } from '@/utils/utils';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Image, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
@@ -58,7 +58,7 @@ export function StudentCard({
                     </ThemedText>
 
                     <ThemedText style={styles.userId}>
-                        {HashUtils.readableHash(user_id, 'STU')}
+                        {readableHash(user_id, 'STU')}
                     </ThemedText>
                 </View>
             </ThemedView>

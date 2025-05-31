@@ -48,11 +48,7 @@ export default function HomeScreen() {
     }, [fetchUpcomingAssessments]);
 
     const handleAssessmentPress = (assessment: ComponentAssessment) => {
-        console.log("Assessment pressed:", assessment);
-        router.push({
-            pathname: "/(assessment)/(tabs)",
-            params: { id: assessment.id }
-        });
+        router.push(`/(assessment)/${assessment.id}/(tabs)`);
     };
 
     const componentData: ClassAssessmentData[] = assessmentService.transformToComponentFormat(upcomingAssessments);

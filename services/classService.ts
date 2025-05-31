@@ -5,7 +5,7 @@ import { tokenService } from "./tokenService";
 class ClassService {
     private static instance: ClassService;
 
-    static getInstance() {
+    static getInstance(): ClassService {
         if (!ClassService.instance) {
             ClassService.instance = new ClassService();
         }
@@ -14,10 +14,9 @@ class ClassService {
 
     async getClasses(userID?: string): Promise<Class[]> {
         try {
-            const rawUserID = userID !== undefined ? userID : tokenService.getUserId();
-            const finalUserID = rawUserID === null ? undefined : rawUserID;
+            const finalUserID = userID ?? tokenService.getUserId() ?? undefined;
             const response = await classApi.getAllClasses(finalUserID);
-            
+
             return response.data?.map((classItem: any) => ({
                 id: classItem.id,
                 name: classItem.name || classItem.title,
@@ -36,7 +35,6 @@ class ClassService {
             const response = await classApi.getClassInfo(classId);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch class info:', error);
             throw error;
         }
     }
@@ -46,7 +44,6 @@ class ClassService {
             const response = await classApi.getWeeklySections(classId);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch weekly sections:', error);
             throw error;
         }
     }
@@ -56,7 +53,6 @@ class ClassService {
             const response = await classApi.getClassAssessments(classId);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch assessments:', error);
             throw error;
         }
     }
@@ -66,7 +62,6 @@ class ClassService {
             const response = await classApi.getClassMembers(classId);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch class members:', error);
             throw error;
         }
     }
