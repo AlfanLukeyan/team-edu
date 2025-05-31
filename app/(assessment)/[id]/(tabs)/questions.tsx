@@ -95,14 +95,14 @@ export default function QuestionsScreen() {
     }, [selectedQuestionIds, showActionsMenu, navigation, theme]);
 
     const handleSelectAllQuestions = () => {
-        const allQuestionIds = questions.map(question => question.id);
+        const allQuestionIds = questions.map(question => question.question_id);
         setSelectedQuestionIds(allQuestionIds);
         setShowActionsMenu(false);
     };
 
     const handleDeleteQuestions = () => {
-        const selectedQuestions = questions.filter(q => selectedQuestionIds.includes(q.id));
-        const questionNumbers = selectedQuestions.map((q, index) => `Question ${questions.findIndex(question => question.id === q.id) + 1}`).join(', ');
+        const selectedQuestions = questions.filter(q => selectedQuestionIds.includes(q.question_id));
+        const questionNumbers = selectedQuestions.map((q, index) => `Question ${questions.findIndex(question => question.question_id === q.question_id) + 1}`).join(', ');
 
         Alert.alert(
             "Delete Questions",
@@ -113,7 +113,7 @@ export default function QuestionsScreen() {
                     text: "Delete",
                     style: "destructive",
                     onPress: () => {
-                        setQuestions(questions.filter(question => !selectedQuestionIds.includes(question.id)));
+                        setQuestions(questions.filter(question => !selectedQuestionIds.includes(question.question_id)));
                         setSelectedQuestionIds([]);
                         setShowActionsMenu(false);
                     }
@@ -194,11 +194,11 @@ export default function QuestionsScreen() {
                 <View style={styles.questionsList}>
                     {questions.map((question, index) => (
                         <QuestionCard
-                            key={question.id}
-                            id={question.id}
+                            key={question.question_id}
+                            id={question.question_id}
                             questionNumber={index + 1}
                             questionText={question.question_text}
-                            isSelected={selectedQuestionIds.includes(question.id)}
+                            isSelected={selectedQuestionIds.includes(question.question_id)}
                             onLongPress={handleQuestionLongPress}
                             onPress={handleQuestionPress}
                         />

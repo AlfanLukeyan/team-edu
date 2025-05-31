@@ -25,13 +25,12 @@ const AssessmentActionsMenu: React.FC<AssessmentActionsMenuProps> = ({
             icon: 'checkmark-circle-outline',
             onPress: onSelectAll,
         },
-        {
+        ...(selectedCount === 1 ? [{
             id: 'edit',
-            title: selectedCount === 1 ? 'Edit' : 'Edit Multiple',
-            icon: 'create-outline',
+            title: 'Edit',
+            icon: 'create-outline' as keyof typeof import('@expo/vector-icons').Ionicons.glyphMap,
             onPress: onEdit,
-            disabled: selectedCount === 0,
-        },
+        }] : []),
         {
             id: 'delete',
             title: 'Delete',

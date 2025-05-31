@@ -1,8 +1,8 @@
 import AssessmentActionsMenu from '@/components/AssessmentActionsMenu';
 import { AssessmentCard } from '@/components/AssessmentCard';
 import { Button } from '@/components/Button';
-import CreateAssessmentBottomSheet, { CreateAssessmentBottomSheetRef } from '@/components/teacher/CreateAssessmentBottomSheet';
-import CreateQuestionsBottomSheet, { CreateQuestionsBottomSheetRef } from '@/components/teacher/CreateQuestionsBottomSheet';
+import AssessmentBottomSheet, { AssessmentBottomSheetRef } from '@/components/teacher/AssessmentBottomSheet';
+import QuestionBottomSheet, { QuestionBottomSheetRef } from '@/components/teacher/QuestionBottomSheet';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
@@ -10,13 +10,17 @@ import { useClass } from '@/contexts/ClassContext';
 import { assessmentService } from '@/services/assessmentService';
 import { classService } from '@/services/classService';
 import { ModalEmitter } from '@/services/modalEmitter';
-import { Assessment } from '@/types/api';
-import { AssessmentFormData, QuestionsFormData } from '@/types/common';
+import { Assessment, CreateQuestionItem } from '@/types/api';
+import { AssessmentFormData } from '@/types/common';
 import { formatDate } from '@/utils/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+
+interface QuestionsFormData {
+    questions: CreateQuestionItem[];
+}
 
 const AssessmentsScreen = () => {
     const { classId } = useClass();
@@ -31,8 +35,8 @@ const AssessmentsScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const createAssessmentRef = useRef<CreateAssessmentBottomSheetRef>(null);
-    const createQuestionsRef = useRef<CreateQuestionsBottomSheetRef>(null);
+    const assessmentBottomSheetRef = useRef<AssessmentBottomSheetRef>(null);
+    const questionBottomSheetRef = useRef<QuestionBottomSheetRef>(null);
     const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
 
     const fetchAssessments = async () => {
@@ -58,18 +62,62 @@ const AssessmentsScreen = () => {
         setRefreshing(false);
     };
 
-    const handleOpenAssessmentSheet = useCallback(() => createAssessmentRef.current?.open(), []);
+    const handleOpenAssessmentSheet = useCallback(() => assessmentBottomSheetRef.current?.open(), []);
 
-    const handleCreateAssessment = useCallback((data: AssessmentFormData) => {
-        const newAssessmentId = `assessment_${Date.now()}`;
-        setCurrentAssessmentId(newAssessmentId);
-        createQuestionsRef.current?.open();
-    }, []);
+    const handleCreateOrUpdateAssessment = useCallback(async (data: AssessmentFormData, assessmentId?: string) => {
+        if (!classId) {
+            ModalEmitter.showError('Class ID not found');
+            return;
+        }
 
-    const handleCreateQuestions = useCallback((data: QuestionsFormData) => {
-        setCurrentAssessmentId(null);
-        handleRefresh();
-    }, []);
+        try {
+            let response;
+            if (assessmentId) {
+                const updatedAssessment = {
+                    ...assessments.find(a => a.assessment_id === assessmentId)!,
+                    name: data.title,
+                    description: data.description,
+                    duration: parseInt(data.duration) * 60,
+                    start_time: data.start_date,
+                    end_time: data.end_date,
+                    updated_at: new Date().toISOString()
+                };
+
+                setAssessments(prev =>
+                    prev.map(assessment =>
+                        assessment.assessment_id === assessmentId ? updatedAssessment : assessment
+                    )
+                );
+
+                response = await assessmentService.updateAssessment(assessmentId, data);
+
+                await fetchAssessments();
+            } else {
+                response = await assessmentService.createAssessment(classId, data);
+                setCurrentAssessmentId(response.data.assessment_id);
+                questionBottomSheetRef.current?.open();
+            }
+        } catch (error) {
+            if (assessmentId) {
+                await fetchAssessments();
+            }
+        }
+    }, [classId, assessments]);
+
+    const handleCreateQuestions = useCallback(async (data: QuestionsFormData) => {
+        if (!currentAssessmentId) {
+            ModalEmitter.showError('Assessment ID not found');
+            return;
+        }
+
+        try {
+            await assessmentService.createQuestions(currentAssessmentId, data);
+            setCurrentAssessmentId(null);
+            await handleRefresh();
+        } catch (error) {
+            console.error('Failed to create questions:', error);
+        }
+    }, [currentAssessmentId]);
 
     // Selection handlers
     const handleAssessmentLongPress = (id: string) => {
@@ -98,25 +146,16 @@ const AssessmentsScreen = () => {
 
     const handleEditAssessments = () => {
         if (selectedAssessmentIds.length === 1) {
-            // Edit single assessment
-            const assessmentId = selectedAssessmentIds[0];
-            console.log('Edit assessment:', assessmentId);
-            // Navigate to edit screen or open edit modal
-        } else {
-            // Edit multiple assessments
-            console.log('Edit multiple assessments:', selectedAssessmentIds);
-            // Show bulk edit options
+            const assessment = assessments.find(a => a.assessment_id === selectedAssessmentIds[0]);
+            if (assessment) {
+                assessmentBottomSheetRef.current?.openForEdit(assessment);
+            }
         }
         setSelectedAssessmentIds([]);
         setShowActionsMenu(false);
     };
 
     const handleDeleteAssessments = () => {
-        const selectedAssessments = assessments.filter(assessment =>
-            selectedAssessmentIds.includes(assessment.assessment_id)
-        );
-        const assessmentNames = selectedAssessments.map(assessment => assessment.name).join(', ');
-
         ModalEmitter.showAlert({
             title: "Delete Assessments",
             message: `Are you sure you want to delete the ${selectedAssessmentIds.length} selected assessment(s)?`,
@@ -140,12 +179,9 @@ const AssessmentsScreen = () => {
                 } catch (error) {
                     ModalEmitter.hideLoading();
                     console.error('Failed to delete assessments:', error);
-                    fetchAssessments();
+                    await handleRefresh();
                 }
             },
-            onCancel: () => {
-                
-            }
         });
     };
 
@@ -164,7 +200,6 @@ const AssessmentsScreen = () => {
     );
 
     useLayoutEffect(() => {
-        console.log('Updating header with selectedAssessmentIds:', selectedAssessmentIds.length);
         if (selectedAssessmentIds.length > 0) {
             navigation.setOptions({
                 headerTitle: `${selectedAssessmentIds.length} selected`,
@@ -269,18 +304,17 @@ const AssessmentsScreen = () => {
                     )}
                 </ScrollView>
             </ThemedView>
-            <CreateAssessmentBottomSheet
-                ref={createAssessmentRef}
-                onSubmit={handleCreateAssessment}
+            <AssessmentBottomSheet
+                ref={assessmentBottomSheetRef}
+                onSubmit={handleCreateOrUpdateAssessment}
             />
-            <CreateQuestionsBottomSheet
-                ref={createQuestionsRef}
+            <QuestionBottomSheet
+                ref={questionBottomSheetRef}
                 onSubmit={handleCreateQuestions}
-                assessmentId={currentAssessmentId || undefined}
             />
         </>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
     container: {

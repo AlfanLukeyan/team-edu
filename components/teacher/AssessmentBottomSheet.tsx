@@ -3,6 +3,7 @@ import ThemedBottomSheetTextInput from "@/components/ThemedBottomSheetTextInput"
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { Assessment } from "@/types/api";
 import { AssessmentFormData } from "@/types/common";
 import {
     BottomSheetBackdrop,
@@ -23,19 +24,20 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { DateType } from "../Calendar";
 import CalendarBottomSheet, { CalendarBottomSheetRef } from "./CalendarBottomSheet";
 
-export interface CreateAssessmentBottomSheetRef {
+export interface AssessmentBottomSheetRef {
     open: () => void;
     close: () => void;
+    openForEdit: (assessment: Assessment) => void;
 }
 
-interface CreateAssessmentBottomSheetProps {
-    onSubmit: (data: AssessmentFormData) => void;
+interface AssessmentBottomSheetProps {
+    onSubmit: (data: AssessmentFormData, assessmentId?: string) => void;
     onClose?: () => void;
 }
 
-const CreateAssessmentBottomSheet = forwardRef<
-    CreateAssessmentBottomSheetRef,
-    CreateAssessmentBottomSheetProps
+const AssessmentBottomSheet = forwardRef<
+    AssessmentBottomSheetRef,
+    AssessmentBottomSheetProps
 >(({ onSubmit, onClose }, ref) => {
     const startDateRef = useRef<CalendarBottomSheetRef>(null);
     const endDateRef = useRef<CalendarBottomSheetRef>(null);
@@ -52,12 +54,43 @@ const CreateAssessmentBottomSheet = forwardRef<
         duration: "",
     });
 
+    // Edit mode state
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingAssessmentId, setEditingAssessmentId] = useState<string | null>(null);
+
+    const resetForm = useCallback(() => {
+        setFormData({
+            title: "",
+            description: "",
+            start_date: "",
+            end_date: "",
+            duration: "",
+        });
+        setIsEditMode(false);
+        setEditingAssessmentId(null);
+    }, []);
+
     const handleClose = useCallback(() => {
+        resetForm();
         if (onClose) onClose();
         dismiss();
-    }, [onClose, dismiss]);
+    }, [resetForm, onClose, dismiss]);
 
     const handleOpen = useCallback(() => {
+        resetForm();
+        bottomSheetModalRef.current?.present();
+    }, [resetForm]);
+
+    const handleOpenForEdit = useCallback((assessment: Assessment) => {
+        setIsEditMode(true);
+        setEditingAssessmentId(assessment.assessment_id);
+        setFormData({
+            title: assessment.name,
+            description: assessment.description,
+            start_date: assessment.start_time,
+            end_date: assessment.end_time,
+            duration: (assessment.duration / 60).toString(), // Convert seconds to minutes
+        });
         bottomSheetModalRef.current?.present();
     }, []);
 
@@ -66,16 +99,9 @@ const CreateAssessmentBottomSheet = forwardRef<
     };
 
     const handleSubmit = useCallback(() => {
-        onSubmit(formData);
-        setFormData({
-            title: "",
-            description: "",
-            start_date: "",
-            end_date: "",
-            duration: "",
-        });
+        onSubmit(formData, isEditMode ? editingAssessmentId || undefined : undefined);
         handleClose();
-    }, [formData, onSubmit, handleClose]);
+    }, [formData, onSubmit, isEditMode, editingAssessmentId, handleClose]);
 
     const renderBackdrop = useCallback(
         (props: BottomSheetBackdropProps) => (
@@ -121,7 +147,14 @@ const CreateAssessmentBottomSheet = forwardRef<
         });
     };
 
-    useImperativeHandle(ref, () => ({ open: handleOpen, close: handleClose }));
+    const isFormValid = formData.title.trim() && formData.description.trim() &&
+        formData.start_date && formData.end_date && formData.duration;
+
+    useImperativeHandle(ref, () => ({
+        open: handleOpen,
+        close: handleClose,
+        openForEdit: handleOpenForEdit
+    }));
 
     return (
         <>
@@ -143,9 +176,11 @@ const CreateAssessmentBottomSheet = forwardRef<
                     <View style={styles.innerContainer}>
                         <View style={styles.header}>
                             <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Bold" }}>
-                                Create
+                                {isEditMode ? "Edit" : "Create"}
                             </ThemedText>
-                            <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Regular" }}>Assessment</ThemedText>
+                            <ThemedText style={{ fontSize: 16, fontFamily: "Poppins-Regular" }}>
+                                Assessment
+                            </ThemedText>
                         </View>
                         <View style={{ gap: 8 }}>
                             <ThemedBottomSheetTextInput
@@ -183,7 +218,7 @@ const CreateAssessmentBottomSheet = forwardRef<
                                     onPress={() => endDateRef.current?.open()}
                                 >
                                     <ThemedText type="placeholder">
-                                        {formData.end_date ? formatDate(formData.end_date) : 'Empty'}
+                                        {formData.end_date ? formatDate(formData.end_date) : 'Select end date'}
                                     </ThemedText>
                                 </Pressable>
                             </View>
@@ -196,7 +231,9 @@ const CreateAssessmentBottomSheet = forwardRef<
                                 onChangeText={(value) => handleFieldChange("duration", value)}
                             />
 
-                            <Button onPress={handleSubmit}>Create Assessment</Button>
+                            <Button onPress={handleSubmit} disabled={!isFormValid}>
+                                {isEditMode ? "Update Assessment" : "Create Assessment"}
+                            </Button>
                         </View>
 
                     </View>
@@ -219,6 +256,8 @@ const CreateAssessmentBottomSheet = forwardRef<
     );
 });
 
+AssessmentBottomSheet.displayName = 'AssessmentBottomSheet';
+
 const styles = StyleSheet.create({
     contentContainer: { flex: 1, padding: 0 },
     innerContainer: { paddingHorizontal: 25 },
@@ -233,13 +272,6 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins-SemiBold",
         marginBottom: 4,
     },
-    dateButton: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 12,
-        backgroundColor: 'rgba(0,0,0,0.05)',
-    },
 });
 
-export default CreateAssessmentBottomSheet;
+export default AssessmentBottomSheet;

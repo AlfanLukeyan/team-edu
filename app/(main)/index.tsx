@@ -52,7 +52,6 @@ export default function HomeScreen() {
     };
 
     const componentData: ClassAssessmentData[] = assessmentService.transformToComponentFormat(upcomingAssessments);
-    console.log('Component Data:', ...componentData);
 
     if (loading) {
         return (

@@ -122,7 +122,7 @@ export interface AssessmentChoice {
 }
 
 export interface AssessmentQuestion {
-    id: string;
+    question_id: string;
     question_text: string;
     evaluation_id: string;
     created_at: string;
@@ -139,6 +139,73 @@ export interface ClassMember {
     kelas_kelas_id: string;
 }
 
+export interface CreateAssessmentRequest {
+    name: string;
+    class_id: string;
+    description: string;
+    date_created: string;
+    duration: number;
+    start_time: string;
+    end_time: string;
+}
+
+export interface UpdateAssessmentRequest {
+    assessment_id: string;
+    name: string;
+    date_created: string;
+    description: string;
+    start_time: string;
+    duration: number;
+    end_time: string;
+}
+
+export interface CreateQuestionsRequest {
+    assessment_id: string;
+    questions: CreateQuestionItem[];
+}
+
+export interface CreateQuestionItem {
+    question_text: string;
+    choices: CreateChoiceItem[];
+}
+
+export interface CreateChoiceItem {
+    choice_text: string;
+    is_correct: boolean;
+}
+
+export interface UpdateQuestionRequest {
+    question_id: string;
+    question_text: string;
+    choices: CreateChoiceItem[];
+}
+export interface AssessmentCrudResponseData {
+    assessment_id: string;
+    class_id: string;
+    name: string;
+    description: string;
+    start_time: string;
+    end_time: string;
+    duration: number;
+    date_created: string;
+    updated_at: string;
+}
+
+export interface QuestionResponseData {
+    assessment_id: string;
+    question_id: string;
+    question_text: string;
+    created_at: string;
+    choices: ChoiceResponseData[];
+}
+
+export interface ChoiceResponseData {
+    id: string;
+    choice_text: string;
+    is_correct: boolean;
+    question_id: string;
+}
+
 export type UpcomingAssessmentsResponse = ApiResponse<ClassAssessment[]>;
 export type ClassResponse = ApiResponse<Class[]>;
 export type ClassInfoResponse = ApiResponse<ClassInfo>;
@@ -148,3 +215,8 @@ export type AssessmentDetailsResponse = ApiResponse<AssessmentDetails>;
 export type AssessmentSubmissionsResponse = ApiResponse<AssessmentSubmission[]>;
 export type AssessmentQuestionsResponse = ApiResponse<AssessmentQuestion[]>;
 export type ClassMemberResponse = ApiResponse<ClassMember[]>;
+export type CreateAssessmentResponse = ApiResponse<AssessmentCrudResponseData>;
+export type UpdateAssessmentResponse = ApiResponse<AssessmentCrudResponseData>;
+export type DeleteAssessmentResponse = ApiResponse<string>;
+export type CreateQuestionsResponse = ApiResponse<QuestionResponseData[]>;
+export type UpdateQuestionResponse = ApiResponse<QuestionResponseData>;

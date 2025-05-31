@@ -4,6 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { CreateQuestionItem } from "@/types/api";
 import {
     BottomSheetBackdrop,
     BottomSheetBackdropProps,
@@ -47,25 +48,23 @@ interface Question {
 }
 
 interface QuestionsFormData {
-    questions: Question[];
-    assessment_id?: string;
+    questions: CreateQuestionItem[];
 }
 
-export interface CreateQuestionsBottomSheetRef {
+export interface QuestionBottomSheetRef {
     open: () => void;
     close: () => void;
 }
 
-interface CreateQuestionsBottomSheetProps {
+interface QuestionBottomSheetProps {
     onSubmit: (data: QuestionsFormData) => void;
     onClose?: () => void;
-    assessmentId?: string;
 }
 
-const CreateQuestionsBottomSheet = forwardRef<
-    CreateQuestionsBottomSheetRef,
-    CreateQuestionsBottomSheetProps
->(({ onSubmit, onClose, assessmentId }, ref) => {
+const QuestionBottomSheet = forwardRef<
+    QuestionBottomSheetRef,
+    QuestionBottomSheetProps
+>(({ onSubmit, onClose }, ref) => {
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const { dismiss } = useBottomSheetModal();
     const theme = useColorScheme() || "light";
@@ -83,16 +82,31 @@ const CreateQuestionsBottomSheet = forwardRef<
         },
     ]);
 
-    const handleClose = useCallback(() => {
-        if (onClose) onClose();
-        dismiss();
-    }, [onClose, dismiss]);
-
-    const handleOpen = useCallback(() => {
-        bottomSheetModalRef.current?.present();
+    const resetForm = useCallback(() => {
+        setQuestions([
+            {
+                id: generateId(),
+                question_text: "",
+                choices: [
+                    { id: generateId(), choice_text: "", is_correct: false },
+                    { id: generateId(), choice_text: "", is_correct: false },
+                ],
+            },
+        ]);
     }, []);
 
-    const handleCreate = useCallback(() => {
+    const handleClose = useCallback(() => {
+        resetForm();
+        if (onClose) onClose();
+        dismiss();
+    }, [resetForm, onClose, dismiss]);
+
+    const handleOpen = useCallback(() => {
+        resetForm();
+        bottomSheetModalRef.current?.present();
+    }, [resetForm]);
+
+    const handleSubmit = useCallback(() => {
         // Validate questions before submitting
         if (questions.some((q) => !q.question_text.trim())) {
             Alert.alert("Validation Error", "Please enter text for all questions", [
@@ -126,37 +140,20 @@ const CreateQuestionsBottomSheet = forwardRef<
             return;
         }
 
-        // Show confirmation dialog before submitting
-        Alert.alert(
-            "Submit Questions",
-            "Are you sure you want to submit these questions?",
-            [
-                {
-                    text: "Cancel",
-                    style: "cancel",
-                },
-                {
-                    text: "Submit",
-                    style: "default",
-                    onPress: () => {
-                        onSubmit({ questions, assessment_id: assessmentId });
-                        // Reset form
-                        setQuestions([
-                            {
-                                id: generateId(),
-                                question_text: "",
-                                choices: [
-                                    { id: generateId(), choice_text: "", is_correct: false },
-                                    { id: generateId(), choice_text: "", is_correct: false },
-                                ],
-                            },
-                        ]);
-                        handleClose();
-                    },
-                },
-            ]
-        );
-    }, [questions, onSubmit, handleClose, assessmentId]);
+        // Transform to API format
+        const apiData: QuestionsFormData = {
+            questions: questions.map(q => ({
+                question_text: q.question_text,
+                choices: q.choices.map(c => ({
+                    choice_text: c.choice_text,
+                    is_correct: c.is_correct
+                }))
+            }))
+        };
+
+        onSubmit(apiData);
+        handleClose();
+    }, [questions, onSubmit, handleClose]);
 
     const renderBackdrop = useCallback(
         (props: BottomSheetBackdropProps) => (
@@ -266,7 +263,6 @@ const CreateQuestionsBottomSheet = forwardRef<
     // Remove a question
     const handleRemoveQuestion = (questionId: string) => {
         if (questions.length === 1) {
-            // Don't remove if it's the last question
             return;
         }
         setQuestions((prevQuestions) =>
@@ -284,13 +280,11 @@ const CreateQuestionsBottomSheet = forwardRef<
             backdropComponent={renderBackdrop}
             enablePanDownToClose
             handleIndicatorStyle={{
-                backgroundColor:
-                    theme === "dark" ? Colors.dark.text : Colors.light.text,
+                backgroundColor: Colors[theme].text,
                 opacity: 0.5,
             }}
             backgroundStyle={{
-                backgroundColor:
-                    theme === "dark" ? Colors.dark.background : Colors.light.background,
+                backgroundColor: Colors[theme].background,
             }}
         >
             <BottomSheetScrollView style={styles.contentContainer}>
@@ -384,7 +378,6 @@ const CreateQuestionsBottomSheet = forwardRef<
                                             </View>
 
                                             {choiceIndex === question.choices.length - 1 ? (
-                                                // Last choice - show add button
                                                 <TouchableOpacity
                                                     style={styles.actionButton}
                                                     onPress={() => handleAddChoice(question.id)}
@@ -396,7 +389,6 @@ const CreateQuestionsBottomSheet = forwardRef<
                                                     />
                                                 </TouchableOpacity>
                                             ) : question.choices.length > 2 ? (
-                                                // Not last choice and more than minimum - show delete button
                                                 <TouchableOpacity
                                                     style={styles.actionButton}
                                                     onPress={() =>
@@ -410,7 +402,6 @@ const CreateQuestionsBottomSheet = forwardRef<
                                                     />
                                                 </TouchableOpacity>
                                             ) : (
-                                                // Not last choice but at minimum - show disabled delete
                                                 <View style={styles.actionButtonDisabled}>
                                                     <IconSymbol
                                                         name="minus.circle.fill"
@@ -445,7 +436,7 @@ const CreateQuestionsBottomSheet = forwardRef<
                     <View style={styles.buttonContainer}>
                         <ButtonWithDescription
                             description="Please make sure all question and option configure perfectly!"
-                            onPress={handleCreate}
+                            onPress={handleSubmit}
                         >
                             Submit
                         </ButtonWithDescription>
@@ -510,4 +501,6 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CreateQuestionsBottomSheet;
+QuestionBottomSheet.displayName = 'QuestionBottomSheet';
+
+export default QuestionBottomSheet;

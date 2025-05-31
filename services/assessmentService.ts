@@ -4,8 +4,10 @@ import {
     AssessmentQuestion,
     AssessmentSubmission,
     ClassAssessment,
-    ComponentAssessment
+    ComponentAssessment,
+    CreateQuestionItem
 } from '@/types/api';
+import { AssessmentFormData } from '@/types/common';
 import { getDaysRemaining } from '@/utils/utils';
 import { assessmentApi } from './api/assessmentApi';
 import { tokenService } from './tokenService';
@@ -15,6 +17,10 @@ interface ClassAssessmentData {
     classCode: string;
     classId: string;
     assessments: ComponentAssessment[];
+}
+
+interface QuestionsFormData {
+    questions: CreateQuestionItem[];
 }
 
 class AssessmentService {
@@ -68,8 +74,84 @@ class AssessmentService {
         }
     }
 
+    async createAssessment(classId: string, data: AssessmentFormData): Promise<{ status: string; message: string; data: any }> {
+        try {
+            const payload = {
+                name: data.title,
+                class_id: classId,
+                description: data.description,
+                date_created: new Date().toISOString(),
+                duration: parseInt(data.duration) * 60,
+                start_time: data.start_date,
+                end_time: data.end_date
+            };
+
+            const response = await assessmentApi.createAssessment(payload);
+            return response;
+        } catch (error) {
+            console.error('Failed to create assessment:', error);
+            throw error;
+        }
+    }
+
+    async updateAssessment(assessmentId: string, data: AssessmentFormData): Promise<{ status: string; message: string; data: any }> {
+        try {
+            const payload = {
+                assessment_id: assessmentId,
+                name: data.title,
+                date_created: new Date().toISOString(),
+                description: data.description,
+                start_time: data.start_date,
+                duration: parseInt(data.duration) * 60,
+                end_time: data.end_date
+            };
+
+            const response = await assessmentApi.updateAssessment(payload);
+            return response;
+        } catch (error) {
+            console.error('Failed to update assessment:', error);
+            throw error;
+        }
+    }
+
+    async createQuestions(assessmentId: string, data: QuestionsFormData): Promise<{ status: string; message: string; data: any }> {
+        try {
+            const payload = {
+                assessment_id: assessmentId,
+                questions: data.questions
+            };
+
+            const response = await assessmentApi.createQuestions(payload);
+            return response;
+        } catch (error) {
+            console.error('Failed to create questions:', error);
+            throw error;
+        }
+    }
+
+    async deleteAssessment(assessmentId: string): Promise<{ status: string; message: string; data: string }> {
+        try {
+            const response = await assessmentApi.deleteAssessment(assessmentId);
+            return response;
+        } catch (error) {
+            console.error('Failed to delete assessment:', error);
+            throw error;
+        }
+    }
+
+    async deleteMultipleAssessments(assessmentIds: string[]): Promise<void> {
+        try {
+            await Promise.all(
+                assessmentIds.map(id => this.deleteAssessment(id))
+            );
+        } catch (error) {
+            console.error('Failed to delete multiple assessments:', error);
+            throw error;
+        }
+    }
+
     getAllAssessments(classAssessments: ClassAssessment[]): (AssessmentItem & { class_name: string; class_tag: string })[] {
-        return classAssessments.flatMap(classData => 
+        return classAssessments.flatMap(classData =>
             classData.class_assessment.map(assessment => ({
                 ...assessment,
                 class_name: classData.class_name,
@@ -79,7 +161,7 @@ class AssessmentService {
     }
 
     getAssessmentsByStatus(
-        classAssessments: ClassAssessment[], 
+        classAssessments: ClassAssessment[],
         status: AssessmentItem['submission_status']
     ): (AssessmentItem & { class_name: string; class_tag: string })[] {
         return this.getAllAssessments(classAssessments).filter(
@@ -109,28 +191,6 @@ class AssessmentService {
                 submission_status: assessment.submission_status
             }))
         }));
-    }
-
-
-    async deleteAssessment(assessmentId: string): Promise<{ status: string; message: string; data: string }> {
-        try {
-            const response = await assessmentApi.deleteAssessment(assessmentId);
-            return response;
-        } catch (error) {
-            console.error('Failed to delete assessment:', error);
-            throw error;
-        }
-    }
-
-    async deleteMultipleAssessments(assessmentIds: string[]): Promise<void> {
-        try {
-            await Promise.all(
-                assessmentIds.map(id => this.deleteAssessment(id))
-            );
-        } catch (error) {
-            console.error('Failed to delete multiple assessments:', error);
-            throw error;
-        }
     }
 }
 
