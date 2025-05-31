@@ -1,10 +1,3 @@
-export interface ClassData {
-    id: string;
-    title: string;
-    class_code: string;
-    desc: string;
-}
-
 export interface AssessmentFormData {
     title: string;
     description: string;
@@ -16,25 +9,27 @@ export interface AssessmentFormData {
 export interface WeeklySectionFormData {
     title: string;
     description: string;
-    videoUrl: string;
+    videoUrl?: string;
+    file?: File | null;
 }
 
-export interface TabContentProps {
-    onCreatePress: () => void;
+export interface QuestionsFormData {
+    questions: QuestionFormData[];
+    assessment_id?: string;
 }
-export interface Choice {
+
+export interface ChoiceFormData {
     id: string;
     choice_text: string;
     is_correct: boolean;
 }
 
-export interface Question {
+export interface QuestionFormData {
     id: string;
     question_text: string;
-    choices: Choice[];
+    choices: ChoiceFormData[];
 }
 
-export interface QuestionsFormData {
-    questions: Question[];
-    assessment_id?: string;
+export interface TabContentProps {
+    onCreatePress: () => void;
 }

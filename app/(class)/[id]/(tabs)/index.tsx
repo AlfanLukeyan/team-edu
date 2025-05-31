@@ -7,8 +7,10 @@ import { ThemedView } from "@/components/ThemedView";
 import { WeeklyCard } from "@/components/WeeklyCard";
 import { useClass } from "@/contexts/ClassContext";
 import { classService } from "@/services/classService";
+import { ModalEmitter } from "@/services/modalEmitter";
 import { WeeklySection } from "@/types/api";
 import { WeeklySectionFormData } from "@/types/common";
+import { cleanFileName, formatDate } from "@/utils/utils";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet } from "react-native";
 
@@ -18,7 +20,7 @@ const WeeklyScreen = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
+
     const createSectionRef = useRef<CreateWeeklySectionBottomSheetRef>(null);
 
     const fetchWeeklySections = async () => {
@@ -26,7 +28,7 @@ const WeeklyScreen = () => {
             setLoading(false);
             return;
         }
-        
+
         try {
             setError(null);
             const data = await classService.getWeeklySections(classId);
@@ -34,6 +36,7 @@ const WeeklyScreen = () => {
             setWeeklySections(sortedData);
         } catch (err) {
             setError('Failed to load weekly sections');
+            console.error('Error fetching weekly sections:', err);
         } finally {
             setLoading(false);
         }
@@ -46,10 +49,28 @@ const WeeklyScreen = () => {
     };
 
     const handleOpenWeeklySheet = useCallback(() => createSectionRef.current?.open(), []);
-    
-    const handleCreateSection = useCallback((data: WeeklySectionFormData) => {
-        handleRefresh();
-    }, []);
+
+    const handleCreateSection = useCallback(async (data: WeeklySectionFormData) => {
+        if (!classId) {
+            ModalEmitter.showError('Class ID not found');
+            return;
+        }
+
+        try {
+            ModalEmitter.showLoading('Creating weekly section...');
+
+            await classService.createWeeklySection(classId, data);
+
+            ModalEmitter.hideLoading();
+            ModalEmitter.showSuccess('Weekly section created successfully!');
+
+            await handleRefresh();
+        } catch (error) {
+            ModalEmitter.hideLoading();
+            console.error('Failed to create weekly section:', error);
+            ModalEmitter.showError('Failed to create weekly section. Please try again.');
+        }
+    }, [classId]);
 
     useEffect(() => {
         if (classId) {
@@ -100,28 +121,22 @@ const WeeklyScreen = () => {
                     ) : (
                         weeklySections.map((week) => (
                             <WeeklyCard
-                                key={week.id}
+                                key={week.week_id}
                                 count={week.week_number}
                                 title={week.item_pembelajaran?.headingPertemuan || `Week ${week.week_number}`}
                                 description={week.item_pembelajaran?.bodyPertemuan || 'No description available'}
                                 videoUrl={week.item_pembelajaran?.urlVideo}
-                                attachment={week.item_pembelajaran?.file_link ? {
-                                    name: week.item_pembelajaran.fileName || 'Download File',
-                                    url: week.item_pembelajaran.file_link,
+                                attachment={week.item_pembelajaran?.fileUrl ? {
+                                    name: cleanFileName(week.item_pembelajaran.fileName ?? '') || 'Download File',
+                                    url: week.item_pembelajaran.fileUrl,
                                 } : undefined}
                                 assignment={week.assignment ? {
-                                    id: week.assignment.ID.toString(),
+                                    id: week.assignment.assignment_id.toString(),
                                     title: week.assignment.title,
-                                    dueDate: new Date(week.assignment.deadline).toLocaleDateString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    }),
+                                    dueDate: formatDate(week.assignment.deadline),
                                     description: week.assignment.description,
                                 } : undefined}
-                            />
+                        />
                         ))
                     )}
                 </ScrollView>

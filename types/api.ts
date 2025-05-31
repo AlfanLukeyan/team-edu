@@ -33,32 +33,30 @@ export interface ComponentAssessment {
 }
 
 export interface Assignment {
-    ID: number;
-    CreatedAt: string;
-    UpdatedAt: string;
-    DeletedAt: string | null;
-    title: string;
-    description: string;
+    assignment_id: number;
     deadline: string;
+    description: string;
+    title: string;
+    file_id: string;
     file_name: string;
-    file_link: string;
-    WeekdID: number;
+    file_url: string;
 }
 
 export interface ItemPembelajaran {
-    id: number;
+    week_id: number;
     headingPertemuan: string;
     bodyPertemuan: string;
     urlVideo: string;
-    fileName: string;
-    file_link: string;
+    fileName: string | null;
+    fileId: string | null;
+    fileUrl: string | null;
 }
 
 export interface WeeklySection {
-    id: number;
+    week_id: number;        // Added week_id
     week_number: number;
     class_id: string;
-    assignment: Assignment | null;
+    assignment: Assignment | null;  // Can be null
     item_pembelajaran: ItemPembelajaran;
 }
 

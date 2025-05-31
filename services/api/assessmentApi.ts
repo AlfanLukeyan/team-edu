@@ -23,26 +23,10 @@ export const assessmentApi = {
     },
 
     getAssessmentQuestions: async (assessmentId: string): Promise<AssessmentQuestionsResponse> => {
-        const token = await tokenService.getValidToken();
-        const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
-        };
-        
-        if (token) {
-            headers.Authorization = `Bearer ${token}`;
-        }
+        return httpClient.get(`/assessment/detail/questions/?id=${assessmentId}`);
+    },
 
-        const response = await fetch(`${TEMP_ASSESSMENT_URL}/assessment/detail/questions/?id=${assessmentId}`, {
-            method: 'GET',
-            headers,
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            const message = errorData.error || errorData.message || `Request failed with status ${response.status}`;
-            throw new Error(message);
-        }
-
-        return response.json();
+    deleteAssessment: async (assessmentId: string): Promise<{ status: string; message: string; data: string }> => {
+        return httpClient.delete(`/teacher/assessment/?id=${assessmentId}`);
     }
 };

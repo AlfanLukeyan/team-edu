@@ -3,7 +3,7 @@ import { ComponentAssessment } from "@/types/api";
 import { formatDate } from "@/utils/utils";
 import React from "react";
 import { StyleSheet, useColorScheme, View } from "react-native";
-import { AssessmentCard } from "./AssesmentCard";
+import { AssessmentCard } from "./AssessmentCard";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 

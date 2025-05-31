@@ -7,7 +7,9 @@ export default function ClassIdLayout() {
     const { setClassId, classInfo } = useClass();
 
     useEffect(() => {
+        if (id) {
             setClassId(id);
+        }
     }, [id, setClassId]);
 
     return (

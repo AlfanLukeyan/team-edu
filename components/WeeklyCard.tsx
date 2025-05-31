@@ -1,6 +1,7 @@
 import { AssignmentCard } from "@/components/AssignmentCard";
 import { AttachmentCard } from "@/components/AttachmentCard";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { getYoutubeEmbedUrl } from "@/utils/utils";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -26,29 +27,6 @@ interface WeeklyCardProps {
     };
 }
 
-// Helper function to convert YouTube URLs to embed format
-function getYoutubeEmbedUrl(url: string) {
-    if (!url) return "";
-
-    // If it's already an embed URL, return as is
-    if (url.includes("youtube.com/embed/")) return url;
-
-    // Extract video ID from various YouTube URL formats
-    let videoId = "";
-
-    if (url.includes("youtube.com/watch?v=")) {
-        videoId = url.split("v=")[1];
-        const ampersandPosition = videoId.indexOf("&");
-        if (ampersandPosition !== -1) {
-            videoId = videoId.substring(0, ampersandPosition);
-        }
-    } else if (url.includes("youtu.be/")) {
-        videoId = url.split("youtu.be/")[1];
-    }
-
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
-}
-
 export function WeeklyCard({
     count,
     title,
@@ -60,7 +38,7 @@ export function WeeklyCard({
     const router = useRouter();
     const theme = useColorScheme() ?? "light";
     const screenWidth = Dimensions.get("window").width;
-    const videoHeight = screenWidth * 0.5625; // 16:9 aspect ratio
+    const videoHeight = screenWidth * 0.5625;
 
     const embedUrl = videoUrl ? getYoutubeEmbedUrl(videoUrl) : "";
 

@@ -1,4 +1,5 @@
 import { Assessment, Class, ClassInfo, ClassMember, WeeklySection } from '@/types/api';
+import { WeeklySectionFormData } from '@/types/common';
 import { classApi } from "./api/classApi";
 import { tokenService } from "./tokenService";
 
@@ -62,6 +63,19 @@ class ClassService {
             const response = await classApi.getClassMembers(classId);
             return response.data;
         } catch (error) {
+            throw error;
+        }
+    }
+
+    async createWeeklySection(classId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> {
+        try {
+            const existingSections = await this.getWeeklySections(classId);
+            const nextWeekNumber = Math.max(0, ...existingSections.map(section => section.week_number)) + 1;
+
+            const response = await classApi.createWeeklySection(classId, nextWeekNumber, data);
+            return response;
+        } catch (error) {
+            console.error('Failed to create weekly section:', error);
             throw error;
         }
     }

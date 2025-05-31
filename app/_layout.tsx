@@ -1,3 +1,4 @@
+import CustomAlert from "@/components/CustomAlert";
 import ErrorModal from "@/components/ErrorModal";
 import LoadingModal from "@/components/LoadingModal";
 import SuccessModal from "@/components/SuccessModal";
@@ -59,6 +60,21 @@ export default function RootLayout() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [loadingMessage, setLoadingMessage] = useState<string | undefined>(undefined);
 
+    const [alertOptions, setAlertOptions] = useState<{
+        visible: boolean;
+        title: string;
+        message: string;
+        confirmText?: string;
+        cancelText?: string;
+        type?: 'warning' | 'danger' | 'info';
+        onConfirm?: () => void;
+        onCancel?: () => void;
+    }>({
+        visible: false,
+        title: '',
+        message: '',
+    });
+
     useEffect(() => {
         const handleError = (message: string) => {
             setErrorMessage(message);
@@ -92,12 +108,27 @@ export default function RootLayout() {
             }, 1000);
         };
 
+        const handleShowAlert = (options: any) => {
+            setAlertOptions({
+                visible: true,
+                ...options,
+            });
+        };
+
+        const handleHideAlert = () => {
+            setAlertOptions(prev => ({ ...prev, visible: false }));
+        };
+
+
         ModalEmitter.on("SHOW_ERROR", handleError);
         ModalEmitter.on("SHOW_SUCCESS", handleSuccess);
         ModalEmitter.on("SHOW_LOADING", handleShowLoading);
         ModalEmitter.on("HIDE_LOADING", handleHideLoading);
         ModalEmitter.on("UNAUTHORIZED", handleUnauthorized);
         ModalEmitter.on("ANOTHER_DEVICE_LOGIN", handleAnotherDeviceLogin);
+        ModalEmitter.on("SHOW_ALERT", handleShowAlert);
+        ModalEmitter.on("HIDE_ALERT", handleHideAlert);
+
 
         return () => {
             ModalEmitter.off("SHOW_ERROR", handleError);
@@ -106,6 +137,8 @@ export default function RootLayout() {
             ModalEmitter.off("HIDE_LOADING", handleHideLoading);
             ModalEmitter.off("UNAUTHORIZED", handleUnauthorized);
             ModalEmitter.off("ANOTHER_DEVICE_LOGIN", handleAnotherDeviceLogin);
+            ModalEmitter.off("SHOW_ALERT", handleShowAlert);
+            ModalEmitter.off("HIDE_ALERT", handleHideAlert);
         };
     }, [router]);
 
@@ -135,6 +168,22 @@ export default function RootLayout() {
                         <LoadingModal
                             visible={isLoading}
                             message={loadingMessage}
+                        />
+                        <CustomAlert
+                            visible={alertOptions.visible}
+                            title={alertOptions.title}
+                            message={alertOptions.message}
+                            confirmText={alertOptions.confirmText}
+                            cancelText={alertOptions.cancelText}
+                            type={alertOptions.type}
+                            onConfirm={() => {
+                                alertOptions.onConfirm?.();
+                                setAlertOptions(prev => ({ ...prev, visible: false }));
+                            }}
+                            onCancel={() => {
+                                alertOptions.onCancel?.();
+                                setAlertOptions(prev => ({ ...prev, visible: false }));
+                            }}
                         />
                     </ThemeProvider>
                 </BottomSheetModalProvider>

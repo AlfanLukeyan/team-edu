@@ -116,6 +116,18 @@ class HttpClient {
         return response.data;
     }
 
+    async postFormData<T = any>(url: string, formData: FormData, config?: RequestConfig): Promise<T> {
+        const headers: Record<string, string> = {
+            ...config?.headers,
+        };
+
+        const response = await this.axiosInstance.post<T>(url, formData, {
+            headers,
+            timeout: config?.timeout || 30000,
+        });
+        return response.data;
+    }
+
     async put<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
         const headers: Record<string, string> = { ...config?.headers };
 

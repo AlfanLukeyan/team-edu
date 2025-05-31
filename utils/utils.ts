@@ -29,6 +29,7 @@ export const formatDate = (dateString: string): string => {
     return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
+        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
     });
@@ -78,4 +79,85 @@ export const readableHash = (uuid: string, prefix: string = 'ID'): string => {
         console.error('Error creating hash:', error);
         return 'ID-ERROR';
     }
-}
+};
+
+/**
+ * Decodes URL-encoded filename and cleans it up
+ * Example: "Open%20Recruitment%20Ciputra%20Hospital%20Surabaya%20-%20Apple%20Developer%20Academy%20UC.pdf"
+ * Returns: "Open Recruitment Ciputra Hospital Surabaya - Apple Developer Academy UC.pdf"
+ */
+export const cleanFileName = (fileName: string): string => {
+    if (!fileName || typeof fileName !== 'string') {
+        return 'Unknown File';
+    }
+
+    try {
+        // Decode URL-encoded characters
+        const decoded = decodeURIComponent(fileName);
+        return decoded;
+    } catch (error) {
+        console.error('Error decoding filename:', error);
+        // Fallback: manually replace common URL encodings
+        return fileName
+            .replace(/%20/g, ' ')
+            .replace(/%21/g, '!')
+            .replace(/%22/g, '"')
+            .replace(/%23/g, '#')
+            .replace(/%24/g, '$')
+            .replace(/%25/g, '%')
+            .replace(/%26/g, '&')
+            .replace(/%27/g, "'")
+            .replace(/%28/g, '(')
+            .replace(/%29/g, ')')
+            .replace(/%2A/g, '*')
+            .replace(/%2B/g, '+')
+            .replace(/%2C/g, ',')
+            .replace(/%2D/g, '-')
+            .replace(/%2E/g, '.')
+            .replace(/%2F/g, '/')
+            .replace(/%3A/g, ':')
+            .replace(/%3B/g, ';')
+            .replace(/%3C/g, '<')
+            .replace(/%3D/g, '=')
+            .replace(/%3E/g, '>')
+            .replace(/%3F/g, '?')
+            .replace(/%40/g, '@');
+    }
+};
+
+/**
+ * Converts YouTube URLs to embed format for WebView
+ * Supports: youtube.com/watch?v=, youtu.be/, and existing embed URLs
+ * @param url - YouTube URL in any format
+ * @returns Embed URL or empty string if invalid
+ */
+export const getYoutubeEmbedUrl = (url: string): string => {
+    if (!url || typeof url !== 'string') return "";
+
+    if (url.includes("youtube.com/embed/")) return url;
+
+    let videoId = "";
+
+    try {
+        if (url.includes("youtube.com/watch?v=")) {
+            videoId = url.split("v=")[1];
+            const ampersandPosition = videoId.indexOf("&");
+            if (ampersandPosition !== -1) {
+                videoId = videoId.substring(0, ampersandPosition);
+            }
+        } else if (url.includes("youtu.be/")) {
+            videoId = url.split("youtu.be/")[1];
+            const questionPosition = videoId.indexOf("?");
+            if (questionPosition !== -1) {
+                videoId = videoId.substring(0, questionPosition);
+            }
+        } else if (url.includes("youtube.com/embed/")) {
+            return url;
+        }
+
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
+    } catch (error) {
+        console.error('Error parsing YouTube URL:', error);
+        return "";
+    }
+};

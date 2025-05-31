@@ -110,6 +110,28 @@ class AssessmentService {
             }))
         }));
     }
+
+
+    async deleteAssessment(assessmentId: string): Promise<{ status: string; message: string; data: string }> {
+        try {
+            const response = await assessmentApi.deleteAssessment(assessmentId);
+            return response;
+        } catch (error) {
+            console.error('Failed to delete assessment:', error);
+            throw error;
+        }
+    }
+
+    async deleteMultipleAssessments(assessmentIds: string[]): Promise<void> {
+        try {
+            await Promise.all(
+                assessmentIds.map(id => this.deleteAssessment(id))
+            );
+        } catch (error) {
+            console.error('Failed to delete multiple assessments:', error);
+            throw error;
+        }
+    }
 }
 
 export const assessmentService = AssessmentService.getInstance();
