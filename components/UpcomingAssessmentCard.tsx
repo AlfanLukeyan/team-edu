@@ -8,13 +8,15 @@ import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
 interface UpcomingAssessmentCardProps {
+    classId: string;
     classTitle: string;
     classCode: string;
     assessments: ComponentAssessment[];
-    onAssessmentPress?: (assessment: ComponentAssessment) => void;
+    onAssessmentPress?: (assessment: ComponentAssessment, classId: string) => void;
 }
 
 export function UpcomingAssessmentCard({
+    classId,
     classTitle,
     classCode,
     assessments,
@@ -48,7 +50,7 @@ export function UpcomingAssessmentCard({
                             title={assessment.title}
                             startDate={formatDate(assessment.start_date)}
                             endDate={getDaysRemainingText(assessment.days_remaining)}
-                            onPress={() => onAssessmentPress?.(assessment)}
+                            onPress={() => onAssessmentPress?.(assessment, classId)}
                         />
                         {index < assessments.length - 1 && (
                             <View style={[

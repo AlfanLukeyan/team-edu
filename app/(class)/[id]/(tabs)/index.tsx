@@ -15,6 +15,7 @@ import { ModalEmitter } from "@/services/modalEmitter";
 import { WeeklySection } from "@/types/api";
 import { AssignmentFormData, WeeklySectionFormData } from "@/types/common";
 import { cleanFileName, formatDate } from "@/utils/utils";
+import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet } from "react-native";
 
@@ -247,6 +248,7 @@ const WeeklyScreen = () => {
                                 onCreateAssignment={handleCreateAssignment}
                                 onEditAssignment={handleEditAssignment}
                                 onDeleteAssignment={handleDeleteAssignment}
+                                onAssignmentPress={(assignmentId) => router.push(`/(class)/${classId}/(assignment)/${assignmentId}/(tabs)`)}
                             />
                         ))
                     )}

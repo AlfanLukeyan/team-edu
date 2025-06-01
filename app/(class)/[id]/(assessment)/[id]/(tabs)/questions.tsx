@@ -6,12 +6,13 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
+import { useHeader } from "@/contexts/HeaderContext";
 import { assessmentService } from "@/services/assessmentService";
 import { ModalEmitter } from "@/services/modalEmitter";
 import { AssessmentQuestion, CreateQuestionItem } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useNavigation } from "expo-router";
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 interface QuestionsFormData {
@@ -19,7 +20,7 @@ interface QuestionsFormData {
 }
 
 export default function QuestionsScreen() {
-    const navigation = useNavigation('/(assessment)');
+    const { setHeaderConfig, resetHeader } = useHeader();
     const theme = useColorScheme();
     const { assessmentId, assessmentInfo } = useAssessment();
 
@@ -104,56 +105,56 @@ export default function QuestionsScreen() {
         }
     }, [assessmentId, handleRefresh]);
 
+    const headerRightComponent = useMemo(() => {
+        if (selectedQuestionIds.length === 0) return null;
+
+        return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <TouchableOpacity
+                    onPress={() => setSelectedQuestionIds([])}
+                    style={{ padding: 8 }}
+                >
+                    <Text style={{ color: Colors[theme ?? 'light'].tint }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => setShowActionsMenu(!showActionsMenu)}
+                    style={{ padding: 8 }}
+                >
+                    <Ionicons
+                        name="ellipsis-vertical"
+                        size={20}
+                        color={Colors[theme ?? 'light'].tint}
+                    />
+                </TouchableOpacity>
+            </View>
+        );
+    }, [selectedQuestionIds.length, showActionsMenu, theme]);
+
+    useEffect(() => {
+        if (selectedQuestionIds.length > 0) {
+            setHeaderConfig({
+                title: `${selectedQuestionIds.length} selected`,
+                rightComponent: headerRightComponent
+            });
+        } else {
+            resetHeader();
+        }
+    }, [selectedQuestionIds.length, headerRightComponent, setHeaderConfig, resetHeader]);
 
     useEffect(() => {
         fetchQuestions();
     }, [fetchQuestions]);
 
+    // Clean up on screen focus/blur
     useFocusEffect(
         useCallback(() => {
             return () => {
                 setSelectedQuestionIds([]);
                 setShowActionsMenu(false);
-                navigation.setOptions({
-                    headerTitle: undefined,
-                    headerRight: undefined,
-                });
+                resetHeader();
             };
-        }, [navigation])
+        }, [resetHeader])
     );
-
-    useLayoutEffect(() => {
-        if (selectedQuestionIds.length > 0) {
-            navigation.setOptions({
-                headerTitle: `${selectedQuestionIds.length} selected`,
-                headerRight: () => (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <TouchableOpacity
-                            onPress={() => setSelectedQuestionIds([])}
-                            style={{ padding: 8 }}
-                        >
-                            <Text style={{ color: Colors[theme ?? 'light'].tint }}>Cancel</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => setShowActionsMenu(!showActionsMenu)}
-                            style={{ padding: 8 }}
-                        >
-                            <Ionicons
-                                name="ellipsis-vertical"
-                                size={20}
-                                color={Colors[theme ?? 'light'].tint}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                ),
-            });
-        } else {
-            navigation.setOptions({
-                headerTitle: undefined,
-                headerRight: undefined,
-            });
-        }
-    }, [selectedQuestionIds, showActionsMenu, navigation, theme]);
 
     const handleSelectAllQuestions = () => {
         const allQuestionIds = questions.map(question => question.question_id);
@@ -283,7 +284,7 @@ export default function QuestionsScreen() {
                         />
                     }
                 >
-                    {/* Add Create Questions Button */}
+                    {/* Create Questions Button */}
                     <Button onPress={handleOpenQuestionSheet}>
                         Create Questions
                     </Button>
@@ -312,7 +313,7 @@ export default function QuestionsScreen() {
                 </ScrollView>
             </ThemedView>
 
-            {/* Add QuestionBottomSheet */}
+            {/* Question Bottom Sheet */}
             <QuestionBottomSheet
                 ref={questionBottomSheetRef}
                 onSubmit={handleCreateQuestions}

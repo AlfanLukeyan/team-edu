@@ -4,15 +4,17 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
+import { useHeader } from "@/contexts/HeaderContext"; // ✅ Add this import
 import { assessmentService } from "@/services/assessmentService";
 import { AssessmentSubmission } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useNavigation } from "expo-router";
-import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 export default function SubmissionsScreen() {
-    const navigation = useNavigation('/(assessment)');
+    // ✅ Remove navigation hook and add header context
+    const { setHeaderConfig, resetHeader } = useHeader();
     const theme = useColorScheme();
     const { assessmentId } = useAssessment();
 
@@ -44,55 +46,60 @@ export default function SubmissionsScreen() {
         setRefreshing(false);
     }, [fetchSubmissions]);
 
+    // ✅ Memoize the header component
+    const headerRightComponent = useMemo(() => {
+        if (selectedSubmissionIds.length === 0) return null;
+
+        return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <TouchableOpacity
+                    onPress={() => setSelectedSubmissionIds([])}
+                    style={{ padding: 8 }}
+                >
+                    <Text style={{ color: Colors[theme ?? 'light'].tint }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => setShowActionsMenu(!showActionsMenu)}
+                    style={{ padding: 8 }}
+                >
+                    <Ionicons
+                        name="ellipsis-horizontal"
+                        size={20}
+                        color={Colors[theme ?? 'light'].tint}
+                    />
+                </TouchableOpacity>
+            </View>
+        );
+    }, [selectedSubmissionIds.length, showActionsMenu, theme]);
+
+    // ✅ Use header context instead of useLayoutEffect
+    useEffect(() => {
+        if (selectedSubmissionIds.length > 0) {
+            setHeaderConfig({
+                title: `${selectedSubmissionIds.length} selected`,
+                rightComponent: headerRightComponent
+            });
+        } else {
+            resetHeader();
+        }
+    }, [selectedSubmissionIds.length, headerRightComponent, setHeaderConfig, resetHeader]);
+
     useEffect(() => {
         fetchSubmissions();
     }, [fetchSubmissions]);
 
+    // ✅ Update useFocusEffect to use header context
     useFocusEffect(
         useCallback(() => {
             return () => {
                 setSelectedSubmissionIds([]);
                 setShowActionsMenu(false);
-                navigation.setOptions({
-                    headerTitle: undefined,
-                    headerRight: undefined,
-                });
+                resetHeader(); // ✅ Use resetHeader instead of navigation.setOptions
             };
-        }, [navigation])
+        }, [resetHeader])
     );
 
-    useLayoutEffect(() => {
-        if (selectedSubmissionIds.length > 0) {
-            navigation.setOptions({
-                headerTitle: `${selectedSubmissionIds.length} selected`,
-                headerRight: () => (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <TouchableOpacity
-                            onPress={() => setSelectedSubmissionIds([])}
-                            style={{ padding: 8 }}
-                        >
-                            <Text style={{ color: Colors[theme ?? 'light'].tint }}>Cancel</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => setShowActionsMenu(!showActionsMenu)}
-                            style={{ padding: 8 }}
-                        >
-                            <Ionicons
-                                name="ellipsis-horizontal"
-                                size={20}
-                                color={Colors[theme ?? 'light'].tint}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                ),
-            });
-        } else {
-            navigation.setOptions({
-                headerTitle: undefined,
-                headerRight: undefined,
-            });
-        }
-    }, [selectedSubmissionIds, showActionsMenu, navigation, theme]);
+    // ✅ Remove the entire useLayoutEffect block
 
     const handleSelectAllSubmissions = () => {
         const allSubmissionIds = submissions.filter(s => s.id).map(s => s.id!);
@@ -136,7 +143,7 @@ export default function SubmissionsScreen() {
             }
             setShowActionsMenu(false);
         } else {
-            console.log("Normal press on submission:", id);
+            
         }
     };
 
@@ -155,7 +162,7 @@ export default function SubmissionsScreen() {
                 <ThemedText style={{ textAlign: 'center', marginBottom: 16 }}>
                     {error}
                 </ThemedText>
-                <ThemedText 
+                <ThemedText
                     style={{ color: Colors[theme ?? 'light'].tint, textAlign: 'center' }}
                     onPress={fetchSubmissions}
                 >
@@ -186,24 +193,40 @@ export default function SubmissionsScreen() {
                     />
                 }
             >
-                <View style={styles.submissionsList}>
-                    {submissions.map((item) => (
-                        <SubmissionCard
-                            key={item.id || item.user_user_id}
-                            id={item.id || item.user_user_id}
-                            user_profile_url={`http://20.2.83.17:5002/storage/user_profile_pictures/${item.user_user_id}.jpg`}
-                            user_name={item.username}
-                            user_id={item.user_user_id}
-                            time_remaining={item.time_remaining? item.time_remaining : undefined}
-                            status={item.status}
-                            score={item.score}
-                            total_score={100}
-                            isSelected={item.id ? selectedSubmissionIds.includes(item.id) : false}
-                            onLongPress={item.id ? () => handleSubmissionLongPress(item.id!) : undefined}
-                            onPress={item.id ? () => handleSubmissionPress(item.id!) : undefined}
-                        />
-                    ))}
-                </View>
+                {submissions.length === 0 ? (
+                    <ThemedView style={styles.emptyState}>
+                        <ThemedText style={styles.emptyText}>
+                            No submissions available yet
+                        </ThemedText>
+                    </ThemedView>
+                ) : (
+                    <View style={styles.submissionsList}>
+                        {submissions.map((item, index) => {
+                            const submissionId = item.id || `${item.user_user_id}-${index}`;
+
+                            return (
+                                <SubmissionCard
+                                    key={submissionId}
+                                    id={submissionId}
+                                    user_profile_url={`http://20.2.83.17:5002/storage/user_profile_pictures/${item.user_user_id}.jpg`}
+                                    user_name={item.username}
+                                    user_id={item.user_user_id}
+                                    time_remaining={item.time_remaining ? item.time_remaining : undefined}
+                                    status={item.status}
+                                    score={item.score}
+                                    total_score={100}
+                                    isSelected={selectedSubmissionIds.includes(submissionId)}
+                                    onLongPress={(id: string) => {
+                                        handleSubmissionLongPress(id);
+                                    }}
+                                    onPress={(id: string) => {
+                                        handleSubmissionPress(id);
+                                    }}
+                                />
+                            );
+                        })}
+                    </View>
+                )}
             </ScrollView>
         </ThemedView>
     );
@@ -219,5 +242,15 @@ const styles = StyleSheet.create({
     },
     submissionsList: {
         gap: 8,
+    },
+    emptyState: {
+        padding: 24,
+        alignItems: 'center',
+        borderRadius: 12,
+        marginTop: 20,
+    },
+    emptyText: {
+        opacity: 0.7,
+        textAlign: 'center',
     },
 });

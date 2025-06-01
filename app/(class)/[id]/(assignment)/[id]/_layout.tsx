@@ -18,12 +18,7 @@ export default function AssignmentIdLayout() {
                 headerShown: false,
             }}
         >
-            <Stack.Screen
-                name="(tabs)"
-                options={{
-                    title: "Assignment Details",
-                }}
-            />
+            <Stack.Screen name="(tabs)" />
         </Stack>
     );
 }

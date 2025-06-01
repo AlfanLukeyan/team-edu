@@ -42,6 +42,7 @@ class ClassService {
 
     async getWeeklySections(classId: string): Promise<WeeklySection[]> {
         try {
+            console.log('Fetching weekly sections for class:', classId);
             const response = await classApi.getWeeklySections(classId);
             return response.data;
         } catch (error) {

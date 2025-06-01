@@ -29,8 +29,6 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
 
         const inAuthGroup = segments[0] === '(auth)';
         const inProtectedGroup = segments[0] === '(main)'
-            || segments[0] === '(assessment)'
-            || segments[0] === '(assignment)'
             || segments[0] === '(class)'
             || segments[0] === '(verification)';
 

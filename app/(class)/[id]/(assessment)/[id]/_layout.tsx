@@ -18,10 +18,14 @@ export default function AssessmentIdLayout() {
                 headerShown: false,
             }}
         >
-            <Stack.Screen
-                name="(tabs)"
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen 
+                name="session" 
                 options={{
-                    title: "Assessment Details",
+                    presentation: 'fullScreenModal',
+                    headerShown: true,
+                    title: 'Assessment Session',
+                    headerBackTitle: 'Back',
                 }}
             />
         </Stack>

@@ -45,11 +45,21 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
 
     const shouldShowImage = user_profile_url && !imageError;
 
+    const handlePress = () => {
+        onPress?.(id);
+    };
+
+    const handleLongPress = () => {
+        onLongPress?.(id);
+    };
+
     return (
         <TouchableOpacity
-            onLongPress={() => onLongPress?.(id)}
-            onPress={() => onPress?.(id)}
+            onPress={handlePress}
+            onLongPress={handleLongPress}
             delayLongPress={500}
+            activeOpacity={0.7}
+            style={{ opacity: isSelected ? 0.8 : 1 }}
         >
             <ThemedView
                 isCard={true}
@@ -58,6 +68,7 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
                     isSelected && {
                         borderColor: Colors[theme].tint,
                         backgroundColor: theme === "dark" ? 'rgba(190, 27, 182, 0.1)' : 'rgba(30, 206, 206, 0.1)',
+                        borderWidth: 1,
                     },
                 ]}
             >
@@ -114,12 +125,20 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
                         </ThemedText>
                     )}
                 </View>
+                {isSelected && (
+                    <View style={styles.selectionIndicator}>
+                        <Ionicons
+                            name="checkmark-circle"
+                            size={20}
+                            color={Colors[theme].tint}
+                        />
+                    </View>
+                )}
             </ThemedView>
         </TouchableOpacity>
     );
 }
 
-// Helper functions updated to match API response
 const formatStatus = (status: string): string => {
     switch (status) {
         case "submitted": return "Submitted";
@@ -227,5 +246,10 @@ const styles = StyleSheet.create({
     timeText: {
         fontSize: 12,
         opacity: 0.8,
+    },
+    selectionIndicator: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
     },
 });

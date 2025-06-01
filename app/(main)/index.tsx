@@ -47,8 +47,8 @@ export default function HomeScreen() {
         fetchUpcomingAssessments();
     }, [fetchUpcomingAssessments]);
 
-    const handleAssessmentPress = (assessment: ComponentAssessment) => {
-        router.push(`/(assessment)/${assessment.id}/(tabs)`);
+    const handleAssessmentPress = (assessment: ComponentAssessment, classId: string) => {
+        router.push(`/(class)/${classId}/(assessment)/${assessment.id}/(tabs)`);
     };
 
     const componentData: ClassAssessmentData[] = assessmentService.transformToComponentFormat(upcomingAssessments);
@@ -99,6 +99,7 @@ export default function HomeScreen() {
                 {componentData.map((classData) => (
                     <UpcomingAssessmentCard
                         key={classData.classId}
+                        classId={classData.classId}
                         classTitle={classData.classTitle}
                         classCode={classData.classCode}
                         assessments={classData.assessments}

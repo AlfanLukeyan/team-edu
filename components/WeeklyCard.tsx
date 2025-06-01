@@ -35,6 +35,7 @@ interface WeeklyCardProps {
     onCreateAssignment?: (weekId: number) => void;
     onEditAssignment?: (assignmentId: string, weekId: number) => void;
     onDeleteAssignment?: (assignmentId: string, weekId: number) => void;
+    onAssignmentPress?: (assignmentId: string) => void;
 }
 
 export function WeeklyCard({
@@ -49,7 +50,8 @@ export function WeeklyCard({
     onDelete,
     onCreateAssignment,
     onEditAssignment,
-    onDeleteAssignment
+    onDeleteAssignment,
+    onAssignmentPress
 }: WeeklyCardProps) {
     const router = useRouter();
     const theme = useColorScheme() ?? "light";
@@ -201,9 +203,7 @@ export function WeeklyCard({
                                     key={assignment.id}
                                     title={assignment.title}
                                     dueDate={assignment.dueDate}
-                                    onPress={() => {
-                                        router.push(`/(assignment)/${assignment.id}/(tabs)`);
-                                    }}
+                                    onPress={() => onAssignmentPress?.(assignment.id)}
                                     onEdit={() => handleEditAssignment(assignment.id)}
                                     onDelete={() => handleDeleteAssignment(assignment.id)}
                                     showActions={true}

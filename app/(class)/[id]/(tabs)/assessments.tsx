@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useClass } from '@/contexts/ClassContext';
+import { useHeader } from '@/contexts/HeaderContext'; // ✅ Add this import
 import { assessmentService } from '@/services/assessmentService';
 import { classService } from '@/services/classService';
 import { ModalEmitter } from '@/services/modalEmitter';
@@ -14,8 +15,8 @@ import { Assessment, CreateQuestionItem } from '@/types/api';
 import { AssessmentFormData } from '@/types/common';
 import { formatDate } from '@/utils/utils';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 interface QuestionsFormData {
@@ -25,7 +26,7 @@ interface QuestionsFormData {
 const AssessmentsScreen = () => {
     const { classId } = useClass();
     const router = useRouter();
-    const navigation = useNavigation("/(class)");
+    const { setHeaderConfig, resetHeader } = useHeader(); // ✅ Use header context
     const theme = useColorScheme();
 
     const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -122,6 +123,44 @@ const AssessmentsScreen = () => {
         }
     }, [currentAssessmentId]);
 
+    // ✅ Memoize the header component
+    const headerRightComponent = useMemo(() => {
+        if (selectedAssessmentIds.length === 0) return null;
+
+        return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <TouchableOpacity
+                    onPress={() => setSelectedAssessmentIds([])}
+                    style={{ padding: 8 }}
+                >
+                    <Text style={{ color: Colors[theme ?? 'light'].tint }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => setShowActionsMenu(!showActionsMenu)}
+                    style={{ padding: 8 }}
+                >
+                    <Ionicons
+                        name="ellipsis-vertical"
+                        size={20}
+                        color={Colors[theme ?? 'light'].tint}
+                    />
+                </TouchableOpacity>
+            </View>
+        );
+    }, [selectedAssessmentIds.length, showActionsMenu, theme]);
+
+    // ✅ Use header context instead of navigation.setOptions
+    useEffect(() => {
+        if (selectedAssessmentIds.length > 0) {
+            setHeaderConfig({
+                title: `${selectedAssessmentIds.length} selected`,
+                rightComponent: headerRightComponent
+            });
+        } else {
+            resetHeader();
+        }
+    }, [selectedAssessmentIds.length, headerRightComponent, setHeaderConfig, resetHeader]);
+
     // Selection handlers
     const handleAssessmentLongPress = (id: string) => {
         setSelectedAssessmentIds([id]);
@@ -137,7 +176,7 @@ const AssessmentsScreen = () => {
             }
             setShowActionsMenu(false);
         } else {
-            router.push(`/(assessment)/${id}/(tabs)`);
+            router.push(`/(class)/${classId}/(assessment)/${id}/(tabs)`);
         }
     };
 
@@ -188,52 +227,18 @@ const AssessmentsScreen = () => {
         });
     };
 
-    // Reset selection when screen loses focus
+    // ✅ Clean up with header context instead of navigation
     useFocusEffect(
         useCallback(() => {
             return () => {
                 setSelectedAssessmentIds([]);
                 setShowActionsMenu(false);
-                navigation.setOptions({
-                    headerTitle: undefined,
-                    headerRight: undefined,
-                });
+                resetHeader(); // ✅ Use resetHeader instead of navigation.setOptions
             };
-        }, [navigation])
+        }, [resetHeader])
     );
 
-    useLayoutEffect(() => {
-        if (selectedAssessmentIds.length > 0) {
-            navigation.setOptions({
-                headerTitle: `${selectedAssessmentIds.length} selected`,
-                headerRight: () => (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <TouchableOpacity
-                            onPress={() => setSelectedAssessmentIds([])}
-                            style={{ padding: 8 }}
-                        >
-                            <Text style={{ color: Colors[theme ?? 'light'].tint }}>Cancel</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => setShowActionsMenu(!showActionsMenu)}
-                            style={{ padding: 8 }}
-                        >
-                            <Ionicons
-                                name="ellipsis-vertical"
-                                size={20}
-                                color={Colors[theme ?? 'light'].tint}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                ),
-            });
-        } else {
-            navigation.setOptions({
-                headerTitle: undefined,
-                headerRight: undefined,
-            });
-        }
-    }, [selectedAssessmentIds, showActionsMenu, navigation, theme]);
+    // ✅ Remove the old useLayoutEffect completely
 
     useEffect(() => {
         if (classId) {
