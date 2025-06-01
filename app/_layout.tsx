@@ -155,46 +155,56 @@ export default function RootLayout() {
                         </NavigationHandler>
                         <StatusBar style="auto" />
 
-                        <View style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            zIndex: 9999,
-                            pointerEvents: (isLoading || !!errorMessage || !!successMessage || alertOptions.visible) ? 'auto' : 'none'
-                        }}>
-                            <ErrorModal
-                                visible={!!errorMessage}
-                                errorMessage={errorMessage || ""}
-                                onClose={() => setErrorMessage(null)}
-                            />
-                            <SuccessModal
-                                visible={!!successMessage}
-                                successMessage={successMessage || ""}
-                                onClose={() => setSuccessMessage(null)}
-                            />
-                            <LoadingModal
-                                visible={isLoading}
-                                message={loadingMessage}
-                            />
-                            <CustomAlert
-                                visible={alertOptions.visible}
-                                title={alertOptions.title}
-                                message={alertOptions.message}
-                                confirmText={alertOptions.confirmText}
-                                cancelText={alertOptions.cancelText}
-                                type={alertOptions.type}
-                                onConfirm={() => {
-                                    alertOptions.onConfirm?.();
-                                    setAlertOptions(prev => ({ ...prev, visible: false }));
-                                }}
-                                onCancel={() => {
-                                    alertOptions.onCancel?.();
-                                    setAlertOptions(prev => ({ ...prev, visible: false }));
-                                }}
-                            />
-                        </View>
+                        {(isLoading || !!errorMessage || !!successMessage || alertOptions.visible) && (
+                            <View style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                zIndex: 9999,
+                                pointerEvents: 'auto'
+                            }}>
+                                {!!errorMessage && (
+                                    <ErrorModal
+                                        visible={true}
+                                        errorMessage={errorMessage}
+                                        onClose={() => setErrorMessage(null)}
+                                    />
+                                )}
+                                {!!successMessage && (
+                                    <SuccessModal
+                                        visible={true}
+                                        successMessage={successMessage}
+                                        onClose={() => setSuccessMessage(null)}
+                                    />
+                                )}
+                                {isLoading && (
+                                    <LoadingModal
+                                        visible={true}
+                                        message={loadingMessage}
+                                    />
+                                )}
+                                {alertOptions.visible && (
+                                    <CustomAlert
+                                        visible={true}
+                                        title={alertOptions.title}
+                                        message={alertOptions.message}
+                                        confirmText={alertOptions.confirmText}
+                                        cancelText={alertOptions.cancelText}
+                                        type={alertOptions.type}
+                                        onConfirm={() => {
+                                            alertOptions.onConfirm?.();
+                                            setAlertOptions(prev => ({ ...prev, visible: false }));
+                                        }}
+                                        onCancel={() => {
+                                            alertOptions.onCancel?.();
+                                            setAlertOptions(prev => ({ ...prev, visible: false }));
+                                        }}
+                                    />
+                                )}
+                            </View>
+                        )}
                     </BottomSheetModalProvider>
                 </ThemeProvider>
             </GestureHandlerRootView>

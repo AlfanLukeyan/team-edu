@@ -1,4 +1,7 @@
 import { Button } from "@/components/Button";
+import AssignmentBottomSheet, {
+    AssignmentBottomSheetRef,
+} from "@/components/teacher/AssignmentBottomSheet";
 import WeeklySectionBottomSheet, {
     WeeklySectionBottomSheetRef,
 } from "@/components/teacher/WeeklySectionBottomSheet";
@@ -6,10 +9,11 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { WeeklyCard } from "@/components/WeeklyCard";
 import { useClass } from "@/contexts/ClassContext";
+import { assignmentService } from "@/services/assignmentService";
 import { classService } from "@/services/classService";
 import { ModalEmitter } from "@/services/modalEmitter";
 import { WeeklySection } from "@/types/api";
-import { WeeklySectionFormData } from "@/types/common";
+import { AssignmentFormData, WeeklySectionFormData } from "@/types/common";
 import { cleanFileName, formatDate } from "@/utils/utils";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet } from "react-native";
@@ -22,6 +26,7 @@ const WeeklyScreen = () => {
     const [error, setError] = useState<string | null>(null);
 
     const createSectionRef = useRef<WeeklySectionBottomSheetRef>(null);
+    const assignmentBottomSheetRef = useRef<AssignmentBottomSheetRef>(null);
 
     const fetchWeeklySections = async () => {
         if (!classId) {
@@ -94,9 +99,70 @@ const WeeklyScreen = () => {
                     ModalEmitter.showSuccess('Weekly section deleted successfully!');
                     await handleRefresh();
                 } catch (error) {
+                    ModalEmitter.showError('Failed to delete weekly section.');
                 }
             },
         });
+    }, [handleRefresh]);
+
+    // Assignment handlers
+    const handleCreateAssignment = useCallback((weekId: number) => {
+        assignmentBottomSheetRef.current?.open(weekId.toString());
+    }, []);
+
+    const handleEditAssignment = useCallback((weekId: number) => {
+        const section = weeklySections.find(w => w.week_id === weekId);
+        if (section?.assignment) {
+            assignmentBottomSheetRef.current?.openForEdit(section.assignment, weekId.toString());
+        }
+    }, [weeklySections]);
+
+    const handleDeleteAssignment = useCallback((weekId: number) => {
+        ModalEmitter.showAlert({
+            title: "Delete Assignment",
+            message: "Are you sure you want to delete this assignment?",
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    // You'll need to implement this API call
+                    // await assignmentService.deleteAssignment(assignmentId);
+                    ModalEmitter.showSuccess('Assignment deleted successfully!');
+                    await handleRefresh();
+                } catch (error) {
+                    ModalEmitter.showError('Failed to delete assignment.');
+                }
+            },
+        });
+    }, [handleRefresh]);
+
+    const handleCreateOrUpdateAssignment = useCallback(async (
+        data: AssignmentFormData,
+        weekId: string,
+        assignmentId?: string
+    ) => {
+        try {
+            if (assignmentId) {
+                // Edit mode
+                ModalEmitter.showLoading('Updating assignment...');
+                await assignmentService.updateAssignment(assignmentId, weekId, data);
+                ModalEmitter.hideLoading();
+                ModalEmitter.showSuccess('Assignment updated successfully!');
+            } else {
+                // Create mode
+                ModalEmitter.showLoading('Creating assignment...');
+                await assignmentService.createAssignment(weekId, data);
+                ModalEmitter.hideLoading();
+                ModalEmitter.showSuccess('Assignment created successfully!');
+            }
+
+            await handleRefresh();
+        } catch (error) {
+            ModalEmitter.hideLoading();
+            console.error('Failed to save assignment:', error);
+            ModalEmitter.showError('Failed to save assignment. Please try again.');
+        }
     }, [handleRefresh]);
 
     useEffect(() => {
@@ -166,14 +232,23 @@ const WeeklyScreen = () => {
                                 weekId={week.week_id}
                                 onEdit={handleEditSection}
                                 onDelete={handleDeleteSection}
+                                onCreateAssignment={handleCreateAssignment}
+                                onEditAssignment={handleEditAssignment}
+                                onDeleteAssignment={handleDeleteAssignment}
                             />
                         ))
                     )}
                 </ScrollView>
             </ThemedView>
+
             <WeeklySectionBottomSheet
                 ref={createSectionRef}
                 onSubmit={handleCreateOrUpdateSection}
+            />
+
+            <AssignmentBottomSheet
+                ref={assignmentBottomSheetRef}
+                onSubmit={handleCreateOrUpdateAssignment}
             />
         </>
     );

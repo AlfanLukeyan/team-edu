@@ -1,7 +1,10 @@
 import {
     AssignmentDetailsResponse,
     AssignmentSubmissionsResponse,
+    CreateAssignmentResponse,
+    UpdateAssignmentResponse,
 } from '@/types/api';
+import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
 
 export const assignmentApi = {
@@ -18,5 +21,13 @@ export const assignmentApi = {
             params.append('status', status);
         }
         return httpClient.get(`/kelas/assignment-submission?${params.toString()}`);
+    },
+
+    createAssignment: async (formData: FormData): Promise<CreateAssignmentResponse> => {
+        return simplePostFormData('/teacher/kelas/assignment', formData);
+    },
+
+    updateAssignment: async (formData: FormData): Promise<UpdateAssignmentResponse> => {
+        return simplePostFormData('/teacher/kelas/assignment', formData, "PUT");
     },
 };

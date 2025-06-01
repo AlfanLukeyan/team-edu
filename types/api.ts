@@ -229,6 +229,26 @@ export interface AssignmentSubmission {
     updated_at: string | null;
 }
 
+export interface CreateAssignmentData {
+    assignment_id: number;
+    title: string;
+    description: string;
+    deadline: string;
+    file_name: string;
+    file_id: string;
+    file_url: string;
+}
+
+export interface UpdateAssignmentData {
+    assignment_id: number;
+    title: string;
+    description: string;
+    deadline: string;
+    file_name: string;
+    file_id: string;
+    file_url: string;
+}
+
 export type UpcomingAssessmentsResponse = ApiResponse<ClassAssessment[]>;
 export type ClassResponse = ApiResponse<Class[]>;
 export type ClassInfoResponse = ApiResponse<ClassInfo>;
@@ -245,3 +265,5 @@ export type CreateQuestionsResponse = ApiResponse<QuestionResponseData[]>;
 export type UpdateQuestionResponse = ApiResponse<QuestionResponseData>;
 export type AssignmentDetailsResponse = ApiResponse<Assignment>;
 export type AssignmentSubmissionsResponse = ApiResponse<AssignmentSubmission[]>;
+export type CreateAssignmentResponse = ApiResponse<CreateAssignmentData>;
+export type UpdateAssignmentResponse = ApiResponse<UpdateAssignmentData>;

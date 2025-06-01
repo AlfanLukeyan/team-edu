@@ -33,3 +33,10 @@ export interface QuestionFormData {
 export interface TabContentProps {
     onCreatePress: () => void;
 }
+
+export interface AssignmentFormData {
+    title: string;
+    description: string;
+    deadline: string;
+    file?: any;
+}

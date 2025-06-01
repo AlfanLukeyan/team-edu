@@ -1,5 +1,6 @@
 import { AssignmentCard } from "@/components/AssignmentCard";
 import { AttachmentCard } from "@/components/AttachmentCard";
+import { Button } from "@/components/Button";
 import WeeklySectionActionsMenu from "@/components/WeeklySectionActionsMenu";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -31,6 +32,9 @@ interface WeeklyCardProps {
     weekId?: number;
     onEdit?: (weekId: number) => void;
     onDelete?: (weekId: number) => void;
+    onCreateAssignment?: (weekId: number) => void;
+    onEditAssignment?: (weekId: number) => void;
+    onDeleteAssignment?: (weekId: number) => void;
 }
 
 export function WeeklyCard({
@@ -42,7 +46,10 @@ export function WeeklyCard({
     assignment,
     weekId,
     onEdit,
-    onDelete
+    onDelete,
+    onCreateAssignment,
+    onEditAssignment,
+    onDeleteAssignment
 }: WeeklyCardProps) {
     const router = useRouter();
     const theme = useColorScheme() ?? "light";
@@ -64,6 +71,24 @@ export function WeeklyCard({
             onDelete(weekId);
         }
         setShowActionsMenu(false);
+    };
+
+    const handleCreateAssignment = () => {
+        if (weekId && onCreateAssignment) {
+            onCreateAssignment(weekId);
+        }
+    };
+
+    const handleEditAssignment = () => {
+        if (weekId && onEditAssignment) {
+            onEditAssignment(weekId);
+        }
+    };
+
+    const handleDeleteAssignment = () => {
+        if (weekId && onDeleteAssignment) {
+            onDeleteAssignment(weekId);
+        }
     };
 
     return (
@@ -146,9 +171,10 @@ export function WeeklyCard({
                         />
                     </View>
                 )}
+
                 {/* Assignment Section */}
-                {assignment && (
-                    <View style={styles.attachmentContainer}>
+                {assignment ? (
+                    <View style={styles.assignmentContainer}>
                         <ThemedText type="subtitle">
                             Assignment
                         </ThemedText>
@@ -158,7 +184,20 @@ export function WeeklyCard({
                             onPress={() => {
                                 router.push(`/(assignment)/${assignment.id}/(tabs)`);
                             }}
+                            onEdit={handleEditAssignment}
+                            onDelete={handleDeleteAssignment}
+                            showActions={true}
                         />
+                    </View>
+                ) : (
+                    <View style={styles.assignmentContainer}>
+                        <Button
+                            type="secondary"
+                            onPress={handleCreateAssignment}
+                            icon={{ name: "plus.circle.fill" }}
+                        >
+                            Create Assignment
+                        </Button>
                     </View>
                 )}
             </View>
@@ -192,6 +231,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     attachmentContainer: {
+        paddingVertical: 8,
+    },
+    assignmentContainer: {
         paddingVertical: 8,
     },
     attachmentLabel: {
