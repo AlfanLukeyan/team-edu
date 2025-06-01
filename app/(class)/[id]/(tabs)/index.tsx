@@ -133,10 +133,15 @@ const WeeklyScreen = () => {
                     type: "danger",
                     onConfirm: async () => {
                         try {
+                            ModalEmitter.showLoading('Deleting assignment...');
+                            await assignmentService.deleteAssignment(assignmentId);
                             ModalEmitter.showSuccess('Assignment deleted successfully!');
                             await handleRefresh();
                         } catch (error) {
-                            ModalEmitter.showError('Failed to delete assignment.');
+                            console.error('Failed to delete assignment:', error);
+                            ModalEmitter.showError('Failed to delete assignment. Please try again.');
+                        } finally {
+                            ModalEmitter.hideLoading();
                         }
                     },
                 });

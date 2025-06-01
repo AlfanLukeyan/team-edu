@@ -68,7 +68,6 @@ class AssessmentService {
     async getAssessmentQuestions(assessmentId: string): Promise<AssessmentQuestion[]> {
         try {
             const response = await assessmentApi.getAssessmentQuestions(assessmentId);
-            console.log('Fetched assessment questions:', response.data);
             return response.data;
         } catch (error) {
             console.error('Failed to fetch assessment questions:', error);

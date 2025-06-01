@@ -82,6 +82,17 @@ class AssignmentService {
         }
     }
 
+    async deleteAssignment(assignmentId: string): Promise<{ status: string; message: string; data: string }> {
+        try {
+            const response = await assignmentApi.deleteAssignment(assignmentId);
+            console.log('Assignment deleted successfully:', response);
+            return response;
+        } catch (error) {
+            console.error('Failed to delete assignment:', error);
+            throw error;
+        }
+    }
+
     getSubmittedAssignments(submissions: AssignmentSubmission[]): AssignmentSubmission[] {
         return submissions.filter(submission => submission.status === 'submitted');
     }

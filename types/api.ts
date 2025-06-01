@@ -267,3 +267,4 @@ export type AssignmentDetailsResponse = ApiResponse<Assignment>;
 export type AssignmentSubmissionsResponse = ApiResponse<AssignmentSubmission[]>;
 export type CreateAssignmentResponse = ApiResponse<CreateAssignmentData>;
 export type UpdateAssignmentResponse = ApiResponse<UpdateAssignmentData>;
+export type DeleteAssignmentResponse = ApiResponse<string>;

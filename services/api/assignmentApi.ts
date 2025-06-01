@@ -2,6 +2,7 @@ import {
     AssignmentDetailsResponse,
     AssignmentSubmissionsResponse,
     CreateAssignmentResponse,
+    DeleteAssignmentResponse,
     UpdateAssignmentResponse,
 } from '@/types/api';
 import { simplePostFormData } from '@/utils/httpUtils';
@@ -29,5 +30,9 @@ export const assignmentApi = {
 
     updateAssignment: async (formData: FormData): Promise<UpdateAssignmentResponse> => {
         return simplePostFormData('/teacher/kelas/assignment', formData, "PUT");
+    },
+
+    deleteAssignment: async (assignmentId: string): Promise<DeleteAssignmentResponse> => {
+        return httpClient.delete(`/teacher/kelas/assignment?assignment_id=${assignmentId}`);
     },
 };
