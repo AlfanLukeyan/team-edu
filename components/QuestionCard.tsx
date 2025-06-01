@@ -61,7 +61,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        marginHorizontal: 16,
         padding: 16,
         borderRadius: 12,
         borderWidth: 1,

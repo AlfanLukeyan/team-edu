@@ -1,15 +1,22 @@
+import { Button } from "@/components/Button";
 import QuestionActionsMenu from "@/components/QuestionActionsMenu";
 import { QuestionCard } from "@/components/QuestionCard";
+import QuestionBottomSheet, { QuestionBottomSheetRef } from "@/components/teacher/QuestionBottomSheet";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import { assessmentService } from "@/services/assessmentService";
-import { AssessmentQuestion } from "@/types/api";
+import { ModalEmitter } from "@/services/modalEmitter";
+import { AssessmentQuestion, CreateQuestionItem } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "expo-router";
-import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+
+interface QuestionsFormData {
+    questions: CreateQuestionItem[];
+}
 
 export default function QuestionsScreen() {
     const navigation = useNavigation('/(assessment)');
@@ -22,6 +29,12 @@ export default function QuestionsScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const questionBottomSheetRef = useRef<QuestionBottomSheetRef>(null);
+
+    const handleOpenQuestionSheet = useCallback(() => {
+        questionBottomSheetRef.current?.open();
+    }, []);
 
     const fetchQuestions = useCallback(async () => {
         if (!assessmentId) return;
@@ -43,6 +56,54 @@ export default function QuestionsScreen() {
         await fetchQuestions();
         setRefreshing(false);
     }, [fetchQuestions]);
+
+    const handleCreateQuestions = useCallback(async (data: QuestionsFormData, questionIds?: string[]) => {
+        if (!assessmentId) {
+            ModalEmitter.showError('Assessment ID not found');
+            return;
+        }
+
+        try {
+            if (questionIds && questionIds.length > 0) {
+                // Edit mode - update questions
+                ModalEmitter.showLoading(
+                    questionIds.length === 1
+                        ? 'Updating question...'
+                        : `Updating ${questionIds.length} questions...`
+                );
+
+                if (questionIds.length === 1) {
+                    // Single question update
+                    await assessmentService.updateQuestion(questionIds[0], {
+                        question_text: data.questions[0].question_text,
+                        choices: data.questions[0].choices
+                    });
+                } else {
+                    // Multiple questions update
+                    await assessmentService.updateMultipleQuestions(questionIds, data.questions);
+                }
+
+                ModalEmitter.showSuccess(
+                    questionIds.length === 1
+                        ? 'Question updated successfully'
+                        : `${questionIds.length} questions updated successfully`
+                );
+            } else {
+                // Create mode - create multiple questions
+                ModalEmitter.showLoading('Creating questions...');
+                await assessmentService.createQuestions(assessmentId, data);
+                ModalEmitter.showSuccess('Questions created successfully');
+            }
+
+            await handleRefresh();
+        } catch (error) {
+            console.error('Failed to save questions:', error);
+            ModalEmitter.showError('Failed to save questions. Please try again.');
+        } finally {
+            ModalEmitter.hideLoading();
+        }
+    }, [assessmentId, handleRefresh]);
+
 
     useEffect(() => {
         fetchQuestions();
@@ -78,7 +139,7 @@ export default function QuestionsScreen() {
                             style={{ padding: 8 }}
                         >
                             <Ionicons
-                                name="ellipsis-horizontal"
+                                name="ellipsis-vertical"
                                 size={20}
                                 color={Colors[theme ?? 'light'].tint}
                             />
@@ -100,33 +161,61 @@ export default function QuestionsScreen() {
         setShowActionsMenu(false);
     };
 
-    const handleDeleteQuestions = () => {
+    const handleDeleteQuestions = useCallback(() => {
         const selectedQuestions = questions.filter(q => selectedQuestionIds.includes(q.question_id));
-        const questionNumbers = selectedQuestions.map((q, index) => `Question ${questions.findIndex(question => question.question_id === q.question_id) + 1}`).join(', ');
+        const questionNumbers = selectedQuestions.map((q, index) =>
+            `Question ${questions.findIndex(question => question.question_id === q.question_id) + 1}`
+        ).join(', ');
 
-        Alert.alert(
-            "Delete Questions",
-            `Are you sure you want to delete ${selectedQuestionIds.length} question(s): ${questionNumbers}?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: () => {
-                        setQuestions(questions.filter(question => !selectedQuestionIds.includes(question.question_id)));
-                        setSelectedQuestionIds([]);
-                        setShowActionsMenu(false);
+        ModalEmitter.showAlert({
+            title: "Delete Questions",
+            message: `Are you sure you want to delete ${selectedQuestionIds.length} question(s): ${questionNumbers}?`,
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    ModalEmitter.showLoading('Deleting questions...');
+
+                    if (selectedQuestionIds.length === 1) {
+                        await assessmentService.deleteQuestion(selectedQuestionIds[0]);
+                    } else {
+                        await assessmentService.deleteMultipleQuestions(selectedQuestionIds);
                     }
-                }
-            ]
-        );
-    };
 
-    const handleEditQuestions = () => {
-        console.log("Edit questions:", selectedQuestionIds);
+                    ModalEmitter.showSuccess('Questions deleted successfully');
+                    setSelectedQuestionIds([]);
+                    setShowActionsMenu(false);
+                    await handleRefresh();
+                } catch (error) {
+                    console.error('Failed to delete questions:', error);
+                    ModalEmitter.showError('Failed to delete questions. Please try again.');
+                } finally {
+                    ModalEmitter.hideLoading();
+                }
+            },
+        });
+    }, [selectedQuestionIds, questions, handleRefresh]);
+
+    const handleEditQuestions = useCallback(() => {
+        if (selectedQuestionIds.length === 1) {
+            const question = questions.find(q => q.question_id === selectedQuestionIds[0]);
+            if (question) {
+                questionBottomSheetRef.current?.openForEdit(question);
+            }
+        } else if (selectedQuestionIds.length > 1) {
+            const selectedQuestions = questions.filter(q =>
+                selectedQuestionIds.includes(q.question_id)
+            );
+            if (selectedQuestions.length > 0) {
+                questionBottomSheetRef.current?.openForEditMultiple(selectedQuestions);
+            }
+        } else {
+            ModalEmitter.showError('Please select at least one question to edit');
+        }
         setSelectedQuestionIds([]);
         setShowActionsMenu(false);
-    };
+    }, [selectedQuestionIds, questions]);
 
     const handleQuestionLongPress = (id: string) => {
         setSelectedQuestionIds([id]);
@@ -170,42 +259,65 @@ export default function QuestionsScreen() {
     }
 
     return (
-        <ThemedView style={styles.container}>
-            <QuestionActionsMenu
-                visible={showActionsMenu && selectedQuestionIds.length > 0}
-                onClose={() => setShowActionsMenu(false)}
-                onEdit={() => handleEditQuestions()}
-                onDelete={() => handleDeleteQuestions()}
-                onSelectAll={() => handleSelectAllQuestions()}
-            />
+        <>
+            <ThemedView style={styles.container}>
+                <QuestionActionsMenu
+                    visible={showActionsMenu && selectedQuestionIds.length > 0}
+                    onClose={() => setShowActionsMenu(false)}
+                    onEdit={handleEditQuestions}
+                    onDelete={handleDeleteQuestions}
+                    onSelectAll={() => handleSelectAllQuestions()}
+                    selectedCount={selectedQuestionIds.length}
+                />
 
-            <ScrollView
-                style={styles.scrollView}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={handleRefresh}
-                        colors={[Colors[theme ?? 'light'].tint]}
-                        tintColor={Colors[theme ?? 'light'].tint}
-                    />
-                }
-            >
-                <View style={styles.questionsList}>
-                    {questions.map((question, index) => (
-                        <QuestionCard
-                            key={question.question_id}
-                            id={question.question_id}
-                            questionNumber={index + 1}
-                            questionText={question.question_text}
-                            isSelected={selectedQuestionIds.includes(question.question_id)}
-                            onLongPress={handleQuestionLongPress}
-                            onPress={handleQuestionPress}
+                <ScrollView
+                    style={styles.scrollView}
+                    contentContainerStyle={styles.contentContainer}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={handleRefresh}
+                            colors={[Colors[theme ?? 'light'].tint]}
+                            tintColor={Colors[theme ?? 'light'].tint}
                         />
-                    ))}
-                </View>
-            </ScrollView>
-        </ThemedView>
+                    }
+                >
+                    {/* Add Create Questions Button */}
+                    <Button onPress={handleOpenQuestionSheet}>
+                        Create Questions
+                    </Button>
+
+                    {questions.length === 0 ? (
+                        <ThemedView style={styles.emptyState}>
+                            <ThemedText style={styles.emptyText}>
+                                No questions available yet
+                            </ThemedText>
+                        </ThemedView>
+                    ) : (
+                        <View style={styles.questionsList}>
+                            {questions.map((question, index) => (
+                                <QuestionCard
+                                    key={question.question_id}
+                                    id={question.question_id}
+                                    questionNumber={index + 1}
+                                    questionText={question.question_text}
+                                    isSelected={selectedQuestionIds.includes(question.question_id)}
+                                    onLongPress={handleQuestionLongPress}
+                                    onPress={handleQuestionPress}
+                                />
+                            ))}
+                        </View>
+                    )}
+                </ScrollView>
+            </ThemedView>
+
+            {/* Add QuestionBottomSheet */}
+            <QuestionBottomSheet
+                ref={questionBottomSheetRef}
+                onSubmit={handleCreateQuestions}
+            />
+        </>
     );
 }
 
@@ -216,8 +328,22 @@ const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
         borderRadius: 15,
+        margin: 16,
+    },
+    contentContainer: {
+        gap: 16,
     },
     questionsList: {
         gap: 8,
+    },
+    emptyState: {
+        padding: 24,
+        alignItems: 'center',
+        borderRadius: 12,
+        marginTop: 20,
+    },
+    emptyText: {
+        opacity: 0.7,
+        textAlign: 'center',
     },
 });

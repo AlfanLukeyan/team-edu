@@ -23,18 +23,18 @@ interface WeeklyCardProps {
         name: string;
         url: string;
     };
-    assignment?: {
+    assignments?: {
         id: string;
         title: string;
         dueDate: string;
         description: string;
-    };
+    }[];
     weekId?: number;
     onEdit?: (weekId: number) => void;
     onDelete?: (weekId: number) => void;
     onCreateAssignment?: (weekId: number) => void;
-    onEditAssignment?: (weekId: number) => void;
-    onDeleteAssignment?: (weekId: number) => void;
+    onEditAssignment?: (assignmentId: string, weekId: number) => void;
+    onDeleteAssignment?: (assignmentId: string, weekId: number) => void;
 }
 
 export function WeeklyCard({
@@ -43,7 +43,7 @@ export function WeeklyCard({
     description,
     videoUrl,
     attachment,
-    assignment,
+    assignments = [],
     weekId,
     onEdit,
     onDelete,
@@ -79,15 +79,15 @@ export function WeeklyCard({
         }
     };
 
-    const handleEditAssignment = () => {
+    const handleEditAssignment = (assignmentId: string) => {
         if (weekId && onEditAssignment) {
-            onEditAssignment(weekId);
+            onEditAssignment(assignmentId, weekId);
         }
     };
 
-    const handleDeleteAssignment = () => {
+    const handleDeleteAssignment = (assignmentId: string) => {
         if (weekId && onDeleteAssignment) {
-            onDeleteAssignment(weekId);
+            onDeleteAssignment(assignmentId, weekId);
         }
     };
 
@@ -173,33 +173,45 @@ export function WeeklyCard({
                 )}
 
                 {/* Assignment Section */}
-                {assignment ? (
-                    <View style={styles.assignmentContainer}>
+                <View style={styles.assignmentContainer}>
+                    <View style={styles.assignmentHeader}>
                         <ThemedText type="subtitle">
                             Assignment
                         </ThemedText>
-                        <AssignmentCard
-                            title={assignment.title}
-                            dueDate={assignment.dueDate}
-                            onPress={() => {
-                                router.push(`/(assignment)/${assignment.id}/(tabs)`);
-                            }}
-                            onEdit={handleEditAssignment}
-                            onDelete={handleDeleteAssignment}
-                            showActions={true}
-                        />
-                    </View>
-                ) : (
-                    <View style={styles.assignmentContainer}>
                         <Button
                             type="secondary"
                             onPress={handleCreateAssignment}
                             icon={{ name: "plus.circle.fill" }}
+                            style={styles.createAssignmentButton}
                         >
                             Create Assignment
                         </Button>
                     </View>
-                )}
+
+                    {assignments.length === 0 ? (
+                        <View style={styles.noAssignmentContainer}>
+                            <ThemedText style={styles.noAssignmentText}>
+                                No assignments available
+                            </ThemedText>
+                        </View>
+                    ) : (
+                        <View style={styles.assignmentsList}>
+                            {assignments.map((assignment) => (
+                                <AssignmentCard
+                                    key={assignment.id}
+                                    title={assignment.title}
+                                    dueDate={assignment.dueDate}
+                                    onPress={() => {
+                                        router.push(`/(assignment)/${assignment.id}/(tabs)`);
+                                    }}
+                                    onEdit={() => handleEditAssignment(assignment.id)}
+                                    onDelete={() => handleDeleteAssignment(assignment.id)}
+                                    showActions={true}
+                                />
+                            ))}
+                        </View>
+                    )}
+                </View>
             </View>
         </ThemedView>
     );
@@ -221,22 +233,33 @@ const styles = StyleSheet.create({
     webview: {
         width: "100%",
     },
-    videoPlaceholder: {
-        backgroundColor: "#f0f0f0",
-        justifyContent: "center",
-        alignItems: "center",
-        borderRadius: 8,
-    },
-    playText: {
-        fontSize: 16,
-    },
     attachmentContainer: {
         paddingVertical: 8,
     },
     assignmentContainer: {
         paddingVertical: 8,
     },
-    attachmentLabel: {
-        color: "#007AFF",
+    assignmentHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    createAssignmentButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
+    assignmentsList: {
+        gap: 8,
+    },
+    noAssignmentContainer: {
+        padding: 16,
+        alignItems: 'center',
+        borderRadius: 8,
+        backgroundColor: 'rgba(0,0,0,0.05)',
+    },
+    noAssignmentText: {
+        opacity: 0.7,
+        fontSize: 14,
     },
 });

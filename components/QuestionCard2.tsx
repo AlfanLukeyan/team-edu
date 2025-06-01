@@ -4,7 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import React from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import ChoiceRow from "./ChoiceRow";
 import { ThemedView } from "./ThemedView";
 
@@ -48,52 +48,52 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     return (
         <ThemedView
             isCard={true}
-            style={{ padding: 16, marginBottom: 8, borderRadius: 15 }}
+            style={styles.container}
         >
-            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-                <View style={{ paddingRight: 4 }}>
+            <View style={styles.headerRow}>
+                <View style={styles.questionNumberContainer}>
                     <View
-                        style={{
-                            backgroundColor:
-                                theme === "dark"
-                                    ? Colors.light.background
-                                    : Colors.dark.background,
-                            borderRadius: 12,
-                            paddingHorizontal: 14,
-                            paddingTop: 4,
-                            marginTop: 2,
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
+                        style={[
+                            styles.questionNumber,
+                            {
+                                backgroundColor:
+                                    theme === "dark"
+                                        ? Colors.light.background
+                                        : Colors.dark.background,
+                            }
+                        ]}
                     >
                         <ThemedText
                             type="defaultSemiBold"
-                            style={{
-                                textAlign: "center",
-                                alignItems: "center",
-                                color:
-                                    theme === "dark"
-                                        ? Colors.light.text
-                                        : Colors.dark.text,
-                            }}
+                            style={[
+                                styles.questionNumberText,
+                                {
+                                    color:
+                                        theme === "dark"
+                                            ? Colors.light.text
+                                            : Colors.dark.text,
+                                }
+                            ]}
                         >
                             {questionIndex + 1}
                         </ThemedText>
                     </View>
                 </View>
-                <ThemedBottomSheetTextInput
-                    placeholder="Enter your question"
-                    multiline
-                    numberOfLines={2}
-                    value={question.question_text}
-                    onChangeText={(text) => onQuestionTextChange(question.id, text)}
-                />
+                <View style={styles.questionTextContainer}>
+                    <ThemedBottomSheetTextInput
+                        placeholder="Enter your question"
+                        multiline
+                        numberOfLines={2}
+                        value={question.question_text}
+                        onChangeText={(text) => onQuestionTextChange(question.id, text)}
+                    />
+                </View>
             </View>
 
-            <View style={{ gap: 8, paddingVertical: 8 }}>
+            <View style={styles.choicesContainer}>
                 {question.choices.map((choice, choiceIndex) => (
                     <ChoiceRow
-                        key={choice.id}
+                        key={`${question.id}-choice-${choice.id}-${choiceIndex}`} // More specific key
                         choice={choice}
                         choiceIndex={choiceIndex}
                         questionId={question.id}
@@ -106,16 +106,55 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 ))}
             </View>
 
-            <Button
-                type="delete"
-                disabled={!canDeleteQuestion}
-                icon={{ name: "trash.circle.fill" }}
-                onPress={() => onRemoveQuestion(question.id)}
-            >
-                Delete Question
-            </Button>
+            <View style={styles.deleteButtonContainer}>
+                <Button
+                    type="delete"
+                    disabled={!canDeleteQuestion}
+                    icon={{ name: "trash.circle.fill" }}
+                    onPress={() => onRemoveQuestion(question.id)}
+                >
+                    Delete Question
+                </Button>
+            </View>
         </ThemedView>
     );
 };
+
+const styles = StyleSheet.create({
+    container: {
+        padding: 16,
+        marginBottom: 8,
+        borderRadius: 15,
+    },
+    headerRow: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+    },
+    questionNumberContainer: {
+        paddingRight: 4,
+    },
+    questionNumber: {
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingTop: 4,
+        marginTop: 2,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    questionNumberText: {
+        textAlign: "center",
+        alignItems: "center",
+    },
+    questionTextContainer: {
+        flex: 1,
+    },
+    choicesContainer: {
+        gap: 8,
+        paddingVertical: 8,
+    },
+    deleteButtonContainer: {
+        marginTop: 8,
+    },
+});
 
 export default QuestionCard;

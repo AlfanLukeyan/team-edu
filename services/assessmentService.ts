@@ -5,6 +5,7 @@ import {
     AssessmentSubmission,
     ClassAssessment,
     ComponentAssessment,
+    CreateChoiceItem,
     CreateQuestionItem
 } from '@/types/api';
 import { AssessmentFormData } from '@/types/common';
@@ -67,6 +68,7 @@ class AssessmentService {
     async getAssessmentQuestions(assessmentId: string): Promise<AssessmentQuestion[]> {
         try {
             const response = await assessmentApi.getAssessmentQuestions(assessmentId);
+            console.log('Fetched assessment questions:', response.data);
             return response.data;
         } catch (error) {
             console.error('Failed to fetch assessment questions:', error);
@@ -125,6 +127,63 @@ class AssessmentService {
             return response;
         } catch (error) {
             console.error('Failed to create questions:', error);
+            throw error;
+        }
+    }
+
+    async deleteQuestion(questionId: string): Promise<{ status: string; message: string; data: string }> {
+        try {
+            const response = await assessmentApi.deleteQuestion(questionId);
+            return response;
+        } catch (error) {
+            console.error('Failed to delete question:', error);
+            throw error;
+        }
+    }
+
+    async deleteMultipleQuestions(questionIds: string[]): Promise<void> {
+        try {
+            await Promise.all(
+                questionIds.map(id => this.deleteQuestion(id))
+            );
+        } catch (error) {
+            console.error('Failed to delete multiple questions:', error);
+            throw error;
+        }
+    }
+
+    async updateQuestion(questionId: string, data: { question_text: string; choices: CreateChoiceItem[] }): Promise<{ status: string; message: string; data: any }> {
+        try {
+            const payload = {
+                question_id: questionId,
+                question_text: data.question_text,
+                choices: data.choices
+            };
+
+            const response = await assessmentApi.updateQuestion(payload);
+            return response;
+        } catch (error) {
+            console.error('Failed to update question:', error);
+            throw error;
+        }
+    }
+
+    async updateMultipleQuestions(questionIds: string[], questionsData: CreateQuestionItem[]): Promise<void> {
+        try {
+            if (questionIds.length !== questionsData.length) {
+                throw new Error('Question IDs and data arrays must have the same length');
+            }
+
+            const updatePromises = questionIds.map((questionId, index) =>
+                this.updateQuestion(questionId, {
+                    question_text: questionsData[index].question_text,
+                    choices: questionsData[index].choices
+                })
+            );
+
+            await Promise.all(updatePromises);
+        } catch (error) {
+            console.error('Failed to update multiple questions:', error);
             throw error;
         }
     }

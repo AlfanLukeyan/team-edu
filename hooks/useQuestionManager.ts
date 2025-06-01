@@ -131,6 +131,7 @@ export const useQuestionManager = () => {
 
     return {
         questions,
+        setQuestions,
         resetQuestions,
         handleQuestionTextChange,
         handleChoiceTextChange,

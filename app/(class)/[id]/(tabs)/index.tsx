@@ -110,32 +110,39 @@ const WeeklyScreen = () => {
         assignmentBottomSheetRef.current?.open(weekId.toString());
     }, []);
 
-    const handleEditAssignment = useCallback((weekId: number) => {
+    const handleEditAssignment = useCallback((assignmentId: string, weekId: number) => {
         const section = weeklySections.find(w => w.week_id === weekId);
         if (section?.assignment) {
-            assignmentBottomSheetRef.current?.openForEdit(section.assignment, weekId.toString());
+            const assignment = section.assignment.find(a => a.assignment_id.toString() === assignmentId);
+            if (assignment) {
+                assignmentBottomSheetRef.current?.openForEdit(assignment, weekId.toString());
+            }
         }
     }, [weeklySections]);
 
-    const handleDeleteAssignment = useCallback((weekId: number) => {
-        ModalEmitter.showAlert({
-            title: "Delete Assignment",
-            message: "Are you sure you want to delete this assignment?",
-            confirmText: "Delete",
-            cancelText: "Cancel",
-            type: "danger",
-            onConfirm: async () => {
-                try {
-                    // You'll need to implement this API call
-                    // await assignmentService.deleteAssignment(assignmentId);
-                    ModalEmitter.showSuccess('Assignment deleted successfully!');
-                    await handleRefresh();
-                } catch (error) {
-                    ModalEmitter.showError('Failed to delete assignment.');
-                }
-            },
-        });
-    }, [handleRefresh]);
+    const handleDeleteAssignment = useCallback((assignmentId: string, weekId: number) => {
+        const section = weeklySections.find(w => w.week_id === weekId);
+        if (section?.assignment) {
+            const assignment = section.assignment.find(a => a.assignment_id.toString() === assignmentId);
+            if (assignment) {
+                ModalEmitter.showAlert({
+                    title: "Delete Assignment",
+                    message: `Are you sure you want to delete "${assignment.title}"?`,
+                    confirmText: "Delete",
+                    cancelText: "Cancel",
+                    type: "danger",
+                    onConfirm: async () => {
+                        try {
+                            ModalEmitter.showSuccess('Assignment deleted successfully!');
+                            await handleRefresh();
+                        } catch (error) {
+                            ModalEmitter.showError('Failed to delete assignment.');
+                        }
+                    },
+                });
+            }
+        }
+    }, [weeklySections, handleRefresh]);
 
     const handleCreateOrUpdateAssignment = useCallback(async (
         data: AssignmentFormData,
@@ -223,12 +230,12 @@ const WeeklyScreen = () => {
                                     name: cleanFileName(week.item_pembelajaran.fileName ?? '') || 'Download File',
                                     url: week.item_pembelajaran.fileUrl,
                                 } : undefined}
-                                assignment={week.assignment ? {
-                                    id: week.assignment.assignment_id.toString(),
-                                    title: week.assignment.title,
-                                    dueDate: formatDate(week.assignment.deadline),
-                                    description: week.assignment.description,
-                                } : undefined}
+                                assignments={week.assignment ? week.assignment.map(assignment => ({
+                                    id: assignment.assignment_id.toString(),
+                                    title: assignment.title,
+                                    dueDate: formatDate(assignment.deadline),
+                                    description: assignment.description,
+                                })) : []}
                                 weekId={week.week_id}
                                 onEdit={handleEditSection}
                                 onDelete={handleDeleteSection}

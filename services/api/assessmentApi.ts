@@ -59,5 +59,9 @@ export const assessmentApi = {
 
     updateQuestion: async (data: UpdateQuestionRequest): Promise<UpdateQuestionResponse> => {
         return httpClient.put('/assessment/question/update', data);
+    },
+
+    deleteQuestion: async (questionId: string): Promise<DeleteAssessmentResponse> => {
+        return httpClient.delete(`/assessment/question/?id=${questionId}`);
     }
 };

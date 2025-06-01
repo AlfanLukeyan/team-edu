@@ -7,6 +7,7 @@ interface QuestionActionsMenuProps {
     onEdit: () => void;
     onDelete: () => void;
     onSelectAll: () => void;
+    selectedCount?: number;
 }
 
 const QuestionActionsMenu: React.FC<QuestionActionsMenuProps> = ({
@@ -14,7 +15,8 @@ const QuestionActionsMenu: React.FC<QuestionActionsMenuProps> = ({
     onClose,
     onEdit,
     onDelete,
-    onSelectAll
+    onSelectAll,
+    selectedCount = 0
 }) => {
     const menuItems: ActionMenuItem[] = [
         {
@@ -25,13 +27,13 @@ const QuestionActionsMenu: React.FC<QuestionActionsMenuProps> = ({
         },
         {
             id: 'edit',
-            title: 'Edit',
+            title: selectedCount === 1 ? 'Edit Question' : `Edit ${selectedCount} Questions`,
             icon: 'create-outline',
             onPress: onEdit,
         },
         {
             id: 'delete',
-            title: 'Delete',
+            title: selectedCount === 1 ? 'Delete Question' : `Delete ${selectedCount} Questions`,
             icon: 'trash-outline',
             onPress: onDelete,
             destructive: true,

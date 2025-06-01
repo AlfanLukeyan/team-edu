@@ -3,7 +3,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useQuestionManager } from "@/hooks/useQuestionManager";
-import { CreateQuestionItem } from "@/types/api";
+import { AssessmentQuestion, CreateQuestionItem } from "@/types/api";
 import { validateQuestions } from "@/utils/questionValidation";
 import {
     BottomSheetBackdrop,
@@ -18,6 +18,7 @@ import {
     useImperativeHandle,
     useMemo,
     useRef,
+    useState,
 } from "react";
 import { StyleSheet, View } from "react-native";
 import { ButtonWithDescription } from "../ButtonWithDescription";
@@ -30,10 +31,12 @@ interface QuestionsFormData {
 export interface QuestionBottomSheetRef {
     open: () => void;
     close: () => void;
+    openForEdit: (question: AssessmentQuestion) => void;
+    openForEditMultiple: (questions: AssessmentQuestion[]) => void;
 }
 
 interface QuestionBottomSheetProps {
-    onSubmit: (data: QuestionsFormData) => void;
+    onSubmit: (data: QuestionsFormData, questionIds?: string[]) => void;
     onClose?: () => void;
 }
 
@@ -45,10 +48,13 @@ const QuestionBottomSheet = forwardRef<
     const { dismiss } = useBottomSheetModal();
     const theme = useColorScheme() || "light";
     const snapPoints = useMemo(() => ["50%", "75%", "95%"], []);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingQuestionIds, setEditingQuestionIds] = useState<string[]>([]);
 
     const {
         questions,
         resetQuestions,
+        setQuestions,
         handleQuestionTextChange,
         handleChoiceTextChange,
         handleToggleCorrect,
@@ -61,14 +67,54 @@ const QuestionBottomSheet = forwardRef<
 
     const handleClose = useCallback(() => {
         resetQuestions();
+        setIsEditMode(false);
+        setEditingQuestionIds([]);
         if (onClose) onClose();
         dismiss();
     }, [resetQuestions, onClose, dismiss]);
 
     const handleOpen = useCallback(() => {
         resetQuestions();
+        setIsEditMode(false);
+        setEditingQuestionIds([]);
         bottomSheetModalRef.current?.present();
     }, [resetQuestions]);
+
+    const handleOpenForEdit = useCallback((question: AssessmentQuestion) => {
+        setIsEditMode(true);
+        setEditingQuestionIds([question.question_id]);
+
+        const transformedQuestions = [{
+            id: question.question_id,
+            question_text: question.question_text,
+            choices: question.choice.map(choice => ({
+                id: choice.id,
+                choice_text: choice.choice_text,
+                is_correct: choice.is_correct
+            }))
+        }];
+
+        setQuestions(transformedQuestions);
+        bottomSheetModalRef.current?.present();
+    }, [setQuestions]);
+
+    const handleOpenForEditMultiple = useCallback((questionsList: AssessmentQuestion[]) => {
+        setIsEditMode(true);
+        setEditingQuestionIds(questionsList.map(q => q.question_id));
+
+        const transformedQuestions = questionsList.map(question => ({
+            id: question.question_id,
+            question_text: question.question_text,
+            choices: question.choice.map(choice => ({
+                id: choice.id,
+                choice_text: choice.choice_text,
+                is_correct: choice.is_correct
+            }))
+        }));
+
+        setQuestions(transformedQuestions);
+        bottomSheetModalRef.current?.present();
+    }, [setQuestions]);
 
     const handleSubmit = useCallback(() => {
         if (!validateQuestions(questions)) {
@@ -79,9 +125,9 @@ const QuestionBottomSheet = forwardRef<
             questions: transformToApiFormat(),
         };
 
-        onSubmit(apiData);
+        onSubmit(apiData, isEditMode ? editingQuestionIds : undefined);
         handleClose();
-    }, [questions, transformToApiFormat, onSubmit, handleClose]);
+    }, [questions, transformToApiFormat, onSubmit, isEditMode, editingQuestionIds, handleClose]);
 
     const renderBackdrop = useCallback(
         (props: BottomSheetBackdropProps) => (
@@ -95,7 +141,12 @@ const QuestionBottomSheet = forwardRef<
         []
     );
 
-    useImperativeHandle(ref, () => ({ open: handleOpen, close: handleClose }));
+    useImperativeHandle(ref, () => ({
+        open: handleOpen,
+        close: handleClose,
+        openForEdit: handleOpenForEdit,
+        openForEditMultiple: handleOpenForEditMultiple
+    }));
 
     return (
         <BottomSheetModal
@@ -115,8 +166,17 @@ const QuestionBottomSheet = forwardRef<
             <BottomSheetScrollView style={styles.contentContainer}>
                 <View style={styles.innerContainer}>
                     <View style={styles.header}>
-                        <ThemedText type="bold">Create</ThemedText>
-                        <ThemedText style={{ fontSize: 16 }}> Questions</ThemedText>
+                        <ThemedText type="bold">
+                            {isEditMode ? 'Edit' : 'Create'}
+                        </ThemedText>
+                        <ThemedText style={{ fontSize: 16 }}>
+                            {isEditMode
+                                ? editingQuestionIds.length === 1
+                                    ? ' Question'
+                                    : ` ${editingQuestionIds.length} Questions`
+                                : ' Questions'
+                            }
+                        </ThemedText>
                     </View>
 
                     {questions.map((question, questionIndex) => (
@@ -134,20 +194,25 @@ const QuestionBottomSheet = forwardRef<
                         />
                     ))}
 
-                    <Button
-                        type="secondary"
-                        onPress={handleAddQuestion}
-                        icon={{ name: "plus.circle.fill" }}
-                    >
-                        New Question
-                    </Button>
+                    {!isEditMode && (
+                        <Button
+                            type="secondary"
+                            onPress={handleAddQuestion}
+                            icon={{ name: "plus.circle.fill" }}
+                        >
+                            New Question
+                        </Button>
+                    )}
 
                     <View style={styles.buttonContainer}>
                         <ButtonWithDescription
-                            description="Please make sure all question and option configure perfectly!"
+                            description={isEditMode
+                                ? "Please make sure all question and option changes are correct!"
+                                : "Please make sure all question and option configure perfectly!"
+                            }
                             onPress={handleSubmit}
                         >
-                            Submit
+                            {isEditMode ? 'Update' : 'Submit'}
                         </ButtonWithDescription>
                     </View>
                 </View>

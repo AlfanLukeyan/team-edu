@@ -56,7 +56,7 @@ export interface WeeklySection {
     week_id: number;
     week_number: number;
     class_id: string;
-    assignment: Assignment | null;
+    assignment: Assignment[];
     item_pembelajaran: ItemPembelajaran;
 }
 
