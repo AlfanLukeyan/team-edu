@@ -92,7 +92,6 @@ export default function ClassesScreen() {
                                 classCode={classItem.tag || 'No Code'}
                                 description={classItem.description || 'No description available'}
                                 onPress={() => {
-                                    console.log('Navigating to class with ID:', classItem.id);
                                     router.push(`/(class)/${classItem.id}/(tabs)`);
                                 }}
                             />
