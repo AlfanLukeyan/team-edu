@@ -1,4 +1,5 @@
 import { Button } from "@/components/Button";
+import { TeacherOnly } from "@/components/RoleGuard";
 import AssignmentBottomSheet, {
     AssignmentBottomSheetRef,
 } from "@/components/teacher/AssignmentBottomSheet";
@@ -9,6 +10,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { WeeklyCard } from "@/components/WeeklyCard";
 import { useClass } from "@/contexts/ClassContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { assignmentService } from "@/services/assignmentService";
 import { classService } from "@/services/classService";
 import { ModalEmitter } from "@/services/modalEmitter";
@@ -25,6 +27,7 @@ const WeeklyScreen = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { canCreateContent, isTeacher, hasTeacherPermissions } = useUserRole();
 
     const createSectionRef = useRef<WeeklySectionBottomSheetRef>(null);
     const assignmentBottomSheetRef = useRef<AssignmentBottomSheetRef>(null);
@@ -106,7 +109,6 @@ const WeeklyScreen = () => {
         });
     }, [handleRefresh]);
 
-    // Assignment handlers
     const handleCreateAssignment = useCallback((weekId: number) => {
         assignmentBottomSheetRef.current?.open(weekId.toString());
     }, []);
@@ -216,12 +218,19 @@ const WeeklyScreen = () => {
                         />
                     }
                 >
-                    <Button onPress={handleOpenWeeklySheet}>Create Weekly Section</Button>
+                    <TeacherOnly>
+                        <Button onPress={handleOpenWeeklySheet}>
+                            Create Weekly Section
+                        </Button>
+                    </TeacherOnly>
 
                     {weeklySections.length === 0 ? (
                         <ThemedView style={styles.emptyState}>
                             <ThemedText style={styles.emptyText}>
-                                No weekly content available yet
+                                {hasTeacherPermissions()
+                                    ? "No weekly content available yet"
+                                    : "No weekly content available"
+                                }
                             </ThemedText>
                         </ThemedView>
                     ) : (
@@ -243,11 +252,11 @@ const WeeklyScreen = () => {
                                     description: assignment.description,
                                 })) : []}
                                 weekId={week.week_id}
-                                onEdit={handleEditSection}
-                                onDelete={handleDeleteSection}
-                                onCreateAssignment={handleCreateAssignment}
-                                onEditAssignment={handleEditAssignment}
-                                onDeleteAssignment={handleDeleteAssignment}
+                                onEdit={hasTeacherPermissions() ? handleEditSection : undefined}
+                                onDelete={hasTeacherPermissions() ? handleDeleteSection : undefined}
+                                onCreateAssignment={hasTeacherPermissions() ? handleCreateAssignment : undefined}
+                                onEditAssignment={hasTeacherPermissions() ? handleEditAssignment : undefined}
+                                onDeleteAssignment={hasTeacherPermissions() ? handleDeleteAssignment : undefined}
                                 onAssignmentPress={(assignmentId) => router.push(`/(class)/${classId}/(assignment)/${assignmentId}/(tabs)`)}
                             />
                         ))
@@ -255,15 +264,17 @@ const WeeklyScreen = () => {
                 </ScrollView>
             </ThemedView>
 
-            <WeeklySectionBottomSheet
-                ref={createSectionRef}
-                onSubmit={handleCreateOrUpdateSection}
-            />
+            <TeacherOnly>
+                <WeeklySectionBottomSheet
+                    ref={createSectionRef}
+                    onSubmit={handleCreateOrUpdateSection}
+                />
 
-            <AssignmentBottomSheet
-                ref={assignmentBottomSheetRef}
-                onSubmit={handleCreateOrUpdateAssignment}
-            />
+                <AssignmentBottomSheet
+                    ref={assignmentBottomSheetRef}
+                    onSubmit={handleCreateOrUpdateAssignment}
+                />
+            </TeacherOnly>
         </>
     );
 };

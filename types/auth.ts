@@ -6,6 +6,7 @@ export interface DecodedJWT {
     iat: number;
     jti: string;
     csrf: string;
+    role_id: number;
 }
 
 export interface LoginCredentials {
@@ -33,3 +34,12 @@ export interface User {
     name: string;
     permissions: string[];
 }
+
+export const USER_ROLES = {
+    ADMIN: 1,
+    TEACHER: 2,
+    STUDENT: 3,
+    GUEST: 4,
+} as const;
+
+export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];

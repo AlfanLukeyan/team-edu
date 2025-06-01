@@ -1,9 +1,11 @@
 import { AssignmentCard } from "@/components/AssignmentCard";
 import { AttachmentCard } from "@/components/AttachmentCard";
 import { Button } from "@/components/Button";
+import { TeacherOnly } from "@/components/RoleGuard"; // ✅ Import TeacherOnly
 import WeeklySectionActionsMenu from "@/components/WeeklySectionActionsMenu";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useUserRole } from "@/hooks/useUserRole"; // ✅ Import useUserRole
 import { getYoutubeEmbedUrl } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -55,6 +57,7 @@ export function WeeklyCard({
 }: WeeklyCardProps) {
     const router = useRouter();
     const theme = useColorScheme() ?? "light";
+    const { hasTeacherPermissions } = useUserRole(); // ✅ Add role check
     const screenWidth = Dimensions.get("window").width;
     const videoHeight = screenWidth * 0.5625;
     const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -95,12 +98,15 @@ export function WeeklyCard({
 
     return (
         <ThemedView style={{ borderRadius: 15, marginBottom: 16 }} isCard>
-            <WeeklySectionActionsMenu
-                visible={showActionsMenu}
-                onClose={() => setShowActionsMenu(false)}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-            />
+            {/* ✅ Only show actions menu for teachers */}
+            <TeacherOnly>
+                <WeeklySectionActionsMenu
+                    visible={showActionsMenu}
+                    onClose={() => setShowActionsMenu(false)}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                />
+            </TeacherOnly>
 
             <View style={{ position: 'relative' }}>
                 <LinearGradient
@@ -114,19 +120,21 @@ export function WeeklyCard({
                     end={{ x: 1, y: 1 }}
                 />
 
-                {/* Ellipsis Menu Button */}
-                {weekId && onEdit && onDelete && (
-                    <TouchableOpacity
-                        style={styles.ellipsisButton}
-                        onPress={() => setShowActionsMenu(true)}
-                    >
-                        <Ionicons
-                            name="ellipsis-horizontal"
-                            size={14}
-                            color={Colors[theme].background}
-                        />
-                    </TouchableOpacity>
-                )}
+                {/* ✅ Only show ellipsis menu for teachers */}
+                <TeacherOnly>
+                    {weekId && onEdit && onDelete && (
+                        <TouchableOpacity
+                            style={styles.ellipsisButton}
+                            onPress={() => setShowActionsMenu(true)}
+                        >
+                            <Ionicons
+                                name="ellipsis-horizontal"
+                                size={14}
+                                color={Colors[theme].background}
+                            />
+                        </TouchableOpacity>
+                    )}
+                </TeacherOnly>
             </View>
 
             <View style={{ padding: 16 }}>
@@ -180,14 +188,17 @@ export function WeeklyCard({
                         <ThemedText type="subtitle">
                             Assignment
                         </ThemedText>
-                        <Button
-                            type="secondary"
-                            onPress={handleCreateAssignment}
-                            icon={{ name: "plus.circle.fill" }}
-                            style={styles.createAssignmentButton}
-                        >
-                            Create Assignment
-                        </Button>
+                        {/* ✅ Only show create assignment button for teachers */}
+                        <TeacherOnly>
+                            <Button
+                                type="secondary"
+                                onPress={handleCreateAssignment}
+                                icon={{ name: "plus.circle.fill" }}
+                                style={styles.createAssignmentButton}
+                            >
+                                Create Assignment
+                            </Button>
+                        </TeacherOnly>
                     </View>
 
                     {assignments.length === 0 ? (
@@ -204,9 +215,10 @@ export function WeeklyCard({
                                     title={assignment.title}
                                     dueDate={assignment.dueDate}
                                     onPress={() => onAssignmentPress?.(assignment.id)}
-                                    onEdit={() => handleEditAssignment(assignment.id)}
-                                    onDelete={() => handleDeleteAssignment(assignment.id)}
-                                    showActions={true}
+                                    // ✅ Only show actions for teachers
+                                    onEdit={hasTeacherPermissions() ? () => handleEditAssignment(assignment.id) : undefined}
+                                    onDelete={hasTeacherPermissions() ? () => handleDeleteAssignment(assignment.id) : undefined}
+                                    showActions={hasTeacherPermissions()}
                                 />
                             ))}
                         </View>
@@ -217,6 +229,7 @@ export function WeeklyCard({
     );
 }
 
+// ... styles remain the same
 const styles = StyleSheet.create({
     ellipsisButton: {
         position: 'absolute',

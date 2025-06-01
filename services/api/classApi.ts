@@ -1,4 +1,4 @@
-import { AssessmentResponse, ClassInfoResponse, ClassMemberResponse, WeeklySectionResponse } from '@/types/api';
+import { AssessmentResponse, ClassInfoResponse, ClassMemberResponse, StudentAssessmentResponse, WeeklySectionResponse } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
 import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
@@ -14,12 +14,20 @@ export const classApi = {
         return httpClient.get(`/kelas?id=${classId}`);
     },
 
-    getWeeklySections: async (classId: string): Promise<WeeklySectionResponse> => {
+    getTeacherWeeklySections: async (classId: string): Promise<WeeklySectionResponse> => {
         return httpClient.get(`/kelas/weekly-section/class/?class_id=${classId}`);
     },
 
-    getClassAssessments: async (classId: string): Promise<AssessmentResponse> => {
+    getStudentWeeklySections: async (classId: string): Promise<WeeklySectionResponse> => {
+        return httpClient.get(`/student/kelas/weekly-section/class/?class_id=${classId}`);
+    },
+
+    getTeacherClassAssessments: async (classId: string): Promise<AssessmentResponse> => {
         return httpClient.get(`/teacher/assessment/class/?classID=${classId}`);
+    },
+
+    getStudentClassAssessments: async (classId: string, userId: string): Promise<StudentAssessmentResponse> => {
+        return httpClient.get(`/student/assessment/class/?classID=${classId}&userID=${userId}`);
     },
 
     getClassMembers: async (classId: string): Promise<ClassMemberResponse> => {

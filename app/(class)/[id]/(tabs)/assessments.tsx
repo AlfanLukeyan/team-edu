@@ -1,17 +1,19 @@
 import AssessmentActionsMenu from '@/components/AssessmentActionsMenu';
 import { AssessmentCard } from '@/components/AssessmentCard';
 import { Button } from '@/components/Button';
+import { TeacherOnly } from '@/components/RoleGuard';
 import AssessmentBottomSheet, { AssessmentBottomSheetRef } from '@/components/teacher/AssessmentBottomSheet';
 import QuestionBottomSheet, { QuestionBottomSheetRef } from '@/components/teacher/QuestionBottomSheet';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useClass } from '@/contexts/ClassContext';
-import { useHeader } from '@/contexts/HeaderContext'; // ✅ Add this import
+import { useHeader } from '@/contexts/HeaderContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { assessmentService } from '@/services/assessmentService';
 import { classService } from '@/services/classService';
 import { ModalEmitter } from '@/services/modalEmitter';
-import { Assessment, CreateQuestionItem } from '@/types/api';
+import { Assessment, AssessmentData, CreateQuestionItem, StudentAssessment } from '@/types/api';
 import { AssessmentFormData } from '@/types/common';
 import { formatDate } from '@/utils/utils';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,10 +28,11 @@ interface QuestionsFormData {
 const AssessmentsScreen = () => {
     const { classId } = useClass();
     const router = useRouter();
-    const { setHeaderConfig, resetHeader } = useHeader(); // ✅ Use header context
+    const { setHeaderConfig, resetHeader } = useHeader();
+    const { hasTeacherPermissions, isStudent } = useUserRole();
     const theme = useColorScheme();
 
-    const [assessments, setAssessments] = useState<Assessment[]>([]);
+    const [assessments, setAssessments] = useState<AssessmentData[]>([]);
     const [selectedAssessmentIds, setSelectedAssessmentIds] = useState<string[]>([]);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -40,7 +43,7 @@ const AssessmentsScreen = () => {
     const questionBottomSheetRef = useRef<QuestionBottomSheetRef>(null);
     const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
 
-    const fetchAssessments = async () => {
+    const fetchAssessments = useCallback(async () => {
         if (!classId) {
             setLoading(false);
             return;
@@ -52,16 +55,17 @@ const AssessmentsScreen = () => {
             setAssessments(data);
         } catch (err) {
             setError('Failed to load assessments');
+            console.error('Assessment fetch error:', err);
         } finally {
             setLoading(false);
         }
-    };
+    }, [classId]);
 
-    const handleRefresh = async () => {
+    const handleRefresh = useCallback(async () => {
         setRefreshing(true);
         await fetchAssessments();
         setRefreshing(false);
-    };
+    }, [fetchAssessments]);
 
     const handleOpenAssessmentSheet = useCallback(() => assessmentBottomSheetRef.current?.open(), []);
 
@@ -76,21 +80,24 @@ const AssessmentsScreen = () => {
         try {
             let response;
             if (assessmentId) {
-                const updatedAssessment = {
-                    ...assessments.find(a => a.assessment_id === assessmentId)!,
-                    name: data.title,
-                    description: data.description,
-                    duration: parseInt(data.duration) * 60,
-                    start_time: data.start_date,
-                    end_time: data.end_date,
-                    updated_at: new Date().toISOString()
-                };
+                const existingAssessment = assessments.find(a => a.assessment_id === assessmentId) as Assessment;
+                if (existingAssessment) {
+                    const updatedAssessment = {
+                        ...existingAssessment,
+                        name: data.title,
+                        description: data.description,
+                        duration: parseInt(data.duration) * 60,
+                        start_time: data.start_date,
+                        end_time: data.end_date,
+                        updated_at: new Date().toISOString()
+                    };
 
-                setAssessments(prev =>
-                    prev.map(assessment =>
-                        assessment.assessment_id === assessmentId ? updatedAssessment : assessment
-                    )
-                );
+                    setAssessments(prev =>
+                        prev.map(assessment =>
+                            assessment.assessment_id === assessmentId ? updatedAssessment : assessment
+                        )
+                    );
+                }
 
                 response = await assessmentService.updateAssessment(assessmentId, data);
                 await fetchAssessments();
@@ -106,7 +113,7 @@ const AssessmentsScreen = () => {
                 await fetchAssessments();
             }
         }
-    }, [classId, assessments]);
+    }, [classId, assessments, fetchAssessments]);
 
     const handleCreateQuestions = useCallback(async (data: QuestionsFormData) => {
         if (!currentAssessmentId) {
@@ -121,11 +128,10 @@ const AssessmentsScreen = () => {
         } catch (error) {
             console.error('Failed to create questions:', error);
         }
-    }, [currentAssessmentId]);
+    }, [currentAssessmentId, handleRefresh]);
 
-    // ✅ Memoize the header component
     const headerRightComponent = useMemo(() => {
-        if (selectedAssessmentIds.length === 0) return null;
+        if (selectedAssessmentIds.length === 0 || !hasTeacherPermissions()) return null;
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -147,11 +153,10 @@ const AssessmentsScreen = () => {
                 </TouchableOpacity>
             </View>
         );
-    }, [selectedAssessmentIds.length, showActionsMenu, theme]);
+    }, [selectedAssessmentIds.length, showActionsMenu, theme, hasTeacherPermissions]);
 
-    // ✅ Use header context instead of navigation.setOptions
     useEffect(() => {
-        if (selectedAssessmentIds.length > 0) {
+        if (selectedAssessmentIds.length > 0 && hasTeacherPermissions()) {
             setHeaderConfig({
                 title: `${selectedAssessmentIds.length} selected`,
                 rightComponent: headerRightComponent
@@ -159,16 +164,17 @@ const AssessmentsScreen = () => {
         } else {
             resetHeader();
         }
-    }, [selectedAssessmentIds.length, headerRightComponent, setHeaderConfig, resetHeader]);
+    }, [selectedAssessmentIds.length, hasTeacherPermissions, headerRightComponent, setHeaderConfig, resetHeader]);
 
-    // Selection handlers
-    const handleAssessmentLongPress = (id: string) => {
-        setSelectedAssessmentIds([id]);
-        setShowActionsMenu(false);
-    };
+    const handleAssessmentLongPress = useCallback((id: string) => {
+        if (hasTeacherPermissions()) {
+            setSelectedAssessmentIds([id]);
+            setShowActionsMenu(false);
+        }
+    }, [hasTeacherPermissions]);
 
-    const handleAssessmentPress = (id: string) => {
-        if (selectedAssessmentIds.length > 0) {
+    const handleAssessmentPress = useCallback((id: string) => {
+        if (selectedAssessmentIds.length > 0 && hasTeacherPermissions()) {
             if (selectedAssessmentIds.includes(id)) {
                 setSelectedAssessmentIds(selectedAssessmentIds.filter(assessmentId => assessmentId !== id));
             } else {
@@ -178,26 +184,26 @@ const AssessmentsScreen = () => {
         } else {
             router.push(`/(class)/${classId}/(assessment)/${id}/(tabs)`);
         }
-    };
+    }, [selectedAssessmentIds, hasTeacherPermissions, router, classId]);
 
-    const handleSelectAllAssessments = () => {
+    const handleSelectAllAssessments = useCallback(() => {
         const allAssessmentIds = assessments.map(assessment => assessment.assessment_id);
         setSelectedAssessmentIds(allAssessmentIds);
         setShowActionsMenu(false);
-    };
+    }, [assessments]);
 
-    const handleEditAssessments = () => {
+    const handleEditAssessments = useCallback(() => {
         if (selectedAssessmentIds.length === 1) {
-            const assessment = assessments.find(a => a.assessment_id === selectedAssessmentIds[0]);
+            const assessment = assessments.find(a => a.assessment_id === selectedAssessmentIds[0]) as Assessment;
             if (assessment) {
                 assessmentBottomSheetRef.current?.openForEdit(assessment);
             }
         }
         setSelectedAssessmentIds([]);
         setShowActionsMenu(false);
-    };
+    }, [selectedAssessmentIds, assessments]);
 
-    const handleDeleteAssessments = () => {
+    const handleDeleteAssessments = useCallback(() => {
         ModalEmitter.showAlert({
             title: "Delete Assessments",
             message: `Are you sure you want to delete the ${selectedAssessmentIds.length} selected assessment(s)?`,
@@ -225,26 +231,23 @@ const AssessmentsScreen = () => {
                 }
             },
         });
-    };
+    }, [selectedAssessmentIds, assessments, handleRefresh]);
 
-    // ✅ Clean up with header context instead of navigation
     useFocusEffect(
         useCallback(() => {
             return () => {
                 setSelectedAssessmentIds([]);
                 setShowActionsMenu(false);
-                resetHeader(); // ✅ Use resetHeader instead of navigation.setOptions
+                resetHeader();
             };
         }, [resetHeader])
     );
-
-    // ✅ Remove the old useLayoutEffect completely
 
     useEffect(() => {
         if (classId) {
             fetchAssessments();
         }
-    }, [classId]);
+    }, [fetchAssessments]);
 
     if (loading) {
         return (
@@ -268,14 +271,16 @@ const AssessmentsScreen = () => {
     return (
         <>
             <ThemedView style={styles.container}>
-                <AssessmentActionsMenu
-                    visible={showActionsMenu && selectedAssessmentIds.length > 0}
-                    onClose={() => setShowActionsMenu(false)}
-                    onDelete={handleDeleteAssessments}
-                    onEdit={handleEditAssessments}
-                    onSelectAll={handleSelectAllAssessments}
-                    selectedCount={selectedAssessmentIds.length}
-                />
+                <TeacherOnly>
+                    <AssessmentActionsMenu
+                        visible={showActionsMenu && selectedAssessmentIds.length > 0}
+                        onClose={() => setShowActionsMenu(false)}
+                        onDelete={handleDeleteAssessments}
+                        onEdit={handleEditAssessments}
+                        onSelectAll={handleSelectAllAssessments}
+                        selectedCount={selectedAssessmentIds.length}
+                    />
+                </TeacherOnly>
 
                 <ScrollView
                     style={styles.scrollView}
@@ -287,9 +292,11 @@ const AssessmentsScreen = () => {
                         />
                     }
                 >
-                    <Button onPress={handleOpenAssessmentSheet}>
-                        Create Assessment
-                    </Button>
+                    <TeacherOnly>
+                        <Button onPress={handleOpenAssessmentSheet}>
+                            Create Assessment
+                        </Button>
+                    </TeacherOnly>
 
                     {assessments.length === 0 ? (
                         <ThemedView style={styles.emptyState}>
@@ -298,28 +305,37 @@ const AssessmentsScreen = () => {
                             </ThemedText>
                         </ThemedView>
                     ) : (
-                        assessments.map((assessment) => (
-                            <AssessmentCard
-                                key={assessment.assessment_id}
-                                title={assessment.name}
-                                startDate={formatDate(assessment.start_time)}
-                                endDate={formatDate(assessment.end_time)}
-                                isSelected={selectedAssessmentIds.includes(assessment.assessment_id)}
-                                onPress={() => handleAssessmentPress(assessment.assessment_id)}
-                                onLongPress={() => handleAssessmentLongPress(assessment.assessment_id)}
-                            />
-                        ))
+                        assessments.map((assessment) => {
+                            const isStudentAssessment = 'submission_status' in assessment;
+
+                            return (
+                                <AssessmentCard
+                                    key={assessment.assessment_id}
+                                    title={assessment.name}
+                                    startDate={formatDate(assessment.start_time)}
+                                    endDate={formatDate(assessment.end_time)}
+                                    isSelected={selectedAssessmentIds.includes(assessment.assessment_id)}
+                                    onPress={() => handleAssessmentPress(assessment.assessment_id)}
+                                    onLongPress={hasTeacherPermissions() ? () => handleAssessmentLongPress(assessment.assessment_id) : undefined}
+                                    submissionStatus={isStudentAssessment ? (assessment as StudentAssessment).submission_status : undefined}
+                                    showSubmissionStatus={isStudent()}
+                                />
+                            );
+                        })
                     )}
                 </ScrollView>
             </ThemedView>
-            <AssessmentBottomSheet
-                ref={assessmentBottomSheetRef}
-                onSubmit={handleCreateOrUpdateAssessment}
-            />
-            <QuestionBottomSheet
-                ref={questionBottomSheetRef}
-                onSubmit={handleCreateQuestions}
-            />
+
+            <TeacherOnly>
+                <AssessmentBottomSheet
+                    ref={assessmentBottomSheetRef}
+                    onSubmit={handleCreateOrUpdateAssessment}
+                />
+                <QuestionBottomSheet
+                    ref={questionBottomSheetRef}
+                    onSubmit={handleCreateQuestions}
+                />
+            </TeacherOnly>
         </>
     );
 };

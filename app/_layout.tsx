@@ -20,7 +20,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 function NavigationHandler({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated, isLoading } = useAuth();
+    const {isAuthenticated, isLoading } = useAuth();
     const segments = useSegments();
     const router = useRouter();
 

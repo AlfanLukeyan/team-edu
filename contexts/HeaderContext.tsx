@@ -16,7 +16,6 @@ const HeaderContext = createContext<HeaderContextType | undefined>(undefined);
 export function HeaderProvider({ children }: { children: ReactNode }) {
     const [headerConfig, setHeaderConfigState] = useState<HeaderConfig>({});
 
-    // ✅ Wrap functions with useCallback to prevent unnecessary re-renders
     const setHeaderConfig = useCallback((config: HeaderConfig) => {
         setHeaderConfigState(config);
     }, []);
@@ -25,7 +24,6 @@ export function HeaderProvider({ children }: { children: ReactNode }) {
         setHeaderConfigState({});
     }, []);
 
-    // ✅ Memoize the context value to prevent object recreation on every render
     const contextValue = React.useMemo(() => ({
         headerConfig,
         setHeaderConfig,

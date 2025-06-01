@@ -1,6 +1,6 @@
 import { classService } from '@/services/classService';
 import { ClassInfo } from '@/types/api';
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
 interface ClassContextType {
     classId: string | null;
@@ -53,17 +53,19 @@ export function ClassProvider({ children }: { children: ReactNode }) {
         }
     }, [classId]);
 
+    const value = useMemo(() => ({
+        classId,
+        classInfo,
+        loading,
+        error,
+        setClassId,
+        refetchClassInfo,
+        clearClassData,
+    }), [classId]);
+
     return (
         <ClassContext.Provider
-            value={{
-                classId,
-                classInfo,
-                loading,
-                error,
-                setClassId,
-                refetchClassInfo,
-                clearClassData,
-            }}
+            value={value}
         >
             {children}
         </ClassContext.Provider>

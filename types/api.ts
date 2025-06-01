@@ -90,6 +90,19 @@ export interface Assessment {
     updated_at: string;
 }
 
+export interface StudentAssessment {
+    assessment_id: string;
+    class_id: string;
+    date_created: string;
+    duration: number;
+    end_time: string;
+    name: string;
+    start_time: string;
+    submission_id?: string;
+    submission_status: 'todo' | 'submitted' | 'in_progress';
+    updated_at: string;
+}
+
 export interface AssessmentDetails {
     id: string;
     name: string;
@@ -248,6 +261,11 @@ export interface UpdateAssignmentData {
     file_id: string;
     file_url: string;
 }
+
+export type AssessmentData = Assessment | StudentAssessment;
+
+export type StudentAssessmentResponse = ApiResponse<StudentAssessment[]>;
+export type TeacherAssessmentResponse = ApiResponse<Assessment[]>;
 
 export type UpcomingAssessmentsResponse = ApiResponse<ClassAssessment[]>;
 export type ClassResponse = ApiResponse<Class[]>;

@@ -1,4 +1,4 @@
-import { Assessment, Class, ClassInfo, ClassMember, WeeklySection } from '@/types/api';
+import { AssessmentData, Class, ClassInfo, ClassMember, WeeklySection } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
 import { classApi } from "./api/classApi";
 import { tokenService } from "./tokenService";
@@ -42,19 +42,36 @@ class ClassService {
 
     async getWeeklySections(classId: string): Promise<WeeklySection[]> {
         try {
-            console.log('Fetching weekly sections for class:', classId);
-            const response = await classApi.getWeeklySections(classId);
-            return response.data;
+            if (tokenService.hasTeacherPermissions()) {
+                const response = await classApi.getTeacherWeeklySections(classId);
+                return response.data;
+            } else {
+                const response = await classApi.getStudentWeeklySections(classId);
+                return response.data;
+            }
         } catch (error) {
+            console.error('Failed to fetch weekly sections:', error);
             throw error;
         }
     }
 
-    async getClassAssessments(classId: string): Promise<Assessment[]> {
+    async getClassAssessments(classId: string): Promise<AssessmentData[]> {
         try {
-            const response = await classApi.getClassAssessments(classId);
-            return response.data;
+            const userRole = tokenService.getUserRole();
+            const userId = tokenService.getUserId();
+
+            if (tokenService.hasTeacherPermissions()) {
+                const response = await classApi.getTeacherClassAssessments(classId);
+                return response.data;
+            } else {
+                if (!userId) {
+                    throw new Error('User ID is required for student assessments');
+                }
+                const response = await classApi.getStudentClassAssessments(classId, userId);
+                return response.data;
+            }
         } catch (error) {
+            console.error('Failed to fetch class assessments:', error);
             throw error;
         }
     }
@@ -68,6 +85,7 @@ class ClassService {
         }
     }
 
+    // ✅ Teacher-only operations (keep existing)
     async createWeeklySection(classId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> {
         try {
             const existingSections = await this.getWeeklySections(classId);

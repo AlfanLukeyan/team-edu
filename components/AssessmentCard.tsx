@@ -14,6 +14,8 @@ interface AssessmentCardProps {
     onPress?: () => void;
     onLongPress?: () => void;
     isSelected?: boolean;
+    submissionStatus?: 'todo' | 'submitted' | 'in_progress';
+    showSubmissionStatus?: boolean;
 }
 
 export function AssessmentCard({
@@ -22,9 +24,27 @@ export function AssessmentCard({
     endDate,
     onPress,
     onLongPress,
-    isSelected = false
+    isSelected = false,
+    submissionStatus,
+    showSubmissionStatus = false
 }: AssessmentCardProps) {
     const theme = useColorScheme() ?? "light";
+
+    // ✅ Helper function to get status color and text
+    const getStatusInfo = (status: string) => {
+        switch (status) {
+            case 'submitted':
+                return { color: '#4CAF50', text: 'Submitted', icon: 'checkmark-circle' as const };
+            case 'in_progress':
+                return { color: '#FF9800', text: 'In Progress', icon: 'time' as const };
+            case 'todo':
+                return { color: '#F44336', text: 'Not Started', icon: 'alert-circle' as const };
+            default:
+                return { color: '#9E9E9E', text: 'Unknown', icon: 'help-circle' as const };
+        }
+    };
+
+    const statusInfo = submissionStatus ? getStatusInfo(submissionStatus) : null;
 
     return (
         <TouchableOpacity
@@ -74,6 +94,19 @@ export function AssessmentCard({
                                 {endDate}
                             </ThemedText>
                         </View>
+
+                        {showSubmissionStatus && statusInfo && (
+                            <View style={styles.statusRow}>
+                                <Ionicons
+                                    name={statusInfo.icon}
+                                    size={16}
+                                    color={statusInfo.color}
+                                />
+                                <ThemedText style={[styles.statusText, { color: statusInfo.color }]}>
+                                    {statusInfo.text}
+                                </ThemedText>
+                            </View>
+                        )}
                     </View>
 
                     {isSelected && (
@@ -129,6 +162,7 @@ const styles = StyleSheet.create({
     dateRow: {
         flexDirection: "row",
         alignItems: "center",
+        marginBottom: 4,
     },
     dateText: {
         fontSize: 14,
@@ -137,6 +171,16 @@ const styles = StyleSheet.create({
     separator: {
         marginHorizontal: 8,
         alignSelf: "center",
+    },
+    statusRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 4,
+    },
+    statusText: {
+        fontSize: 12,
+        marginLeft: 4,
+        fontWeight: '500',
     },
     selectionContainer: {
         marginLeft: 12,
