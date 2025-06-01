@@ -1,32 +1,72 @@
-// Assignment types
-export interface Assignment {
-    ID: number;
-    CreatedAt: string;
-    UpdatedAt: string;
-    DeletedAt: string | null;
+export interface ApiResponse<T> {
+    status: string;
+    message: string;
+    data: T;
+}
+
+export interface AssessmentItem {
+    class_id: string;
+    end_time: string;
+    assessment_id: string;
+    name: string;
+    start_time: string;
+    submission_status: 'todo' | 'in_progress' | 'completed' | 'submitted';
+}
+
+export interface ClassAssessment {
+    class_assessment: AssessmentItem[];
+    class_desc: string;
+    class_id: string;
+    class_name: string;
+    class_tag: string;
+    class_teacher: string;
+    class_teacher_id: string;
+}
+
+export interface ComponentAssessment {
+    id: string;
     title: string;
-    description: string;
+    start_date: string;
+    end_date: string;
+    days_remaining: number;
+    submission_status: string;
+}
+
+export interface Assignment {
+    assignment_id: number;
     deadline: string;
+    description: string;
+    title: string;
+    file_id: string;
     file_name: string;
-    file_link: string;
-    WeekdID: number;
+    file_url: string;
 }
 
 export interface ItemPembelajaran {
-    id: number;
+    week_id: number;
     headingPertemuan: string;
     bodyPertemuan: string;
     urlVideo: string;
-    fileName: string;
-    file_link: string;
+    fileName: string | null;
+    fileId: string | null;
+    fileUrl: string | null;
 }
 
 export interface WeeklySection {
-    id: number;
+    week_id: number;
     week_number: number;
     class_id: string;
-    assignment: Assignment | null;
+    assignment: Assignment[];
     item_pembelajaran: ItemPembelajaran;
+}
+
+export interface Class {
+    id: string;
+    name: string;
+    tag: string;
+    description: string;
+    teacher: string;
+    teacher_id: string;
 }
 
 export interface ClassInfo {
@@ -39,7 +79,7 @@ export interface ClassInfo {
 }
 
 export interface Assessment {
-    id: string;
+    assessment_id: string;
     name: string;
     description: string;
     duration: number;
@@ -50,6 +90,52 @@ export interface Assessment {
     updated_at: string;
 }
 
+export interface StudentAssessment {
+    assessment_id: string;
+    class_id: string;
+    date_created: string;
+    duration: number;
+    end_time: string;
+    name: string;
+    start_time: string;
+    submission_id?: string;
+    submission_status: 'todo' | 'submitted' | 'in_progress';
+    updated_at: string;
+}
+
+export interface AssessmentSubmission {
+    id?: string;
+    kelas_kelas_id: string;
+    role: string;
+    score: number;
+    status: 'todo' | 'submitted' | 'in_progress';
+    time_remaining: number | null;
+    user_user_id: string;
+    username: string;
+}
+
+// ✅ FIXED: Single definition for AssessmentChoice matching your API response
+export interface AssessmentChoice {
+    choice_id: string;
+    choice_text: string;
+    question_id: string;
+    is_correct: boolean;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+}
+
+// ✅ FIXED: Single definition for AssessmentQuestion matching your API response
+export interface AssessmentQuestion {
+    assessment_id: string;
+    question_id: string;
+    question_text: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    choice: AssessmentChoice[];
+}
+
 export interface ClassMember {
     user_user_id: string;
     username: string;
@@ -58,26 +144,242 @@ export interface ClassMember {
     kelas_kelas_id: string;
 }
 
-// API Response types
-export interface ApiResponse<T> {
-    status: string;
-    message: string;
-    data: T;
+export interface CreateAssessmentRequest {
+    name: string;
+    class_id: string;
+    description: string;
+    date_created: string;
+    duration: number;
+    start_time: string;
+    end_time: string;
 }
 
-export interface ClassInfoResponse extends ApiResponse<ClassInfo> {}
-export interface WeeklySectionResponse extends ApiResponse<WeeklySection[]> {}
-export interface AssessmentResponse extends ApiResponse<Assessment[]> {}
-export interface ClassMemberResponse extends ApiResponse<ClassMember[]> {}
+export interface UpdateAssessmentRequest {
+    assessment_id: string;
+    name: string;
+    date_created: string;
+    description: string;
+    start_time: string;
+    duration: number;
+    end_time: string;
+}
 
-// Legacy types for compatibility
-export interface Class {
+export interface CreateQuestionsRequest {
+    assessment_id: string;
+    questions: CreateQuestionItem[];
+}
+
+export interface CreateQuestionItem {
+    question_text: string;
+    choices: CreateChoiceItem[];
+}
+
+export interface CreateChoiceItem {
+    choice_text: string;
+    is_correct: boolean;
+}
+
+export interface UpdateQuestionRequest {
+    question_id: string;
+    question_text: string;
+    choices: CreateChoiceItem[];
+}
+
+export interface AssessmentCrudResponseData {
+    assessment_id: string;
+    class_id: string;
+    name: string;
+    description: string;
+    start_time: string;
+    end_time: string;
+    duration: number;
+    date_created: string;
+    updated_at: string;
+}
+
+export interface QuestionResponseData {
+    assessment_id: string;
+    question_id: string;
+    question_text: string;
+    created_at: string;
+    choices: ChoiceResponseData[];
+}
+
+export interface ChoiceResponseData {
     id: string;
-    name?: string;
-    title?: string;
-    tag: string;
-    description?: string;
-    desc?: string;
-    teacher?: string;
-    teacher_id?: string;
+    choice_text: string;
+    is_correct: boolean;
+    question_id: string;
 }
+
+export interface AssignmentSubmission {
+    id_submission: string | null;
+    user_user_id: string;
+    username: string;
+    photo_url: string;
+    status: 'submitted' | 'todo';
+    link_file: string | null;
+    filename: string | null;
+    score: number;
+    created_at: string | null;
+    updated_at: string | null;
+}
+
+export interface CreateAssignmentData {
+    assignment_id: number;
+    title: string;
+    description: string;
+    deadline: string;
+    file_name: string;
+    file_id: string;
+    file_url: string;
+}
+
+export interface UpdateAssignmentData {
+    assignment_id: number;
+    title: string;
+    description: string;
+    deadline: string;
+    file_name: string;
+    file_id: string;
+    file_url: string;
+}
+
+export interface StudentAssessmentDetails {
+    assessment: {
+        assessment_id: string;
+        name: string;
+        description: string;
+        start_time: string;
+        end_time: string;
+        duration: number;
+        date_created: string;
+        updated_at: string;
+        class_id: string;
+    };
+    time_spent: number;
+    time_remaining: number;
+    max_score: number;
+    score: number;
+    submitted_answer: number;
+    question: number;
+    submission_status: 'todo' | 'in_progress' | 'submitted';
+    submission_id: string;
+}
+
+export interface AssessmentDetails {
+    id: string;
+    name: string;
+    duration: number;
+    start_time: string;
+    end_time: string;
+    total_student: number;
+    total_submission: number;
+    // Add optional student-specific fields
+    time_spent?: number;
+    time_remaining?: number;
+    max_score?: number;
+    score?: number;
+    submitted_answer?: number;
+    question?: number;
+    submission_status?: 'todo' | 'in_progress' | 'submitted';
+    submission_id?: string;
+}
+
+// ✅ FIXED: Single definition for AssessmentSessionResponse
+export interface AssessmentSessionResponse {
+    assessment_id: string;
+    ended_time: string;
+    question: AssessmentQuestion[];
+    submission_id: string;
+    user_id: string;
+}
+
+export interface CreateSubmissionRequest {
+    user_id: string;
+    assessment_id: string;
+}
+
+export interface SubmitAnswerRequest {
+    submission_id: string;
+    id_question: string;
+    id_choice: string;
+}
+
+export interface SubmitAssessmentResponse {
+    submission_id: string;
+    user_id: string;
+    assessment_id: string;
+    ended_time: string;
+    submitted_at: string;
+    score: number;
+    status: string;
+    updated_at: string;
+    created_at: string;
+}
+
+export interface SubmissionAnswer {
+    answer_id: string;
+    submission_id: string;
+    question_id: string;
+    choice_id: string;
+    created_at: string;
+    question: {
+        question_id: string;
+        question_text: string;
+        assessment_id: string;
+        created_at: string;
+        updated_at: string;
+        deleted_at: string | null;
+        choice: null;
+    };
+    choice: {
+        choice_id: string;
+        choice_text: string;
+        question_id: string;
+        created_at: string;
+        updated_at: string;
+        deleted_at: string | null;
+    };
+}
+
+export interface UpdateAnswerRequest {
+    answer_id: string;
+    submission_id: string;
+    question_id: string;
+    choice_id: string;
+}
+
+// ✅ Type aliases
+export type AssessmentData = Assessment | StudentAssessment;
+
+// ✅ API Response types
+export type StudentAssessmentResponse = ApiResponse<StudentAssessment[]>;
+export type TeacherAssessmentResponse = ApiResponse<Assessment[]>;
+export type UpcomingAssessmentsResponse = ApiResponse<ClassAssessment[]>;
+export type ClassResponse = ApiResponse<Class[]>;
+export type ClassInfoResponse = ApiResponse<ClassInfo>;
+export type WeeklySectionResponse = ApiResponse<WeeklySection[]>;
+export type AssessmentResponse = ApiResponse<Assessment[]>;
+export type AssessmentDetailsResponse = ApiResponse<AssessmentDetails>;
+export type AssessmentSubmissionsResponse = ApiResponse<AssessmentSubmission[]>;
+export type AssessmentQuestionsResponse = ApiResponse<AssessmentQuestion[]>;
+export type ClassMemberResponse = ApiResponse<ClassMember[]>;
+export type CreateAssessmentResponse = ApiResponse<AssessmentCrudResponseData>;
+export type UpdateAssessmentResponse = ApiResponse<AssessmentCrudResponseData>;
+export type DeleteAssessmentResponse = ApiResponse<string>;
+export type CreateQuestionsResponse = ApiResponse<QuestionResponseData[]>;
+export type UpdateQuestionResponse = ApiResponse<QuestionResponseData>;
+export type AssignmentDetailsResponse = ApiResponse<Assignment>;
+export type AssignmentSubmissionsResponse = ApiResponse<AssignmentSubmission[]>;
+export type CreateAssignmentResponse = ApiResponse<CreateAssignmentData>;
+export type UpdateAssignmentResponse = ApiResponse<UpdateAssignmentData>;
+export type DeleteAssignmentResponse = ApiResponse<string>;
+export type StudentAssessmentDetailsResponse = ApiResponse<StudentAssessmentDetails>;
+
+// ✅ Assessment Session specific types
+export type AssessmentSessionApiResponse = ApiResponse<AssessmentSessionResponse>;
+export type SubmitAnswerApiResponse = ApiResponse<any>;
+export type SubmitAssessmentApiResponse = ApiResponse<SubmitAssessmentResponse>;
+export type GetSubmissionAnswersResponse = ApiResponse<SubmissionAnswer[]>;
+export type UpdateAnswerResponse = ApiResponse<any>;

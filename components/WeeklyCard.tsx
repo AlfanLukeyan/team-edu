@@ -1,10 +1,17 @@
 import { AssignmentCard } from "@/components/AssignmentCard";
 import { AttachmentCard } from "@/components/AttachmentCard";
+import { Button } from "@/components/Button";
+import { TeacherOnly } from "@/components/RoleGuard"; // ✅ Import TeacherOnly
+import WeeklySectionActionsMenu from "@/components/WeeklySectionActionsMenu";
+import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useUserRole } from "@/hooks/useUserRole"; // ✅ Import useUserRole
+import { getYoutubeEmbedUrl } from "@/utils/utils";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import React, { useState } from "react";
+import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
@@ -18,35 +25,19 @@ interface WeeklyCardProps {
         name: string;
         url: string;
     };
-    assignment?: {
+    assignments?: {
         id: string;
         title: string;
         dueDate: string;
         description: string;
-    };
-}
-
-// Helper function to convert YouTube URLs to embed format
-function getYoutubeEmbedUrl(url: string) {
-    if (!url) return "";
-
-    // If it's already an embed URL, return as is
-    if (url.includes("youtube.com/embed/")) return url;
-
-    // Extract video ID from various YouTube URL formats
-    let videoId = "";
-
-    if (url.includes("youtube.com/watch?v=")) {
-        videoId = url.split("v=")[1];
-        const ampersandPosition = videoId.indexOf("&");
-        if (ampersandPosition !== -1) {
-            videoId = videoId.substring(0, ampersandPosition);
-        }
-    } else if (url.includes("youtu.be/")) {
-        videoId = url.split("youtu.be/")[1];
-    }
-
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
+    }[];
+    weekId?: number;
+    onEdit?: (weekId: number) => void;
+    onDelete?: (weekId: number) => void;
+    onCreateAssignment?: (weekId: number) => void;
+    onEditAssignment?: (assignmentId: string, weekId: number) => void;
+    onDeleteAssignment?: (assignmentId: string, weekId: number) => void;
+    onAssignmentPress?: (assignmentId: string) => void;
 }
 
 export function WeeklyCard({
@@ -55,35 +46,96 @@ export function WeeklyCard({
     description,
     videoUrl,
     attachment,
-    assignment
+    assignments = [],
+    weekId,
+    onEdit,
+    onDelete,
+    onCreateAssignment,
+    onEditAssignment,
+    onDeleteAssignment,
+    onAssignmentPress
 }: WeeklyCardProps) {
     const router = useRouter();
     const theme = useColorScheme() ?? "light";
+    const { hasTeacherPermissions } = useUserRole(); // ✅ Add role check
     const screenWidth = Dimensions.get("window").width;
-    const videoHeight = screenWidth * 0.5625; // 16:9 aspect ratio
+    const videoHeight = screenWidth * 0.5625;
+    const [showActionsMenu, setShowActionsMenu] = useState(false);
 
     const embedUrl = videoUrl ? getYoutubeEmbedUrl(videoUrl) : "";
 
+    const handleEdit = () => {
+        if (weekId && onEdit) {
+            onEdit(weekId);
+        }
+        setShowActionsMenu(false);
+    };
+
+    const handleDelete = () => {
+        if (weekId && onDelete) {
+            onDelete(weekId);
+        }
+        setShowActionsMenu(false);
+    };
+
+    const handleCreateAssignment = () => {
+        if (weekId && onCreateAssignment) {
+            onCreateAssignment(weekId);
+        }
+    };
+
+    const handleEditAssignment = (assignmentId: string) => {
+        if (weekId && onEditAssignment) {
+            onEditAssignment(assignmentId, weekId);
+        }
+    };
+
+    const handleDeleteAssignment = (assignmentId: string) => {
+        if (weekId && onDeleteAssignment) {
+            onDeleteAssignment(assignmentId, weekId);
+        }
+    };
+
     return (
         <ThemedView style={{ borderRadius: 15, marginBottom: 16 }} isCard>
-            <View
-                style={{
-                    zIndex: 2,
-                    position: "absolute",
-                    margin: 18,
-                    right: 0,
-                }}
-            ></View>
-            <LinearGradient
-                colors={["#BE1BB6", "#1ECEFF"]}
-                style={{
-                    height: 30,
-                    borderTopLeftRadius: 15,
-                    borderTopRightRadius: 15,
-                }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            ></LinearGradient>
+            {/* ✅ Only show actions menu for teachers */}
+            <TeacherOnly>
+                <WeeklySectionActionsMenu
+                    visible={showActionsMenu}
+                    onClose={() => setShowActionsMenu(false)}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                />
+            </TeacherOnly>
+
+            <View style={{ position: 'relative' }}>
+                <LinearGradient
+                    colors={["#BE1BB6", "#1ECEFF"]}
+                    style={{
+                        height: 30,
+                        borderTopLeftRadius: 15,
+                        borderTopRightRadius: 15,
+                    }}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                />
+
+                {/* ✅ Only show ellipsis menu for teachers */}
+                <TeacherOnly>
+                    {weekId && onEdit && onDelete && (
+                        <TouchableOpacity
+                            style={styles.ellipsisButton}
+                            onPress={() => setShowActionsMenu(true)}
+                        >
+                            <Ionicons
+                                name="ellipsis-horizontal"
+                                size={14}
+                                color={Colors[theme].background}
+                            />
+                        </TouchableOpacity>
+                    )}
+                </TeacherOnly>
+            </View>
 
             <View style={{ padding: 16 }}>
                 <View>
@@ -129,30 +181,63 @@ export function WeeklyCard({
                         />
                     </View>
                 )}
+
                 {/* Assignment Section */}
-                {assignment && (
-                    <View style={styles.attachmentContainer}>
+                <View style={styles.assignmentContainer}>
+                    <View style={styles.assignmentHeader}>
                         <ThemedText type="subtitle">
                             Assignment
                         </ThemedText>
-                        <AssignmentCard
-                            title={assignment.title}
-                            dueDate={assignment.dueDate}
-                            onPress={() => {
-                                router.push({
-                                    pathname: "/(assignment)/(tabs)",
-                                    params: { id: assignment.id },
-                                });
-                            }}
-                        />
+                        {/* ✅ Only show create assignment button for teachers */}
+                        <TeacherOnly>
+                            <Button
+                                type="secondary"
+                                onPress={handleCreateAssignment}
+                                icon={{ name: "plus.circle.fill" }}
+                                style={styles.createAssignmentButton}
+                            >
+                                Create Assignment
+                            </Button>
+                        </TeacherOnly>
                     </View>
-                )}
+
+                    {assignments.length === 0 ? (
+                        <View style={styles.noAssignmentContainer}>
+                            <ThemedText style={styles.noAssignmentText}>
+                                No assignments available
+                            </ThemedText>
+                        </View>
+                    ) : (
+                        <View style={styles.assignmentsList}>
+                            {assignments.map((assignment) => (
+                                <AssignmentCard
+                                    key={assignment.id}
+                                    title={assignment.title}
+                                    dueDate={assignment.dueDate}
+                                    onPress={() => onAssignmentPress?.(assignment.id)}
+                                    // ✅ Only show actions for teachers
+                                    onEdit={hasTeacherPermissions() ? () => handleEditAssignment(assignment.id) : undefined}
+                                    onDelete={hasTeacherPermissions() ? () => handleDeleteAssignment(assignment.id) : undefined}
+                                    showActions={hasTeacherPermissions()}
+                                />
+                            ))}
+                        </View>
+                    )}
+                </View>
             </View>
         </ThemedView>
     );
 }
 
+// ... styles remain the same
 const styles = StyleSheet.create({
+    ellipsisButton: {
+        position: 'absolute',
+        top: 5,
+        right: 12,
+        zIndex: 2,
+        padding: 5,
+    },
     videoContainer: {
         marginTop: 8,
         borderRadius: 8,
@@ -161,19 +246,33 @@ const styles = StyleSheet.create({
     webview: {
         width: "100%",
     },
-    videoPlaceholder: {
-        backgroundColor: "#f0f0f0",
-        justifyContent: "center",
-        alignItems: "center",
-        borderRadius: 8,
-    },
-    playText: {
-        fontSize: 16,
-    },
     attachmentContainer: {
         paddingVertical: 8,
     },
-    attachmentLabel: {
-        color: "#007AFF",
+    assignmentContainer: {
+        paddingVertical: 8,
+    },
+    assignmentHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    createAssignmentButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
+    assignmentsList: {
+        gap: 8,
+    },
+    noAssignmentContainer: {
+        padding: 16,
+        alignItems: 'center',
+        borderRadius: 8,
+        backgroundColor: 'rgba(0,0,0,0.05)',
+    },
+    noAssignmentText: {
+        opacity: 0.7,
+        fontSize: 14,
     },
 });

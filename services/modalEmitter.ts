@@ -1,5 +1,15 @@
 import { EventEmitter } from 'events';
 
+interface AlertOptions {
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: 'warning' | 'danger' | 'info';
+    onConfirm?: () => void;
+    onCancel?: () => void;
+}
+
 class ModalEmitterClass extends EventEmitter {
     // Error Modal
     showError(message: string) {
@@ -20,6 +30,15 @@ class ModalEmitterClass extends EventEmitter {
         this.emit('HIDE_LOADING');
     }
 
+    // Custom Alert Modal
+    showAlert(options: AlertOptions) {
+        this.emit('SHOW_ALERT', options);
+    }
+
+    hideAlert() {
+        this.emit('HIDE_ALERT');
+    }
+
     // Auth-related events
     unauthorized() {
         this.emit('UNAUTHORIZED');
@@ -32,7 +51,7 @@ class ModalEmitterClass extends EventEmitter {
 
 export const ModalEmitter = new ModalEmitterClass();
 
-
 export const ErrorModalEmitter = ModalEmitter;
 export const SuccessModalEmitter = ModalEmitter;
 export const LoadingModalEmitter = ModalEmitter;
+export const AlertModalEmitter = ModalEmitter;

@@ -1,11 +1,12 @@
-import { Assessment, Class, ClassInfo, ClassMember, WeeklySection } from '@/types/api';
+import { AssessmentData, Class, ClassInfo, ClassMember, WeeklySection } from '@/types/api';
+import { WeeklySectionFormData } from '@/types/common';
 import { classApi } from "./api/classApi";
 import { tokenService } from "./tokenService";
 
 class ClassService {
     private static instance: ClassService;
 
-    static getInstance() {
+    static getInstance(): ClassService {
         if (!ClassService.instance) {
             ClassService.instance = new ClassService();
         }
@@ -14,10 +15,9 @@ class ClassService {
 
     async getClasses(userID?: string): Promise<Class[]> {
         try {
-            const rawUserID = userID !== undefined ? userID : tokenService.getUserId();
-            const finalUserID = rawUserID === null ? undefined : rawUserID;
+            const finalUserID = userID ?? tokenService.getUserId() ?? undefined;
             const response = await classApi.getAllClasses(finalUserID);
-            
+
             return response.data?.map((classItem: any) => ({
                 id: classItem.id,
                 name: classItem.name || classItem.title,
@@ -36,27 +36,42 @@ class ClassService {
             const response = await classApi.getClassInfo(classId);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch class info:', error);
             throw error;
         }
     }
 
     async getWeeklySections(classId: string): Promise<WeeklySection[]> {
         try {
-            const response = await classApi.getWeeklySections(classId);
-            return response.data;
+            if (tokenService.hasTeacherPermissions()) {
+                const response = await classApi.getTeacherWeeklySections(classId);
+                return response.data;
+            } else {
+                const response = await classApi.getStudentWeeklySections(classId);
+                return response.data;
+            }
         } catch (error) {
             console.error('Failed to fetch weekly sections:', error);
             throw error;
         }
     }
 
-    async getClassAssessments(classId: string): Promise<Assessment[]> {
+    async getClassAssessments(classId: string): Promise<AssessmentData[]> {
         try {
-            const response = await classApi.getClassAssessments(classId);
-            return response.data;
+            const userRole = tokenService.getUserRole();
+            const userId = tokenService.getUserId();
+
+            if (tokenService.hasTeacherPermissions()) {
+                const response = await classApi.getTeacherClassAssessments(classId);
+                return response.data;
+            } else {
+                if (!userId) {
+                    throw new Error('User ID is required for student assessments');
+                }
+                const response = await classApi.getStudentClassAssessments(classId, userId);
+                return response.data;
+            }
         } catch (error) {
-            console.error('Failed to fetch assessments:', error);
+            console.error('Failed to fetch class assessments:', error);
             throw error;
         }
     }
@@ -66,7 +81,38 @@ class ClassService {
             const response = await classApi.getClassMembers(classId);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch class members:', error);
+            throw error;
+        }
+    }
+
+    // ✅ Teacher-only operations (keep existing)
+    async createWeeklySection(classId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> {
+        try {
+            const existingSections = await this.getWeeklySections(classId);
+            const nextWeekNumber = Math.max(0, ...existingSections.map(section => section.week_number)) + 1;
+
+            const response = await classApi.createWeeklySection(classId, nextWeekNumber, data);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async updateWeeklySection(weekId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> {
+        try {
+            const response = await classApi.updateWeeklySection(weekId, data);
+            return response;
+        } catch (error) {
+            console.error('Failed to update weekly section:', error);
+            throw error;
+        }
+    }
+
+    async deleteWeeklySection(weekId: string): Promise<{ status: string; message: string; data: string }> {
+        try {
+            const response = await classApi.deleteWeeklySection(weekId);
+            return response;
+        } catch (error) {
             throw error;
         }
     }

@@ -1,3 +1,4 @@
+import CustomAlert from "@/components/CustomAlert";
 import ErrorModal from "@/components/ErrorModal";
 import LoadingModal from "@/components/LoadingModal";
 import SuccessModal from "@/components/SuccessModal";
@@ -14,11 +15,12 @@ import { useFonts } from "expo-font";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 function NavigationHandler({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated, isLoading } = useAuth();
+    const {isAuthenticated, isLoading } = useAuth();
     const segments = useSegments();
     const router = useRouter();
 
@@ -27,8 +29,6 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
 
         const inAuthGroup = segments[0] === '(auth)';
         const inProtectedGroup = segments[0] === '(main)'
-            || segments[0] === '(assessment)'
-            || segments[0] === '(assignment)'
             || segments[0] === '(class)'
             || segments[0] === '(verification)';
 
@@ -58,6 +58,21 @@ export default function RootLayout() {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [loadingMessage, setLoadingMessage] = useState<string | undefined>(undefined);
+
+    const [alertOptions, setAlertOptions] = useState<{
+        visible: boolean;
+        title: string;
+        message: string;
+        confirmText?: string;
+        cancelText?: string;
+        type?: 'warning' | 'danger' | 'info';
+        onConfirm?: () => void;
+        onCancel?: () => void;
+    }>({
+        visible: false,
+        title: '',
+        message: '',
+    });
 
     useEffect(() => {
         const handleError = (message: string) => {
@@ -92,12 +107,25 @@ export default function RootLayout() {
             }, 1000);
         };
 
+        const handleShowAlert = (options: any) => {
+            setAlertOptions({
+                visible: true,
+                ...options,
+            });
+        };
+
+        const handleHideAlert = () => {
+            setAlertOptions(prev => ({ ...prev, visible: false }));
+        };
+
         ModalEmitter.on("SHOW_ERROR", handleError);
         ModalEmitter.on("SHOW_SUCCESS", handleSuccess);
         ModalEmitter.on("SHOW_LOADING", handleShowLoading);
         ModalEmitter.on("HIDE_LOADING", handleHideLoading);
         ModalEmitter.on("UNAUTHORIZED", handleUnauthorized);
         ModalEmitter.on("ANOTHER_DEVICE_LOGIN", handleAnotherDeviceLogin);
+        ModalEmitter.on("SHOW_ALERT", handleShowAlert);
+        ModalEmitter.on("HIDE_ALERT", handleHideAlert);
 
         return () => {
             ModalEmitter.off("SHOW_ERROR", handleError);
@@ -106,6 +134,8 @@ export default function RootLayout() {
             ModalEmitter.off("HIDE_LOADING", handleHideLoading);
             ModalEmitter.off("UNAUTHORIZED", handleUnauthorized);
             ModalEmitter.off("ANOTHER_DEVICE_LOGIN", handleAnotherDeviceLogin);
+            ModalEmitter.off("SHOW_ALERT", handleShowAlert);
+            ModalEmitter.off("HIDE_ALERT", handleHideAlert);
         };
     }, [router]);
 
@@ -116,28 +146,65 @@ export default function RootLayout() {
     return (
         <AuthProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
-                <BottomSheetModalProvider>
-                    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+                <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+                    <BottomSheetModalProvider>
                         <NavigationHandler>
                             <Slot />
                         </NavigationHandler>
                         <StatusBar style="auto" />
-                        <ErrorModal
-                            visible={!!errorMessage}
-                            errorMessage={errorMessage || ""}
-                            onClose={() => setErrorMessage(null)}
-                        />
-                        <SuccessModal
-                            visible={!!successMessage}
-                            successMessage={successMessage || ""}
-                            onClose={() => setSuccessMessage(null)}
-                        />
-                        <LoadingModal
-                            visible={isLoading}
-                            message={loadingMessage}
-                        />
-                    </ThemeProvider>
-                </BottomSheetModalProvider>
+
+                        {(isLoading || !!errorMessage || !!successMessage || alertOptions.visible) && (
+                            <View style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                zIndex: 9999,
+                                pointerEvents: 'auto'
+                            }}>
+                                {!!errorMessage && (
+                                    <ErrorModal
+                                        visible={true}
+                                        errorMessage={errorMessage}
+                                        onClose={() => setErrorMessage(null)}
+                                    />
+                                )}
+                                {!!successMessage && (
+                                    <SuccessModal
+                                        visible={true}
+                                        successMessage={successMessage}
+                                        onClose={() => setSuccessMessage(null)}
+                                    />
+                                )}
+                                {isLoading && (
+                                    <LoadingModal
+                                        visible={true}
+                                        message={loadingMessage}
+                                    />
+                                )}
+                                {alertOptions.visible && (
+                                    <CustomAlert
+                                        visible={true}
+                                        title={alertOptions.title}
+                                        message={alertOptions.message}
+                                        confirmText={alertOptions.confirmText}
+                                        cancelText={alertOptions.cancelText}
+                                        type={alertOptions.type}
+                                        onConfirm={() => {
+                                            alertOptions.onConfirm?.();
+                                            setAlertOptions(prev => ({ ...prev, visible: false }));
+                                        }}
+                                        onCancel={() => {
+                                            alertOptions.onCancel?.();
+                                            setAlertOptions(prev => ({ ...prev, visible: false }));
+                                        }}
+                                    />
+                                )}
+                            </View>
+                        )}
+                    </BottomSheetModalProvider>
+                </ThemeProvider>
             </GestureHandlerRootView>
         </AuthProvider>
     );

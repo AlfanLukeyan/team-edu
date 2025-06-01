@@ -18,18 +18,23 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
 
     return (
         <ThemedView isCard={true} style={styles.container}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {/* ✅ Added header */}
+            <ThemedText type="subtitle" style={styles.header}>
+                Time Remaining
+            </ThemedText>
+
+            <View style={styles.timeContainer}>
                 {hours > 0 && (
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <View style={styles.timeUnit}>
                         <ThemedText type="title">{hours}</ThemedText>
                         <ThemedText>h</ThemedText>
                     </View>
                 )}
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <View style={styles.timeUnit}>
                     <ThemedText type="title">{minutes}</ThemedText>
                     <ThemedText>min</ThemedText>
                 </View>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <View style={styles.timeUnit}>
                     <ThemedText type="title">{seconds}</ThemedText>
                     <ThemedText>sec</ThemedText>
                 </View>
@@ -41,10 +46,22 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
 const styles = StyleSheet.create({
     container: {
         width: "100%",
-        gap: 18,
         padding: 8,
         borderRadius: 15,
         justifyContent: "center",
         alignItems: "center",
+    },
+    header: {
+        textAlign: "center",
+    },
+    timeContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+    timeUnit: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
     },
 });

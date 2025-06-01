@@ -17,7 +17,7 @@ class TokenService {
     }
 
     private isExpired(token: DecodedJWT): boolean {
-        return Date.now() >= (token.exp - 300) * 1000; // 5min buffer
+        return Date.now() >= (token.exp - 300) * 1000;
     }
 
     async storeTokens(accessToken: string, refreshToken: string, email: string): Promise<void> {
@@ -25,40 +25,57 @@ class TokenService {
         this.refreshToken = refreshToken;
         this.decoded = jwtDecode(accessToken);
 
-        await Promise.all([
+        const storeOperations = [
             SecureStore.setItemAsync("access_token", accessToken),
             SecureStore.setItemAsync("refresh_token", refreshToken),
             SecureStore.setItemAsync("user_email", email),
-            // Store decoded JWT data
-            SecureStore.setItemAsync("user_uuid", this.decoded!.uuid),
-            SecureStore.setItemAsync("user_permissions", JSON.stringify(this.decoded!.permissions)),
             SecureStore.setItemAsync("decoded_jwt", JSON.stringify(this.decoded)),
-        ]);
+        ];
+
+        const userId = this.decoded?.uuid || this.decoded?.sub;
+        if (userId) {
+            storeOperations.push(SecureStore.setItemAsync("user_uuid", userId));
+        }
+
+        if (this.decoded?.role_id !== undefined) {
+            storeOperations.push(SecureStore.setItemAsync("user_role_id", this.decoded.role_id.toString()));
+        }
+
+        if (this.decoded?.permissions) {
+            storeOperations.push(SecureStore.setItemAsync("user_permissions", JSON.stringify(this.decoded.permissions)));
+        }
+
+        await Promise.all(storeOperations);
     }
 
     async loadTokens(): Promise<boolean> {
         try {
-            const [accessToken, refreshToken, decodedJWT] = await Promise.all([
+            const [accessToken, refreshToken, decodedJWT, storedRoleId] = await Promise.all([
                 SecureStore.getItemAsync("access_token"),
                 SecureStore.getItemAsync("refresh_token"),
                 SecureStore.getItemAsync("decoded_jwt"),
+                SecureStore.getItemAsync("user_role_id"),
             ]);
 
             if (!accessToken || !refreshToken) return false;
 
             this.accessToken = accessToken;
             this.refreshToken = refreshToken;
-            
-            // Load decoded JWT from secure store if available
+
             if (decodedJWT) {
                 this.decoded = JSON.parse(decodedJWT);
+                if (this.decoded && this.decoded.role_id === undefined && storedRoleId) {
+                    this.decoded.role_id = parseInt(storedRoleId);
+                }
             } else {
-                // Fallback to decoding the token
                 this.decoded = jwtDecode(accessToken);
+                if (this.decoded && this.decoded.role_id === undefined && storedRoleId) {
+                    this.decoded.role_id = parseInt(storedRoleId);
+                }
             }
-            
+
             return true;
-        } catch {
+        } catch (error) {
             return false;
         }
     }
@@ -74,7 +91,7 @@ class TokenService {
             }
 
             return this.accessToken;
-        } catch {
+        } catch (error) {
             return null;
         }
     }
@@ -84,24 +101,44 @@ class TokenService {
             if (!this.refreshToken) return false;
 
             const response = await refreshTokens(this.refreshToken);
-            
+
             if (response.access_token) {
+                const oldUuid = this.decoded?.uuid;
+                const oldRoleId = this.decoded?.role_id;
+
                 this.accessToken = response.access_token;
                 this.decoded = jwtDecode(response.access_token);
-                
-                // Update stored tokens and decoded data
-                await Promise.all([
+
+                if (this.decoded && !this.decoded.uuid && oldUuid) {
+                    this.decoded.uuid = oldUuid;
+                }
+                if (this.decoded && this.decoded.role_id === undefined && oldRoleId !== undefined) {
+                    this.decoded.role_id = oldRoleId;
+                }
+
+                const updateOperations = [
                     SecureStore.setItemAsync("access_token", response.access_token),
-                    SecureStore.setItemAsync("user_uuid", this.decoded!.uuid),
-                    SecureStore.setItemAsync("user_permissions", JSON.stringify(this.decoded!.permissions)),
                     SecureStore.setItemAsync("decoded_jwt", JSON.stringify(this.decoded)),
-                ]);
-                
+                ];
+
+                const userId = this.decoded?.uuid || this.decoded?.sub;
+                if (userId) {
+                    updateOperations.push(SecureStore.setItemAsync("user_uuid", userId));
+                }
+
+                if (this.decoded?.role_id !== undefined) {
+                    updateOperations.push(SecureStore.setItemAsync("user_role_id", this.decoded.role_id.toString()));
+                }
+
+                if (this.decoded?.permissions) {
+                    updateOperations.push(SecureStore.setItemAsync("user_permissions", JSON.stringify(this.decoded.permissions)));
+                }
+
+                await Promise.all(updateOperations);
                 return true;
             }
             return false;
         } catch (error) {
-            console.error('Token refresh failed:', error);
             return false;
         }
     }
@@ -112,40 +149,93 @@ class TokenService {
         this.decoded = null;
 
         await Promise.all([
-            SecureStore.deleteItemAsync("access_token").catch(() => {}),
-            SecureStore.deleteItemAsync("refresh_token").catch(() => {}),
-            SecureStore.deleteItemAsync("user_email").catch(() => {}),
-            SecureStore.deleteItemAsync("user_uuid").catch(() => {}),
-            SecureStore.deleteItemAsync("user_permissions").catch(() => {}),
-            SecureStore.deleteItemAsync("decoded_jwt").catch(() => {}),
+            SecureStore.deleteItemAsync("access_token").catch(() => { }),
+            SecureStore.deleteItemAsync("refresh_token").catch(() => { }),
+            SecureStore.deleteItemAsync("user_email").catch(() => { }),
+            SecureStore.deleteItemAsync("user_uuid").catch(() => { }),
+            SecureStore.deleteItemAsync("user_role_id").catch(() => { }),
+            SecureStore.deleteItemAsync("user_permissions").catch(() => { }),
+            SecureStore.deleteItemAsync("decoded_jwt").catch(() => { }),
         ]);
     }
 
-    getDecodedToken(): DecodedJWT | null {
-        return this.decoded;
+    getUserRole(): number {
+        return this.decoded?.role_id || 4;
     }
 
-    hasPermission(permission: string): boolean {
-        return this.decoded?.permissions.includes(permission) || false;
+    async getStoredRole(): Promise<number> {
+        try {
+            const storedRole = await SecureStore.getItemAsync("user_role_id");
+            return storedRole ? parseInt(storedRole) : this.getUserRole();
+        } catch {
+            return this.getUserRole();
+        }
+    }
+
+    isAdmin(): boolean {
+        return this.getUserRole() === 1;
+    }
+
+    isTeacher(): boolean {
+        return this.getUserRole() === 2;
+    }
+
+    isStudent(): boolean {
+        return this.getUserRole() === 3;
+    }
+
+    isGuest(): boolean {
+        return this.getUserRole() === 4;
+    }
+
+    hasTeacherPermissions(): boolean {
+        return this.isAdmin() || this.isTeacher();
+    }
+
+    canCreateContent(): boolean {
+        return this.hasTeacherPermissions();
+    }
+
+    canManageClass(): boolean {
+        return this.isAdmin() || this.isTeacher();
+    }
+
+    canManageUsers(): boolean {
+        return this.isAdmin();
     }
 
     getUserId(): string | null {
-        return this.decoded?.uuid || null;
+        return this.decoded?.uuid || this.decoded?.sub || null;
     }
 
     getUserEmail(): string | null {
         return this.decoded?.sub || null;
     }
 
-    isTokenExpired(): boolean {
-        return this.decoded ? this.isExpired(this.decoded) : true;
+    getDecodedToken(): DecodedJWT | null {
+        return this.decoded;
     }
 
     getUser(): DecodedJWT | null {
         return this.decoded;
     }
 
-    // New helper methods to get data directly from secure store
+    hasPermission(permission: string): boolean {
+        return this.decoded?.permissions?.includes(permission) || false;
+    }
+
+    getPermissions(): string[] {
+        return this.decoded?.permissions || [];
+    }
+
+    isTokenExpired(): boolean {
+        return this.decoded ? this.isExpired(this.decoded) : true;
+    }
+
+    isAuthenticated(): boolean {
+        return !!(this.accessToken && this.decoded && !this.isExpired(this.decoded));
+    }
+
     async getStoredUuid(): Promise<string | null> {
         try {
             return await SecureStore.getItemAsync("user_uuid");
@@ -162,6 +252,27 @@ class TokenService {
             return [];
         }
     }
+
+    async getStoredEmail(): Promise<string | null> {
+        try {
+            return await SecureStore.getItemAsync("user_email");
+        } catch {
+            return null;
+        }
+    }
+
+    getRoleText(): string {
+        const role = this.getUserRole();
+        switch (role) {
+            case 1: return 'Admin';
+            case 2: return 'Teacher';
+            case 3: return 'Student';
+            case 4: return 'Guest';
+            default: return 'Guest';
+        }
+    }
+
+    async debugTokenInfo(): Promise<void> { }
 }
 
 export const tokenService = TokenService.getInstance();

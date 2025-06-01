@@ -21,7 +21,7 @@ export const simplePost = async (url: string, data: any, headers: Record<string,
     return response.json();
 };
 
-export const simplePostFormData = async (url: string, formData: FormData, includeAuth: boolean = true) => {
+export const simplePostFormData = async (url: string, formData: FormData, method: string = 'POST', includeAuth: boolean = true) => {
     const headers: Record<string, string> = {};
 
     if (includeAuth) {
@@ -32,7 +32,7 @@ export const simplePostFormData = async (url: string, formData: FormData, includ
     }
 
     const response = await fetch(`${API_URL}${url}`, {
-        method: 'POST',
+        method: method.toUpperCase(),
         headers,
         body: formData,
     });

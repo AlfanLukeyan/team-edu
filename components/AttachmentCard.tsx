@@ -23,26 +23,48 @@ export function AttachmentCard({ name, url }: AttachmentCardProps) {
     };
 
     return (
-        <Pressable onPress={handlePress}>
+        <Pressable onPress={handlePress} style={styles.pressable}>
             <View style={[styles.container, { borderColor: Colors[theme].border }]}>
                 <Ionicons
                     name="document-attach"
                     size={24}
                     color={theme === "light" ? Colors.light.text : Colors.dark.text}
-                    style={{ marginRight: 8 }}
+                    style={styles.icon}
                 />
-                <ThemedText type="default">{name}</ThemedText>
+                <ThemedText
+                    type="default"
+                    style={styles.filename}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                >
+                    {name}
+                </ThemedText>
             </View>
         </Pressable>
     );
 }
 
 const styles = StyleSheet.create({
+    pressable: {
+        width: '100%',
+    },
     container: {
         padding: 12,
         borderRadius: 10,
         borderWidth: 1,
         flexDirection: "row",
-        alignItems: "center",
+        alignItems: "flex-start",
+        width: '100%',
+        minHeight: 48,
+    },
+    icon: {
+        marginRight: 8,
+        flexShrink: 0,
+        marginTop: 2,
+    },
+    filename: {
+        flex: 1,
+        flexShrink: 1,
+        flexWrap: 'wrap',
     },
 });
