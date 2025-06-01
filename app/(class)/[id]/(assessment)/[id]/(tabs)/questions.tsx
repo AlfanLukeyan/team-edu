@@ -7,11 +7,12 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import { useHeader } from "@/contexts/HeaderContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { assessmentService } from "@/services/assessmentService";
 import { ModalEmitter } from "@/services/modalEmitter";
 import { AssessmentQuestion, CreateQuestionItem } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
@@ -20,6 +21,17 @@ interface QuestionsFormData {
 }
 
 export default function QuestionsScreen() {
+    const { isStudent } = useUserRole(); // ✅ Add role check
+    const router = useRouter(); // ✅ Add router
+
+    // ✅ Early return for students - prevent any API calls
+    useEffect(() => {
+        if (isStudent()) {
+            console.log('🚫 Student accessing questions tab - redirecting');
+            router.replace('../'); // Redirect to about tab
+        }
+    }, [isStudent, router]);
+
     const { setHeaderConfig, resetHeader } = useHeader();
     const theme = useColorScheme();
     const { assessmentId, assessmentInfo } = useAssessment();

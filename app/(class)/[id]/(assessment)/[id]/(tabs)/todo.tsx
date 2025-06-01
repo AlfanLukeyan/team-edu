@@ -3,12 +3,24 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { assessmentService } from "@/services/assessmentService";
 import { AssessmentSubmission } from "@/types/api";
+import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, useColorScheme, View } from "react-native";
 
 export default function TodoScreen() {
+    const { isStudent } = useUserRole(); // ✅ Add role check
+    const router = useRouter(); // ✅ Add router
+
+    // ✅ Early return for students - prevent any API calls
+    useEffect(() => {
+        if (isStudent()) {
+            console.log('🚫 Student accessing todo tab - redirecting');
+            router.replace('../'); // Redirect to about tab
+        }
+    }, [isStudent, router]);
     const theme = useColorScheme();
     const { assessmentId } = useAssessment();
 
@@ -57,7 +69,7 @@ export default function TodoScreen() {
                 <ThemedText style={{ textAlign: 'center', marginBottom: 16 }}>
                     {error}
                 </ThemedText>
-                <ThemedText 
+                <ThemedText
                     style={{ color: Colors[theme ?? 'light'].tint, textAlign: 'center' }}
                     onPress={fetchTodoSubmissions}
                 >
@@ -89,7 +101,7 @@ export default function TodoScreen() {
                             user_profile_url=""
                             user_name={submission.username}
                             user_id={submission.user_user_id}
-                            time_remaining={submission.time_remaining? submission.time_remaining : undefined}
+                            time_remaining={submission.time_remaining ? submission.time_remaining : undefined}
                             status={submission.status}
                             score={submission.score}
                             total_score={100}

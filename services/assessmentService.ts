@@ -2,11 +2,16 @@ import {
     AssessmentDetails,
     AssessmentItem,
     AssessmentQuestion,
+    AssessmentSessionResponse,
     AssessmentSubmission,
     ClassAssessment,
     ComponentAssessment,
     CreateChoiceItem,
-    CreateQuestionItem
+    CreateQuestionItem,
+    CreateSubmissionRequest,
+    StudentAssessmentDetails, SubmissionAnswer, SubmitAnswerRequest, // ✅ Add this import
+    SubmitAssessmentResponse,
+    UpdateAnswerRequest
 } from '@/types/api';
 import { AssessmentFormData } from '@/types/common';
 import { getDaysRemaining } from '@/utils/utils';
@@ -34,6 +39,82 @@ class AssessmentService {
         return AssessmentService.instance;
     }
 
+// ✅ Start assessment session
+    async startAssessmentSession(assessmentId: string): Promise<AssessmentSessionResponse> {
+        try {
+            const userId = tokenService.getUserId();
+            if (!userId) {
+                throw new Error('User ID not found');
+            }
+
+            const payload: CreateSubmissionRequest = {
+                user_id: userId,
+                assessment_id: assessmentId
+            };
+
+            const response = await assessmentApi.createSubmission(payload);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to start assessment session:', error);
+            throw error;
+        }
+    }
+
+    // ✅ Get submission answers for continue assessment
+    async getSubmissionAnswers(submissionId: string): Promise<SubmissionAnswer[]> {
+        try {
+            const response = await assessmentApi.getSubmissionAnswers(submissionId);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to get submission answers:', error);
+            throw error;
+        }
+    }
+
+    // ✅ Submit answer for a question
+    async submitAnswer(submissionId: string, questionId: string, choiceId: string): Promise<void> {
+        try {
+            const payload: SubmitAnswerRequest = {
+                submission_id: submissionId,
+                id_question: questionId,
+                id_choice: choiceId
+            };
+
+            await assessmentApi.submitAnswer(payload);
+        } catch (error) {
+            console.error('Failed to submit answer:', error);
+            throw error;
+        }
+    }
+
+    // ✅ Update existing answer
+    async updateAnswer(answerId: string, submissionId: string, questionId: string, choiceId: string): Promise<void> {
+        try {
+            const payload: UpdateAnswerRequest = {
+                answer_id: answerId,
+                submission_id: submissionId,
+                question_id: questionId,
+                choice_id: choiceId
+            };
+
+            await assessmentApi.updateAnswer(payload);
+        } catch (error) {
+            console.error('Failed to update answer:', error);
+            throw error;
+        }
+    }
+
+    // ✅ Submit final assessment
+    async submitAssessment(submissionId: string): Promise<SubmitAssessmentResponse> {
+        try {
+            const response = await assessmentApi.submitAssessment(submissionId);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to submit assessment:', error);
+            throw error;
+        }
+    }
+
     async getUpcomingAssessments(userID?: string): Promise<ClassAssessment[]> {
         try {
             const finalUserID = userID ?? tokenService.getUserId() ?? undefined;
@@ -45,12 +126,45 @@ class AssessmentService {
         }
     }
 
-    async getAssessmentDetails(assessmentId: string): Promise<AssessmentDetails> {
+    async getAssessmentDetails(assessmentId: string, userId?: string): Promise<AssessmentDetails> {
         try {
-            const response = await assessmentApi.getAssessmentDetails(assessmentId);
-            return response.data;
+            if (tokenService.isStudent()) {
+                const response = await assessmentApi.getStudentAssessmentDetails(assessmentId, userId);
+                const studentData = response.data;
+
+                return {
+                    id: studentData.assessment.assessment_id,
+                    name: studentData.assessment.name,
+                    duration: studentData.assessment.duration,
+                    start_time: studentData.assessment.start_time,
+                    end_time: studentData.assessment.end_time,
+                    total_student: 0,
+                    total_submission: 0,
+                    time_spent: studentData.time_spent,
+                    time_remaining: studentData.time_remaining,
+                    max_score: studentData.max_score,
+                    score: studentData.score,
+                    submitted_answer: studentData.submitted_answer,
+                    question: studentData.question,
+                    submission_status: studentData.submission_status,
+                    submission_id: studentData.submission_id
+                };
+            } else {
+                const response = await assessmentApi.getAssessmentDetails(assessmentId);
+                return response.data;
+            }
         } catch (error) {
             console.error('Failed to fetch assessment details:', error);
+            throw error;
+        }
+    }
+
+    async getStudentAssessmentDetails(assessmentId: string, userId?: string): Promise<StudentAssessmentDetails> {
+        try {
+            const response = await assessmentApi.getStudentAssessmentDetails(assessmentId, userId);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch student assessment details:', error);
             throw error;
         }
     }
@@ -75,6 +189,7 @@ class AssessmentService {
         }
     }
 
+    // ✅ Rest of the methods remain the same...
     async createAssessment(classId: string, data: AssessmentFormData): Promise<{ status: string; message: string; data: any }> {
         try {
             const payload = {
@@ -208,6 +323,7 @@ class AssessmentService {
         }
     }
 
+    // ✅ Utility methods remain the same...
     getAllAssessments(classAssessments: ClassAssessment[]): (AssessmentItem & { class_name: string; class_tag: string })[] {
         return classAssessments.flatMap(classData =>
             classData.class_assessment.map(assessment => ({

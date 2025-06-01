@@ -1,13 +1,22 @@
 import {
     AssessmentDetailsResponse,
     AssessmentQuestionsResponse,
+    AssessmentSessionApiResponse,
     AssessmentSubmissionsResponse,
     CreateAssessmentRequest,
     CreateAssessmentResponse,
     CreateQuestionsRequest,
     CreateQuestionsResponse,
+    CreateSubmissionRequest,
     DeleteAssessmentResponse,
+    GetSubmissionAnswersResponse,
+    StudentAssessmentDetailsResponse,
+    SubmitAnswerApiResponse,
+    SubmitAnswerRequest,
+    SubmitAssessmentApiResponse,
     UpcomingAssessmentsResponse,
+    UpdateAnswerRequest,
+    UpdateAnswerResponse,
     UpdateAssessmentRequest,
     UpdateAssessmentResponse,
     UpdateQuestionRequest,
@@ -17,6 +26,32 @@ import { httpClient } from '../httpClient';
 import { tokenService } from '../tokenService';
 
 export const assessmentApi = {
+
+    // ✅ Start assessment session
+    createSubmission: async (data: CreateSubmissionRequest): Promise<AssessmentSessionApiResponse> => {
+        return httpClient.post('/submission', data);
+    },
+
+    // ✅ Submit answer for a question
+    submitAnswer: async (data: SubmitAnswerRequest): Promise<SubmitAnswerApiResponse> => {
+        return httpClient.post('/answer', data);
+    },
+
+    // ✅ Update existing answer
+    updateAnswer: async (data: UpdateAnswerRequest): Promise<UpdateAnswerResponse> => {
+        return httpClient.put('/answer/', data);
+    },
+
+    // ✅ Get submission answers for continue assessment
+    getSubmissionAnswers: async (submissionId: string): Promise<GetSubmissionAnswersResponse> => {
+        return httpClient.get(`/answer/submission/?submission_id=${submissionId}`);
+    },
+
+    // ✅ Submit final assessment
+    submitAssessment: async (submissionId: string): Promise<SubmitAssessmentApiResponse> => {
+        return httpClient.post(`/submission/submit/?id=${submissionId}`);
+    },
+    
     getUpcomingAssessments: async (userID?: string): Promise<UpcomingAssessmentsResponse> => {
         const finalUserID = userID || tokenService.getUserId();
         return httpClient.get(`/public/assessment/upcoming/?userID=${finalUserID}`);
@@ -24,6 +59,11 @@ export const assessmentApi = {
 
     getAssessmentDetails: async (assessmentId: string): Promise<AssessmentDetailsResponse> => {
         return httpClient.get(`/teacher/assessment/?id=${assessmentId}`);
+    },
+
+    getStudentAssessmentDetails: async (assessmentId: string, userId?: string): Promise<StudentAssessmentDetailsResponse> => {
+        const finalUserId = userId || tokenService.getUserId();
+        return httpClient.get(`/student/assessment/?id=${assessmentId}&userID=${finalUserId}`);
     },
 
     getAssessmentSubmissions: async (

@@ -103,16 +103,6 @@ export interface StudentAssessment {
     updated_at: string;
 }
 
-export interface AssessmentDetails {
-    id: string;
-    name: string;
-    duration: number;
-    start_time: string;
-    end_time: string;
-    total_student: number;
-    total_submission: number;
-}
-
 export interface AssessmentSubmission {
     id?: string;
     kelas_kelas_id: string;
@@ -124,8 +114,9 @@ export interface AssessmentSubmission {
     username: string;
 }
 
+// ✅ FIXED: Single definition for AssessmentChoice matching your API response
 export interface AssessmentChoice {
-    id: string;
+    choice_id: string;
     choice_text: string;
     question_id: string;
     is_correct: boolean;
@@ -134,10 +125,11 @@ export interface AssessmentChoice {
     deleted_at: string | null;
 }
 
+// ✅ FIXED: Single definition for AssessmentQuestion matching your API response
 export interface AssessmentQuestion {
+    assessment_id: string;
     question_id: string;
     question_text: string;
-    evaluation_id: string;
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
@@ -192,6 +184,7 @@ export interface UpdateQuestionRequest {
     question_text: string;
     choices: CreateChoiceItem[];
 }
+
 export interface AssessmentCrudResponseData {
     assessment_id: string;
     class_id: string;
@@ -217,16 +210,6 @@ export interface ChoiceResponseData {
     choice_text: string;
     is_correct: boolean;
     question_id: string;
-}
-
-export interface Assignment {
-    assignment_id: number;
-    title: string;
-    description: string;
-    deadline: string;
-    file_name: string;
-    file_id: string;
-    file_url: string;
 }
 
 export interface AssignmentSubmission {
@@ -262,11 +245,117 @@ export interface UpdateAssignmentData {
     file_url: string;
 }
 
+export interface StudentAssessmentDetails {
+    assessment: {
+        assessment_id: string;
+        name: string;
+        description: string;
+        start_time: string;
+        end_time: string;
+        duration: number;
+        date_created: string;
+        updated_at: string;
+        class_id: string;
+    };
+    time_spent: number;
+    time_remaining: number;
+    max_score: number;
+    score: number;
+    submitted_answer: number;
+    question: number;
+    submission_status: 'todo' | 'in_progress' | 'submitted';
+    submission_id: string;
+}
+
+export interface AssessmentDetails {
+    id: string;
+    name: string;
+    duration: number;
+    start_time: string;
+    end_time: string;
+    total_student: number;
+    total_submission: number;
+    // Add optional student-specific fields
+    time_spent?: number;
+    time_remaining?: number;
+    max_score?: number;
+    score?: number;
+    submitted_answer?: number;
+    question?: number;
+    submission_status?: 'todo' | 'in_progress' | 'submitted';
+    submission_id?: string;
+}
+
+// ✅ FIXED: Single definition for AssessmentSessionResponse
+export interface AssessmentSessionResponse {
+    assessment_id: string;
+    ended_time: string;
+    question: AssessmentQuestion[];
+    submission_id: string;
+    user_id: string;
+}
+
+export interface CreateSubmissionRequest {
+    user_id: string;
+    assessment_id: string;
+}
+
+export interface SubmitAnswerRequest {
+    submission_id: string;
+    id_question: string;
+    id_choice: string;
+}
+
+export interface SubmitAssessmentResponse {
+    submission_id: string;
+    user_id: string;
+    assessment_id: string;
+    ended_time: string;
+    submitted_at: string;
+    score: number;
+    status: string;
+    updated_at: string;
+    created_at: string;
+}
+
+export interface SubmissionAnswer {
+    answer_id: string;
+    submission_id: string;
+    question_id: string;
+    choice_id: string;
+    created_at: string;
+    question: {
+        question_id: string;
+        question_text: string;
+        assessment_id: string;
+        created_at: string;
+        updated_at: string;
+        deleted_at: string | null;
+        choice: null;
+    };
+    choice: {
+        choice_id: string;
+        choice_text: string;
+        question_id: string;
+        created_at: string;
+        updated_at: string;
+        deleted_at: string | null;
+    };
+}
+
+export interface UpdateAnswerRequest {
+    answer_id: string;
+    submission_id: string;
+    question_id: string;
+    choice_id: string;
+}
+
+// ✅ Type aliases
 export type AssessmentData = Assessment | StudentAssessment;
 
+// ✅ API Response types
 export type StudentAssessmentResponse = ApiResponse<StudentAssessment[]>;
 export type TeacherAssessmentResponse = ApiResponse<Assessment[]>;
-
 export type UpcomingAssessmentsResponse = ApiResponse<ClassAssessment[]>;
 export type ClassResponse = ApiResponse<Class[]>;
 export type ClassInfoResponse = ApiResponse<ClassInfo>;
@@ -286,3 +375,11 @@ export type AssignmentSubmissionsResponse = ApiResponse<AssignmentSubmission[]>;
 export type CreateAssignmentResponse = ApiResponse<CreateAssignmentData>;
 export type UpdateAssignmentResponse = ApiResponse<UpdateAssignmentData>;
 export type DeleteAssignmentResponse = ApiResponse<string>;
+export type StudentAssessmentDetailsResponse = ApiResponse<StudentAssessmentDetails>;
+
+// ✅ Assessment Session specific types
+export type AssessmentSessionApiResponse = ApiResponse<AssessmentSessionResponse>;
+export type SubmitAnswerApiResponse = ApiResponse<any>;
+export type SubmitAssessmentApiResponse = ApiResponse<SubmitAssessmentResponse>;
+export type GetSubmissionAnswersResponse = ApiResponse<SubmissionAnswer[]>;
+export type UpdateAnswerResponse = ApiResponse<any>;

@@ -19,15 +19,7 @@ export default function AssessmentIdLayout() {
             }}
         >
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen 
-                name="session" 
-                options={{
-                    presentation: 'fullScreenModal',
-                    headerShown: true,
-                    title: 'Assessment Session',
-                    headerBackTitle: 'Back',
-                }}
-            />
+            <Stack.Screen name="session" />
         </Stack>
     );
 }

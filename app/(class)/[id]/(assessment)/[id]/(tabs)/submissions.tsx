@@ -5,14 +5,26 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import { useHeader } from "@/contexts/HeaderContext"; // ✅ Add this import
+import { useUserRole } from "@/hooks/useUserRole";
 import { assessmentService } from "@/services/assessmentService";
 import { AssessmentSubmission } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 export default function SubmissionsScreen() {
+
+    const { isStudent } = useUserRole(); // ✅ Add role check
+    const router = useRouter(); // ✅ Add router
+
+    // ✅ Early return for students - prevent any API calls
+    useEffect(() => {
+        if (isStudent()) {
+            console.log('🚫 Student accessing questions tab - redirecting');
+            router.replace('../'); // Redirect to about tab
+        }
+    }, [isStudent, router]);
     // ✅ Remove navigation hook and add header context
     const { setHeaderConfig, resetHeader } = useHeader();
     const theme = useColorScheme();
@@ -143,7 +155,7 @@ export default function SubmissionsScreen() {
             }
             setShowActionsMenu(false);
         } else {
-            
+
         }
     };
 

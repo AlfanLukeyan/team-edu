@@ -3,24 +3,23 @@ import { StyleSheet, View } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
-interface TimeRemainingCardProps {
-    timeRemaining: number;
+interface DurationCardProps {
+    duration: number; // Duration in minutes
 }
 
-export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
-    timeRemaining,
+export const DurationCard: React.FC<DurationCardProps> = ({
+    duration,
 }) => {
     const theme = useColorScheme() || "light";
 
-    const hours = Math.floor(timeRemaining / 3600);
-    const minutes = Math.floor((timeRemaining % 3600) / 60);
-    const seconds = timeRemaining % 60;
+    const hours = Math.floor(duration / 60);
+    const minutes = duration % 60;
 
     return (
         <ThemedView isCard={true} style={styles.container}>
-            {/* ✅ Added header */}
+            {/* ✅ Header for duration */}
             <ThemedText type="subtitle" style={styles.header}>
-                Time Remaining
+                Duration
             </ThemedText>
 
             <View style={styles.timeContainer}>
@@ -33,10 +32,6 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
                 <View style={styles.timeUnit}>
                     <ThemedText type="title">{minutes}</ThemedText>
                     <ThemedText>min</ThemedText>
-                </View>
-                <View style={styles.timeUnit}>
-                    <ThemedText type="title">{seconds}</ThemedText>
-                    <ThemedText>sec</ThemedText>
                 </View>
             </View>
         </ThemedView>

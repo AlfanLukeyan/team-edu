@@ -64,6 +64,7 @@ export const DueDateCard: React.FC<DueDateCardProps> = ({
 
 const styles = StyleSheet.create({
     container: {
+        width: "100%",
         borderRadius: 15,
         paddingVertical: 16,
     },

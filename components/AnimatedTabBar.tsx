@@ -43,68 +43,74 @@ export const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({ state, navigatio
         <View style={[styles.tabBarContainer, {
             backgroundColor: Colors[theme ?? 'light'].background,
         }]}>
-            {state.routes.map((route: any, index: number) => {
-                const isFocused = state.index === index;
-                const tabConfig = tabs.find(tab => tab.name === route.name);
-                const label = tabConfig?.label || route.name;
-                const iconName = tabConfig?.icon || 'help-outline';
+            {state.routes
+                .filter((route: any) => tabs.some(tab => tab.name === route.name))
+                .map((route: any, filteredIndex: number) => {
+                    const originalIndex = state.routes.findIndex((r: any) => r.key === route.key);
+                    const isFocused = state.index === originalIndex;
+                    const tabConfig = tabs.find(tab => tab.name === route.name);
 
-                return (
-                    <Pressable
-                        key={route.key}
-                        style={styles.tabButton}
-                        onPress={() => {
-                            const event = navigation.emit({
-                                type: 'tabPress',
-                                target: route.key,
-                                canPreventDefault: true,
-                            });
-                            if (!isFocused && !event.defaultPrevented) {
-                                navigation.navigate(route.name);
-                                animateTab(index);
-                            }
-                        }}
-                    >
-                        <Animated.View
-                            style={[
-                                styles.tabContent,
-                                {
-                                    transform: [{ scale: scaleValues[index] || new Animated.Value(1) }],
-                                    backgroundColor: isFocused
-                                        ? Colors[theme ?? 'light'].tint + '20'
-                                        : 'transparent',
-                                    borderColor: isFocused
-                                        ? Colors[theme ?? 'light'].tint
-                                        : 'transparent',
+                    if (!tabConfig) return null;
+
+                    const label = tabConfig.label;
+                    const iconName = tabConfig.icon;
+
+                    return (
+                        <Pressable
+                            key={route.key}
+                            style={styles.tabButton}
+                            onPress={() => {
+                                const event = navigation.emit({
+                                    type: 'tabPress',
+                                    target: route.key,
+                                    canPreventDefault: true,
+                                });
+                                if (!isFocused && !event.defaultPrevented) {
+                                    navigation.navigate(route.name);
+                                    animateTab(filteredIndex); // ✅ Use filteredIndex for animation
                                 }
-                            ]}
+                            }}
                         >
-                            <View style={styles.tabInner}>
-                                <Ionicons
-                                    name={iconName as any}
-                                    size={18}
-                                    color={isFocused
-                                        ? Colors[theme ?? 'light'].tint
-                                        : Colors[theme ?? 'light'].tabIconDefault}
-                                    style={styles.tabIcon}
-                                />
-                                {isFocused && (
-                                    <Text style={[
-                                        styles.tabText,
-                                        {
-                                            color: isFocused
-                                                ? Colors[theme ?? 'light'].tint
-                                                : Colors[theme ?? 'light'].tabIconDefault,
-                                        }
-                                    ]}>
-                                        {label}
-                                    </Text>
-                                )}
-                            </View>
-                        </Animated.View>
-                    </Pressable>
-                );
-            })}
+                            <Animated.View
+                                style={[
+                                    styles.tabContent,
+                                    {
+                                        transform: [{ scale: scaleValues[filteredIndex] || new Animated.Value(1) }], // ✅ Use filteredIndex
+                                        backgroundColor: isFocused
+                                            ? Colors[theme ?? 'light'].tint + '20'
+                                            : 'transparent',
+                                        borderColor: isFocused
+                                            ? Colors[theme ?? 'light'].tint
+                                            : 'transparent',
+                                    }
+                                ]}
+                            >
+                                <View style={styles.tabInner}>
+                                    <Ionicons
+                                        name={iconName as any}
+                                        size={18}
+                                        color={isFocused
+                                            ? Colors[theme ?? 'light'].tint
+                                            : Colors[theme ?? 'light'].tabIconDefault}
+                                        style={styles.tabIcon}
+                                    />
+                                    {isFocused && (
+                                        <Text style={[
+                                            styles.tabText,
+                                            {
+                                                color: isFocused
+                                                    ? Colors[theme ?? 'light'].tint
+                                                    : Colors[theme ?? 'light'].tabIconDefault,
+                                            }
+                                        ]}>
+                                            {label}
+                                        </Text>
+                                    )}
+                                </View>
+                            </Animated.View>
+                        </Pressable>
+                    );
+                })}
         </View>
     );
 };
