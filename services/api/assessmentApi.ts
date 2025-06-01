@@ -46,7 +46,7 @@ export const assessmentApi = {
     },
 
     updateAssessment: async (data: UpdateAssessmentRequest): Promise<UpdateAssessmentResponse> => {
-        return httpClient.put('/teacher/assessment', data);
+        return httpClient.put('/teacher/assessment/update', data);
     },
 
     deleteAssessment: async (assessmentId: string): Promise<DeleteAssessmentResponse> => {

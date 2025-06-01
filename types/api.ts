@@ -53,10 +53,10 @@ export interface ItemPembelajaran {
 }
 
 export interface WeeklySection {
-    week_id: number;        // Added week_id
+    week_id: number;
     week_number: number;
     class_id: string;
-    assignment: Assignment | null;  // Can be null
+    assignment: Assignment | null;
     item_pembelajaran: ItemPembelajaran;
 }
 
