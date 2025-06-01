@@ -1,5 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { formatDate, readableHash } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import React, { useState } from "react";
@@ -39,6 +40,13 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
     const theme = useColorScheme() || "light";
     const [isExpanded, setIsExpanded] = useState(false);
     const [animation] = useState(new Animated.Value(0));
+    const [imageError, setImageError] = useState(false);
+
+    const handleImageError = () => {
+        setImageError(true);
+    };
+
+    const shouldShowImage = user_profile_url && !imageError;
 
     const handleDownloadSubmission = async () => {
         if (file_url) {
@@ -55,20 +63,10 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
         }
     };
 
-    const formatSubmittedDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
     const toggleExpanded = () => {
         const toValue = isExpanded ? 0 : 1;
         setIsExpanded(!isExpanded);
-        
+
         Animated.timing(animation, {
             toValue,
             duration: 300,
@@ -115,13 +113,29 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                 <View style={styles.mainContent}>
                     {/* User Info */}
                     <View style={styles.userInfoContainer}>
-                        <Image
-                            source={{ uri: user_profile_url }}
-                            style={styles.profileImage}
-                        />
+                        <View style={styles.avatarContainer}>
+                            {shouldShowImage ? (
+                                <Image
+                                    source={{
+                                        uri: user_profile_url,
+                                        cache: 'reload'
+                                    }}
+                                    style={styles.profileImage}
+                                    onError={handleImageError}
+                                />
+                            ) : (
+                                <View style={[styles.avatarPlaceholder, { backgroundColor: Colors[theme].tint + '20' }]}>
+                                    <Ionicons
+                                        name="person-outline"
+                                        size={20}
+                                        color={Colors[theme].text}
+                                    />
+                                </View>
+                            )}
+                        </View>
                         <View style={styles.textContainer}>
                             <ThemedText type="defaultSemiBold">{user_name}</ThemedText>
-                            <ThemedText style={{ opacity: 0.7, fontSize: 12 }}>{user_id}</ThemedText>
+                            <ThemedText style={{ opacity: 0.7, fontSize: 12 }}>{readableHash(user_id, "STU")}</ThemedText>
                         </View>
                     </View>
 
@@ -138,9 +152,9 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                                 {status === "submitted" ? "Submitted" : "Pending"}
                             </ThemedText>
                         </View>
-                        
+
                         {status === "submitted" && (
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 onPress={toggleExpanded}
                                 style={styles.chevronButton}
                             >
@@ -166,17 +180,17 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                                     {score}/100
                                 </ThemedText>
                             </View>
-                            
+
                             {submitted_at && (
                                 <View style={styles.detailRow}>
                                     <ThemedText style={styles.detailLabel}>Submitted:</ThemedText>
                                     <ThemedText style={styles.detailValue}>
-                                        {formatSubmittedDate(submitted_at)}
+                                        {formatDate(submitted_at)}
                                     </ThemedText>
                                 </View>
                             )}
                             {file_name && (
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     onPress={handleDownloadSubmission}
                                     style={styles.downloadButton}
                                 >
@@ -185,7 +199,7 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                                         size={16}
                                         color={Colors[theme].tint}
                                     />
-                                    <ThemedText 
+                                    <ThemedText
                                         style={[styles.fileName, { color: Colors[theme].tint }]}
                                         numberOfLines={1}
                                     >
@@ -240,11 +254,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flex: 1,
     },
+    avatarContainer: {
+        marginRight: 12,
+    },
     profileImage: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        marginRight: 12,
+    },
+    avatarPlaceholder: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     textContainer: {
         justifyContent: 'center',

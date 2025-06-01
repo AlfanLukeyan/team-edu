@@ -156,10 +156,7 @@ export function WeeklyCard({
                             title={assignment.title}
                             dueDate={assignment.dueDate}
                             onPress={() => {
-                                router.push({
-                                    pathname: "/(assignment)/(tabs)",
-                                    params: { id: assignment.id },
-                                });
+                                router.push(`/(assignment)/${assignment.id}/(tabs)`);
                             }}
                         />
                     </View>

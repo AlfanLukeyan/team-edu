@@ -206,6 +206,29 @@ export interface ChoiceResponseData {
     question_id: string;
 }
 
+export interface Assignment {
+    assignment_id: number;
+    title: string;
+    description: string;
+    deadline: string;
+    file_name: string;
+    file_id: string;
+    file_url: string;
+}
+
+export interface AssignmentSubmission {
+    id_submission: string | null;
+    user_user_id: string;
+    username: string;
+    photo_url: string;
+    status: 'submitted' | 'todo';
+    link_file: string | null;
+    filename: string | null;
+    score: number;
+    created_at: string | null;
+    updated_at: string | null;
+}
+
 export type UpcomingAssessmentsResponse = ApiResponse<ClassAssessment[]>;
 export type ClassResponse = ApiResponse<Class[]>;
 export type ClassInfoResponse = ApiResponse<ClassInfo>;
@@ -220,3 +243,5 @@ export type UpdateAssessmentResponse = ApiResponse<AssessmentCrudResponseData>;
 export type DeleteAssessmentResponse = ApiResponse<string>;
 export type CreateQuestionsResponse = ApiResponse<QuestionResponseData[]>;
 export type UpdateQuestionResponse = ApiResponse<QuestionResponseData>;
+export type AssignmentDetailsResponse = ApiResponse<Assignment>;
+export type AssignmentSubmissionsResponse = ApiResponse<AssignmentSubmission[]>;
