@@ -5,13 +5,17 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useAssignment } from "@/contexts/AssignmentContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Assignment, StudentAssignment } from "@/types/api";
 import { formatDateTime } from "@/utils/utils";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 export default function AboutAssignmentScreen() {
     const theme = useColorScheme() ?? 'light';
     const { assignmentInfo, loading, error, refetchAssignmentInfo } = useAssignment();
+    const { isStudent } = useUserRole();
 
     const handleRefresh = useCallback(async () => {
         await refetchAssignmentInfo();
@@ -20,6 +24,19 @@ export default function AboutAssignmentScreen() {
     useEffect(() => {
         refetchAssignmentInfo();
     }, [refetchAssignmentInfo]);
+
+    const getStatusInfo = (status: string) => {
+        switch (status) {
+            case 'submitted':
+                return { color: '#4CAF50', text: 'Submitted', icon: 'checkmark-circle' as const };
+            case 'in_progress':
+                return { color: '#FF9800', text: 'In Progress', icon: 'time' as const };
+            case 'todo':
+                return { color: '#F44336', text: 'Not Started', icon: 'alert-circle' as const };
+            default:
+                return { color: '#9E9E9E', text: 'Unknown', icon: 'help-circle' as const };
+        }
+    };
 
     if (loading) {
         return (
@@ -47,6 +64,27 @@ export default function AboutAssignmentScreen() {
     }
 
     const dueDateInfo = formatDateTime(assignmentInfo.deadline);
+    const studentAssignment = isStudent() ? assignmentInfo as StudentAssignment : null;
+    const teacherAssignment = !isStudent() ? assignmentInfo as Assignment : null;
+    const statusInfo = studentAssignment ? getStatusInfo(studentAssignment.status) : null;
+
+    // Get assignment file info based on user role
+    const getAssignmentFileInfo = () => {
+        if (studentAssignment) {
+            return {
+                url: studentAssignment.file_link_assignment,
+                name: studentAssignment.file_name
+            };
+        } else if (teacherAssignment) {
+            return {
+                url: teacherAssignment.file_url,
+                name: teacherAssignment.file_name
+            };
+        }
+        return { url: null, name: null };
+    };
+
+    const assignmentFileInfo = getAssignmentFileInfo();
 
     return (
         <ThemedView style={styles.container}>
@@ -65,27 +103,61 @@ export default function AboutAssignmentScreen() {
                 <View style={styles.content}>
                     <ThemedText type="title">{assignmentInfo.title}</ThemedText>
 
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    {statusInfo && (
+                        <View style={styles.statusContainer}>
+                            <Ionicons
+                                name={statusInfo.icon}
+                                size={16}
+                                color={statusInfo.color}
+                            />
+                            <ThemedText style={[styles.statusText, { color: statusInfo.color }]}>
+                                {statusInfo.text}
+                            </ThemedText>
+                            {studentAssignment?.score !== undefined && studentAssignment.score > 0 && (
+                                <ThemedText style={styles.scoreText}>
+                                    • Score: {studentAssignment.score}
+                                </ThemedText>
+                            )}
+                        </View>
+                    )}
+
+                    <View style={styles.dueDateContainer}>
                         <IconSymbol
                             name="calendar.badge.checkmark"
                             size={20}
                             color={Colors[theme].icon}
                         />
-                        <ThemedText style={{ paddingLeft: 8, fontSize: 14 }} type="defaultSemiBold">
+                        <ThemedText style={styles.dueDateLabel} type="defaultSemiBold">
                             Due Date
                         </ThemedText>
-                        <ThemedText>{dueDateInfo.date} at {dueDateInfo.time}</ThemedText>
+                        <ThemedText style={styles.dueDateText}>
+                            {dueDateInfo.date} at {dueDateInfo.time}
+                        </ThemedText>
                     </View>
 
                     <ThemedText type="default">
                         {assignmentInfo.description}
                     </ThemedText>
 
-                    {assignmentInfo.file_url && (
+                    {/* Assignment File */}
+                    {assignmentFileInfo.url && (
                         <AttachmentCard
-                            name={assignmentInfo.file_name}
-                            url={assignmentInfo.file_url}
+                            name={assignmentFileInfo.name || 'Assignment File'}
+                            url={assignmentFileInfo.url}
                         />
+                    )}
+
+                    {/* Student's Submitted File */}
+                    {studentAssignment?.file_link_submission && (
+                        <View style={styles.submissionSection}>
+                            <ThemedText type="defaultSemiBold" style={styles.submissionTitle}>
+                                Your Submission
+                            </ThemedText>
+                            <AttachmentCard
+                                name="Submitted File"
+                                url={studentAssignment.file_link_submission}
+                            />
+                        </View>
                     )}
                 </View>
             </ScrollView>
@@ -109,5 +181,40 @@ const styles = StyleSheet.create({
     },
     content: {
         gap: 14,
+    },
+    statusContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginTop: -8,
+    },
+    statusText: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    scoreText: {
+        fontSize: 14,
+        fontWeight: '500',
+        opacity: 0.8,
+    },
+    dueDateContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+    dueDateLabel: {
+        fontSize: 14,
+    },
+    dueDateText: {
+        fontSize: 14,
+        flex: 1,
+    },
+    submissionSection: {
+        marginTop: 8,
+        gap: 8,
+    },
+    submissionTitle: {
+        fontSize: 16,
+        marginBottom: 4,
     },
 });

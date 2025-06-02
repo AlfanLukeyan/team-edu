@@ -9,7 +9,10 @@ import {
     CreateChoiceItem,
     CreateQuestionItem,
     CreateSubmissionRequest,
-    StudentAssessmentDetails, SubmissionAnswer, SubmitAnswerRequest, SubmitAnswerResponse,
+    StudentAssessmentDetails,
+    SubmissionSessionData,
+    SubmitAnswerRequest,
+    SubmitAnswerResponse,
     SubmitAssessmentResponse,
     UpdateAnswerRequest
 } from '@/types/api';
@@ -39,7 +42,28 @@ class AssessmentService {
         return AssessmentService.instance;
     }
 
-// ✅ Start assessment session
+    async deleteSubmission(submissionId: string): Promise<{ status: string; message: string }> {
+        try {
+            const response = await assessmentApi.deleteSubmission(submissionId);
+            return response;
+        } catch (error) {
+            console.error('Failed to delete submission:', error);
+            throw error;
+        }
+    }
+
+    async deleteMultipleSubmissions(submissionIds: string[]): Promise<void> {
+        try {
+            await Promise.all(
+                submissionIds.map(id => this.deleteSubmission(id))
+            );
+        } catch (error) {
+            console.error('Failed to delete multiple submissions:', error);
+            throw error;
+        }
+    }
+
+
     async startAssessmentSession(assessmentId: string): Promise<AssessmentSessionResponse> {
         try {
             const userId = tokenService.getUserId();
@@ -60,13 +84,12 @@ class AssessmentService {
         }
     }
 
-    // ✅ Get submission answers for continue assessment
-    async getSubmissionAnswers(submissionId: string): Promise<SubmissionAnswer[]> {
+    async getSubmissionSession(submissionId: string): Promise<SubmissionSessionData> {
         try {
-            const response = await assessmentApi.getSubmissionAnswers(submissionId);
+            const response = await assessmentApi.getSubmissionSession(submissionId);
             return response.data;
         } catch (error) {
-            console.error('Failed to get submission answers:', error);
+            console.error('Failed to get submission session:', error);
             throw error;
         }
     }
@@ -87,7 +110,6 @@ class AssessmentService {
         }
     }
 
-    // ✅ Update existing answer
     async updateAnswer(answerId: string, submissionId: string, questionId: string, choiceId: string): Promise<void> {
         try {
             const payload: UpdateAnswerRequest = {
@@ -104,7 +126,6 @@ class AssessmentService {
         }
     }
 
-    // ✅ Submit final assessment
     async submitAssessment(submissionId: string): Promise<SubmitAssessmentResponse> {
         try {
             const response = await assessmentApi.submitAssessment(submissionId);
@@ -189,7 +210,6 @@ class AssessmentService {
         }
     }
 
-    // ✅ Rest of the methods remain the same...
     async createAssessment(classId: string, data: AssessmentFormData): Promise<{ status: string; message: string; data: any }> {
         try {
             const payload = {

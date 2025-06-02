@@ -1,4 +1,5 @@
 import { AnimatedTabBar } from '@/components/AnimatedTabBar';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
     createMaterialTopTabNavigator,
     MaterialTopTabNavigationEventMap,
@@ -17,24 +18,40 @@ export const MaterialTopTabs = withLayoutContext<
     MaterialTopTabNavigationEventMap
 >(Navigator);
 
-const tabs = [
+const allTabs = [
     { name: 'index', label: 'About', icon: 'information-circle-outline' },
     { name: 'submissions', label: 'Submissions', icon: 'document-text-outline' },
     { name: 'completed', label: 'Completed', icon: 'checkmark-done-outline' },
     { name: 'uncompleted', label: 'Uncompleted', icon: 'close-circle-outline' },
 ];
 
+const studentTabs = [
+    { name: 'index', label: 'About', icon: 'information-circle-outline' },
+];
+
 export default function AssignmentTabsLayout() {
+    const { isStudent } = useUserRole();
+    const tabs = isStudent() ? studentTabs : allTabs;
+
     return (
         <MaterialTopTabs
             initialRouteName="index"
-            screenOptions={{ swipeEnabled: true }}
+            screenOptions={{ 
+                swipeEnabled: !isStudent(),
+                lazy: true,
+            }}
             tabBar={(props) => <AnimatedTabBar {...props} tabs={tabs} />}
         >
-            <MaterialTopTabs.Screen name="index" options={{ title: 'About' }} />
-            <MaterialTopTabs.Screen name="submissions" options={{ title: 'Submissions' }} />
-            <MaterialTopTabs.Screen name="completed" options={{ title: 'Completed' }} />
-            <MaterialTopTabs.Screen name="uncompleted" options={{ title: 'Uncompleted' }} />
+            {tabs.map((tab) => (
+                <MaterialTopTabs.Screen
+                    key={tab.name}
+                    name={tab.name as any}
+                    options={{
+                        title: tab.label,
+                        lazy: tab.name !== 'index',
+                    }}
+                />
+            ))}
         </MaterialTopTabs>
     );
 }

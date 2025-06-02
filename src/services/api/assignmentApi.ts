@@ -3,14 +3,21 @@ import {
     AssignmentSubmissionsResponse,
     CreateAssignmentResponse,
     DeleteAssignmentResponse,
+    StudentAssignmentDetailsResponse,
     UpdateAssignmentResponse,
 } from '@/types/api';
 import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
+import { tokenService } from '../tokenService';
 
 export const assignmentApi = {
     getAssignmentDetails: async (assignmentId: string): Promise<AssignmentDetailsResponse> => {
         return httpClient.get(`/teacher/kelas/assignment/?assignment_id=${assignmentId}`);
+    },
+
+    getStudentAssignmentDetails: async (assignmentId: string, userId?: string): Promise<StudentAssignmentDetailsResponse> => {
+        const finalUserId = userId || tokenService.getUserId();
+        return httpClient.get(`/student/kelas/assignment/?assignment_id=${assignmentId}&user_id=${finalUserId}`);
     },
 
     getAssignmentSubmissions: async (

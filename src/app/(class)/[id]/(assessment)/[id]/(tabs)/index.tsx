@@ -28,7 +28,37 @@ export default function AboutAssessmentScreen() {
         await refetchAssessmentInfo();
     }, [refetchAssessmentInfo]);
 
+    const isAssessmentStarted = useCallback(() => {
+        if (!assessmentInfo?.start_time) return false;
+        const startTime = new Date(assessmentInfo.start_time);
+        const currentTime = new Date();
+        return currentTime >= startTime;
+    }, [assessmentInfo?.start_time]);
+
+    const isAssessmentEnded = useCallback(() => {
+        if (!assessmentInfo?.end_time) return false;
+        const endTime = new Date(assessmentInfo.end_time);
+        const currentTime = new Date();
+        return currentTime > endTime;
+    }, [assessmentInfo?.end_time]);
+
+    const getTimeUntilStart = useCallback(() => {
+        if (!assessmentInfo?.start_time) return 0;
+        const startTime = new Date(assessmentInfo.start_time);
+        const currentTime = new Date();
+        const timeDiff = startTime.getTime() - currentTime.getTime();
+        return Math.max(0, Math.floor(timeDiff / 1000)); // Return seconds
+    }, [assessmentInfo?.start_time]);
+
     const getStatusInfo = (status: string) => {
+        if (isStudent() && !isAssessmentStarted()) {
+            return { color: '#9E9E9E', text: 'Not Started Yet', icon: 'time' as const };
+        }
+        
+        if (isStudent() && isAssessmentEnded()) {
+            return { color: '#9E9E9E', text: 'Ended', icon: 'ban' as const };
+        }
+
         switch (status) {
             case 'submitted':
                 return { color: '#4CAF50', text: 'Completed', icon: 'checkmark-circle' as const };
@@ -43,6 +73,14 @@ export default function AboutAssessmentScreen() {
 
     const getButtonText = () => {
         if (isStudent() && assessmentInfo?.submission_status) {
+            if (!isAssessmentStarted()) {
+                return 'Not Available';
+            }
+            
+            if (isAssessmentEnded()) {
+                return 'Assessment Ended';
+            }
+
             switch (assessmentInfo.submission_status) {
                 case 'submitted':
                     return 'View Results';
@@ -57,10 +95,43 @@ export default function AboutAssessmentScreen() {
     };
 
     const getButtonDescription = () => {
-        if (isStudent() && assessmentInfo?.submission_status === 'submitted') {
-            return `Assessment completed. Score: ${assessmentInfo.score || 0}/${assessmentInfo.max_score || 100}`;
+        if (isStudent()) {
+            if (!isAssessmentStarted()) {
+                const timeUntilStart = getTimeUntilStart();
+                const hours = Math.floor(timeUntilStart / 3600);
+                const minutes = Math.floor((timeUntilStart % 3600) / 60);
+                
+                if (hours > 0) {
+                    return `Assessment will be available in ${hours}h ${minutes}m`;
+                } else if (minutes > 0) {
+                    return `Assessment will be available in ${minutes} minutes`;
+                } else if (timeUntilStart > 0) {
+                    return `Assessment will be available in less than a minute`;
+                } else {
+                    return "Assessment is starting...";
+                }
+            }
+
+            if (isAssessmentEnded()) {
+                return "Assessment period has ended";
+            }
+
+            if (assessmentInfo?.submission_status === 'submitted') {
+                return `Assessment completed. Score: ${assessmentInfo.score || 0}/${assessmentInfo.max_score || 100}`;
+            }
         }
+        
         return "Please ensure that you are prepared to take the assessment.";
+    };
+
+    const isButtonDisabled = () => {
+        if (!isStudent()) return false;
+        
+        return (
+            !isAssessmentStarted() || // Not started yet
+            isAssessmentEnded() || // Already ended
+            assessmentInfo?.submission_status === 'submitted' // Already submitted
+        );
     };
 
     if (loading) {
@@ -128,6 +199,19 @@ export default function AboutAssessmentScreen() {
                         </View>
                     )}
 
+                    {isStudent() && !isAssessmentStarted() && !isAssessmentEnded() && (
+                        <View style={styles.countdownContainer}>
+                            <Ionicons
+                                name="hourglass-outline"
+                                size={20}
+                                color={Colors[theme].tint}
+                            />
+                            <ThemedText style={[styles.countdownText, { color: Colors[theme].tint }]}>
+                                Assessment starts on {startDateTime.date} at {startDateTime.time}
+                            </ThemedText>
+                        </View>
+                    )}
+
                     <View style={styles.cardsRow}>
                         <DueDateCard
                             startTime={startDateTime.time}
@@ -155,17 +239,30 @@ export default function AboutAssessmentScreen() {
                     <DurationCard
                         duration={assessmentInfo.duration}
                     />
-                    <TimeRemainingCard
-                        timeRemaining={durationInSeconds}
-                    />
+                    
+                    {isStudent() && !isAssessmentStarted() ? (
+                        <TimeRemainingCard
+                            timeRemaining={getTimeUntilStart()}
+                            label="Time until start"
+                        />
+                    ) : (
+                        <TimeRemainingCard
+                            timeRemaining={assessmentInfo.time_remaining || durationInSeconds}
+                        />
+                    )}
 
                     {isStudent() && (
                         <ButtonWithDescription
                             onPress={() => {
-                                router.push(`/(class)/${classId}/(assessment)/${assessmentInfo.id}/session`);
+                                if (!isButtonDisabled()) {
+                                    router.push(`/(class)/${classId}/(assessment)/${assessmentInfo.id}/session`);
+                                }
                             }}
                             description={getButtonDescription()}
-                            disabled={assessmentInfo.submission_status === 'submitted'}
+                            disabled={isButtonDisabled()}
+                            style={[
+                                isButtonDisabled() && styles.disabledButton
+                            ]}
                         >
                             {getButtonText()}
                         </ButtonWithDescription>
@@ -210,5 +307,24 @@ const styles = StyleSheet.create({
     statusText: {
         fontSize: 14,
         fontWeight: '500',
+    },
+    countdownContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        backgroundColor: 'rgba(0, 122, 255, 0.1)',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        marginTop: 4,
+    },
+    countdownText: {
+        fontSize: 14,
+        fontWeight: '500',
+        textAlign: 'center',
+    },
+    disabledButton: {
+        opacity: 0.6,
     },
 });

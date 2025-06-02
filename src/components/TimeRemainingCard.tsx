@@ -5,10 +5,12 @@ import { ThemedView } from "./ThemedView";
 
 interface TimeRemainingCardProps {
     timeRemaining: number;
+    label?: string; // ✅ Added optional label prop
 }
 
 export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
     timeRemaining,
+    label = "Time Remaining", // ✅ Default to "Time Remaining"
 }) => {
     const theme = useColorScheme() || "light";
 
@@ -18,9 +20,9 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
 
     return (
         <ThemedView isCard={true} style={styles.container}>
-            {/* ✅ Added header */}
+            {/* ✅ Use dynamic label */}
             <ThemedText type="subtitle" style={styles.header}>
-                Time Remaining
+                {label}
             </ThemedText>
 
             <View style={styles.timeContainer}>
