@@ -356,6 +356,19 @@ export interface SubmittedAnswer {
     created_at: string;
 }
 
+export interface StudentAssignment {
+    assignment_id: number;
+    deadline: string;
+    description: string;
+    file_link_assignment: string;
+    file_link_submission: string | null;
+    file_name: string;
+    score: number;
+    status: 'todo' | 'submitted' | 'in_progress';
+    title: string;
+}
+
+
 // ✅ Type aliases
 export type AssessmentData = Assessment | StudentAssessment;
 
@@ -387,3 +400,5 @@ export type SubmitAnswerApiResponse = ApiResponse<SubmitAnswerResponse>;
 export type SubmitAssessmentApiResponse = ApiResponse<SubmitAssessmentResponse>;
 export type UpdateAnswerResponse = ApiResponse<any>;
 export type GetSubmissionSessionResponse = ApiResponse<SubmissionSessionData>;
+
+export type StudentAssignmentDetailsResponse = ApiResponse<StudentAssignment>;

@@ -1,6 +1,7 @@
-import { Assignment, AssignmentSubmission, CreateAssignmentData, UpdateAssignmentData } from '@/types/api';
+import { Assignment, AssignmentSubmission, CreateAssignmentData, StudentAssignment, UpdateAssignmentData } from '@/types/api';
 import { AssignmentFormData } from '@/types/common';
 import { assignmentApi } from './api/assignmentApi';
+import { tokenService } from './tokenService';
 
 class AssignmentService {
     private static instance: AssignmentService;
@@ -12,12 +13,27 @@ class AssignmentService {
         return AssignmentService.instance;
     }
 
-    async getAssignmentDetails(assignmentId: string): Promise<Assignment> {
+    async getAssignmentDetails(assignmentId: string, userId?: string): Promise<Assignment | StudentAssignment> {
         try {
-            const response = await assignmentApi.getAssignmentDetails(assignmentId);
-            return response.data;
+            if (tokenService.isStudent()) {
+                const response = await assignmentApi.getStudentAssignmentDetails(assignmentId, userId);
+                return response.data;
+            } else {
+                const response = await assignmentApi.getAssignmentDetails(assignmentId);
+                return response.data;
+            }
         } catch (error) {
             console.error('Failed to fetch assignment details:', error);
+            throw error;
+        }
+    }
+
+    async getStudentAssignmentDetails(assignmentId: string, userId?: string): Promise<StudentAssignment> {
+        try {
+            const response = await assignmentApi.getStudentAssignmentDetails(assignmentId, userId);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch student assignment details:', error);
             throw error;
         }
     }

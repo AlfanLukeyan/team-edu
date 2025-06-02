@@ -1,10 +1,10 @@
 import { assignmentService } from '@/services/assignmentService';
-import { Assignment, AssignmentSubmission } from '@/types/api';
+import { Assignment, AssignmentSubmission, StudentAssignment } from '@/types/api';
 import React, { createContext, ReactNode, useCallback, useContext, useState } from 'react';
 
 interface AssignmentContextType {
     assignmentId: string | null;
-    assignmentInfo: Assignment | null;
+    assignmentInfo: Assignment | StudentAssignment | null;
     submissions: AssignmentSubmission[];
     submittedSubmissions: AssignmentSubmission[];
     todoSubmissions: AssignmentSubmission[];
@@ -24,7 +24,7 @@ interface AssignmentProviderProps {
 
 export const AssignmentProvider: React.FC<AssignmentProviderProps> = ({ children }) => {
     const [assignmentId, setAssignmentIdState] = useState<string | null>(null);
-    const [assignmentInfo, setAssignmentInfo] = useState<Assignment | null>(null);
+    const [assignmentInfo, setAssignmentInfo] = useState<Assignment | StudentAssignment | null>(null);
     const [submissions, setSubmissions] = useState<AssignmentSubmission[]>([]);
     const [submittedSubmissions, setSubmittedSubmissions] = useState<AssignmentSubmission[]>([]);
     const [todoSubmissions, setTodoSubmissions] = useState<AssignmentSubmission[]>([]);
