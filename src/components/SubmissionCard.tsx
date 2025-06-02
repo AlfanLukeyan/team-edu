@@ -17,6 +17,7 @@ interface SubmissionCardProps {
     score?: number;
     total_score?: number;
     isSelected?: boolean;
+    disabled?: boolean;
     onLongPress?: (id: string) => void;
     onPress?: (id: string) => void;
     onDelete?: (id: string) => void;
@@ -32,6 +33,7 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
     score,
     total_score,
     isSelected = false,
+    disabled = false,
     onLongPress,
     onPress,
     onDelete
@@ -46,11 +48,15 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
     const shouldShowImage = user_profile_url && !imageError;
 
     const handlePress = () => {
+        if (disabled) return; // Don't handle press if disabled
+        console.log(`SubmissionCard pressed: ${id}`);
         onPress?.(id);
     };
 
     const handleLongPress = () => {
+        if (disabled) return; // Don't handle long press if disabled
         onLongPress?.(id);
+        console.log(`SubmissionCard long pressed: ${id}`);
     };
 
     return (
@@ -58,7 +64,8 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
             onPress={handlePress}
             onLongPress={handleLongPress}
             delayLongPress={500}
-            activeOpacity={0.7}
+            activeOpacity={disabled ? 1 : 0.7} // Don't change opacity if disabled
+            disabled={disabled} // Disable touch if disabled
             style={{ opacity: isSelected ? 0.8 : 1 }}
         >
             <ThemedView

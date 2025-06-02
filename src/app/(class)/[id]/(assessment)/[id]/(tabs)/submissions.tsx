@@ -4,28 +4,27 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
-import { useHeader } from "@/contexts/HeaderContext"; // ✅ Add this import
+import { useHeader } from "@/contexts/HeaderContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { assessmentService } from "@/services/assessmentService";
+import { ModalEmitter } from "@/services/modalEmitter";
 import { AssessmentSubmission } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 export default function SubmissionsScreen() {
 
-    const { isStudent } = useUserRole(); // ✅ Add role check
-    const router = useRouter(); // ✅ Add router
+    const { isStudent } = useUserRole();
+    const router = useRouter();
 
-    // ✅ Early return for students - prevent any API calls
     useEffect(() => {
         if (isStudent()) {
-            console.log('🚫 Student accessing questions tab - redirecting');
-            router.replace('../'); // Redirect to about tab
+            router.replace('../');
         }
     }, [isStudent, router]);
-    // ✅ Remove navigation hook and add header context
+
     const { setHeaderConfig, resetHeader } = useHeader();
     const theme = useColorScheme();
     const { assessmentId } = useAssessment();
@@ -43,10 +42,19 @@ export default function SubmissionsScreen() {
         try {
             setError(null);
             const data = await assessmentService.getAssessmentSubmissions(assessmentId);
-            setSubmissions(data);
+            const mappedSubmissions = data.map((item: any) => ({
+                id: item.submission_id,
+                kelas_kelas_id: item.kelas_kelas_id,
+                role: item.role,
+                score: item.score,
+                status: item.status,
+                time_remaining: item.time_remaining,
+                user_user_id: item.user_user_id,
+                username: item.username,
+            }));
+            setSubmissions(mappedSubmissions);
         } catch (err) {
             setError('Failed to load submissions');
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -58,7 +66,14 @@ export default function SubmissionsScreen() {
         setRefreshing(false);
     }, [fetchSubmissions]);
 
-    // ✅ Memoize the header component
+    const canSelectSubmission = useCallback((submission: AssessmentSubmission) => {
+        return submission.id !== null || submission.status === 'in_progress';
+    }, []);
+
+    const selectableSubmissions = useMemo(() => {
+        return submissions.filter(canSelectSubmission);
+    }, [submissions, canSelectSubmission]);
+
     const headerRightComponent = useMemo(() => {
         if (selectedSubmissionIds.length === 0) return null;
 
@@ -84,7 +99,6 @@ export default function SubmissionsScreen() {
         );
     }, [selectedSubmissionIds.length, showActionsMenu, theme]);
 
-    // ✅ Use header context instead of useLayoutEffect
     useEffect(() => {
         if (selectedSubmissionIds.length > 0) {
             setHeaderConfig({
@@ -100,62 +114,95 @@ export default function SubmissionsScreen() {
         fetchSubmissions();
     }, [fetchSubmissions]);
 
-    // ✅ Update useFocusEffect to use header context
     useFocusEffect(
         useCallback(() => {
             return () => {
                 setSelectedSubmissionIds([]);
                 setShowActionsMenu(false);
-                resetHeader(); // ✅ Use resetHeader instead of navigation.setOptions
+                resetHeader();
             };
         }, [resetHeader])
     );
 
-    // ✅ Remove the entire useLayoutEffect block
-
     const handleSelectAllSubmissions = () => {
-        const allSubmissionIds = submissions.filter(s => s.id).map(s => s.id!);
-        setSelectedSubmissionIds(allSubmissionIds);
+        const selectableSubmissionIds = selectableSubmissions
+            .map(s => s.user_user_id);
+        setSelectedSubmissionIds(selectableSubmissionIds);
         setShowActionsMenu(false);
     };
 
-    const handleDeleteSubmissions = () => {
-        const selectedSubmissions = submissions.filter(s => s.id && selectedSubmissionIds.includes(s.id));
-        const submissionNames = selectedSubmissions.map(s => s.username).join(', ');
+const handleDeleteSubmissions = async () => {
+    const selectedSubmissions = submissions.filter(s => 
+        selectedSubmissionIds.includes(s.user_user_id)
+    );
 
-        Alert.alert(
-            "Delete Submissions",
-            `Are you sure you want to delete ${selectedSubmissionIds.length} submission(s) from: ${submissionNames}?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: () => {
-                        setSubmissions(submissions.filter(submission => !submission.id || !selectedSubmissionIds.includes(submission.id)));
-                        setSelectedSubmissionIds([]);
-                        setShowActionsMenu(false);
-                    }
+    ModalEmitter.showAlert({
+        title: "Delete Submissions",
+        message: `Are you sure you want to delete ${selectedSubmissionIds.length} submission(s)?`,
+        confirmText: "Delete",
+        cancelText: "Cancel",
+        type: "danger",
+        onConfirm: async () => {
+            try {
+                ModalEmitter.showLoading("Deleting submissions...");
+
+                const submissionIdsToDelete = selectedSubmissions
+                    .filter(s => s.id !== null)
+                    .map(s => s.id as string);
+
+                if (submissionIdsToDelete.length === 0) {
+                    ModalEmitter.hideLoading();
+                    ModalEmitter.showError("No valid submissions to delete");
+                    return;
                 }
-            ]
-        );
+
+                await assessmentService.deleteMultipleSubmissions(submissionIdsToDelete);
+
+                setSubmissions(submissions.filter(submission => 
+                    !selectedSubmissionIds.includes(submission.user_user_id)
+                ));
+                setSelectedSubmissionIds([]);
+                setShowActionsMenu(false);
+
+                ModalEmitter.hideLoading();
+                ModalEmitter.showSuccess(`Successfully deleted ${submissionIdsToDelete.length} submission(s)`);
+
+                await fetchSubmissions();
+            } catch (error) {
+                ModalEmitter.hideLoading();
+                ModalEmitter.showError("Failed to delete submissions. Please try again.");
+                setSelectedSubmissionIds([]);
+                setShowActionsMenu(false);
+            }
+        },
+        onCancel: () => {
+            setShowActionsMenu(false);
+        }
+    });
+};
+
+    const handleSubmissionLongPress = (user_id: string) => {
+        const submission = submissions.find(s => s.user_user_id === user_id);
+        if (submission && canSelectSubmission(submission)) {
+            setSelectedSubmissionIds([user_id]);
+            setShowActionsMenu(false);
+        }
     };
 
-    const handleSubmissionLongPress = (id: string) => {
-        setSelectedSubmissionIds([id]);
-        setShowActionsMenu(false);
-    };
+    const handleSubmissionPress = (user_id: string) => {
+        const submission = submissions.find(s => s.user_user_id === user_id);
+        if (!submission || !canSelectSubmission(submission)) {
+            return;
+        }
 
-    const handleSubmissionPress = (id: string) => {
         if (selectedSubmissionIds.length > 0) {
-            if (selectedSubmissionIds.includes(id)) {
-                setSelectedSubmissionIds(selectedSubmissionIds.filter(submissionId => submissionId !== id));
+            if (selectedSubmissionIds.includes(user_id)) {
+                setSelectedSubmissionIds(selectedSubmissionIds.filter(id => id !== user_id));
             } else {
-                setSelectedSubmissionIds([...selectedSubmissionIds, id]);
+                setSelectedSubmissionIds([...selectedSubmissionIds, user_id]);
             }
             setShowActionsMenu(false);
         } else {
-
         }
     };
 
@@ -213,27 +260,25 @@ export default function SubmissionsScreen() {
                     </ThemedView>
                 ) : (
                     <View style={styles.submissionsList}>
-                        {submissions.map((item, index) => {
-                            const submissionId = item.id || `${item.user_user_id}-${index}`;
+                        {submissions.map((item) => {
+                            const isSelectable = canSelectSubmission(item);
+                            const isSelected = selectedSubmissionIds.includes(item.user_user_id);
 
                             return (
                                 <SubmissionCard
-                                    key={submissionId}
-                                    id={submissionId}
+                                    key={item.user_user_id}
+                                    id={item.user_user_id}
                                     user_profile_url={`http://20.2.83.17:5002/storage/user_profile_pictures/${item.user_user_id}.jpg`}
                                     user_name={item.username}
                                     user_id={item.user_user_id}
-                                    time_remaining={item.time_remaining ? item.time_remaining : undefined}
+                                    time_remaining={item.time_remaining}
                                     status={item.status}
                                     score={item.score}
                                     total_score={100}
-                                    isSelected={selectedSubmissionIds.includes(submissionId)}
-                                    onLongPress={(id: string) => {
-                                        handleSubmissionLongPress(id);
-                                    }}
-                                    onPress={(id: string) => {
-                                        handleSubmissionPress(id);
-                                    }}
+                                    isSelected={isSelected}
+                                    disabled={!isSelectable}
+                                    onLongPress={handleSubmissionLongPress}
+                                    onPress={handleSubmissionPress}
                                 />
                             );
                         })}

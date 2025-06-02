@@ -33,6 +33,16 @@ export default function AssessmentSessionScreen() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const calculateTimeRemaining = (endedTime: string): number => {
+        const endTime = new Date(endedTime);
+        const currentTime = new Date();
+        const remainingMs = endTime.getTime() - currentTime.getTime();
+        
+        const remainingSeconds = Math.floor(remainingMs / 1000);
+        
+        return Math.max(0, remainingSeconds);
+    };
+
     useEffect(() => {
         const initializeSession = async () => {
             if (!id || !assessmentInfo) return;
@@ -42,29 +52,47 @@ export default function AssessmentSessionScreen() {
                 setError(null);
 
                 if (assessmentInfo.submission_status === 'in_progress' && assessmentInfo.submission_id) {
-                    const questionsResponse = await assessmentService.getAssessmentQuestions(id);
-                    setQuestions(questionsResponse);
+                    const submissionSession = await assessmentService.getSubmissionSession(assessmentInfo.submission_id);
+
+                    const transformedQuestions: AssessmentQuestion[] = submissionSession.questions.map(q => ({
+                        assessment_id: q.assessment_id,
+                        question_id: q.question_id,
+                        question_text: q.question_text,
+                        created_at: q.created_at,
+                        updated_at: q.updated_at,
+                        deleted_at: q.deleted_at,
+                        choice: q.choices
+                    }));
+
+                    setQuestions(transformedQuestions);
 
                     const existingSessionData: AssessmentSessionResponse = {
-                        assessment_id: id,
-                        submission_id: assessmentInfo.submission_id,
-                        user_id: '',
-                        ended_time: '',
-                        question: questionsResponse
+                        assessment_id: submissionSession.assessment_id,
+                        submission_id: submissionSession.submission_id,
+                        user_id: submissionSession.user_id,
+                        ended_time: submissionSession.ended_time,
+                        question: transformedQuestions
                     };
                     setSessionData(existingSessionData);
 
-                    const existingAnswers = await assessmentService.getSubmissionAnswers(assessmentInfo.submission_id);
                     const answersMap: { [key: string]: string } = {};
                     const answerIdsMap: { [key: string]: string } = {};
 
-                    existingAnswers.forEach(answer => {
-                        answersMap[answer.question_id] = answer.choice_id;
-                        answerIdsMap[answer.question_id] = answer.answer_id;
+                    submissionSession.questions.forEach(question => {
+                        if (question.submitted_answers) {
+                            answersMap[question.question_id] = question.submitted_answers.choice_id;
+                            answerIdsMap[question.question_id] = question.submitted_answers.answer_id;
+                        }
                     });
 
                     setSelectedAnswers(answersMap);
                     setAnswerIds(answerIdsMap);
+
+                    const remaining = calculateTimeRemaining(submissionSession.ended_time);
+                    setTimeRemaining(remaining);
+
+                    console.log('✅ Loaded existing answers:', { answersMap, answerIdsMap });
+                    console.log('✅ Time remaining calculated from end_time:', remaining, 'seconds');
 
                 } else {
                     const sessionResponse = await assessmentService.startAssessmentSession(id);
@@ -75,21 +103,19 @@ export default function AssessmentSessionScreen() {
                     } else {
                         throw new Error('No questions found in session response');
                     }
-                }
 
-                if (assessmentInfo.time_remaining) {
-                    setTimeRemaining(assessmentInfo.time_remaining);
-                } else {
-                    const durationInSeconds = assessmentInfo.duration * 60;
-                    setTimeRemaining(durationInSeconds);
+                    const remaining = calculateTimeRemaining(sessionResponse.ended_time);
+                    setTimeRemaining(remaining);
+
+                    console.log('✅ New session started with end time:', sessionResponse.ended_time);
+                    console.log('✅ Time remaining calculated:', remaining, 'seconds');
                 }
 
                 setHasStarted(true);
 
             } catch (error) {
                 setError(
-                    `Failed to start assessment session: ${error instanceof Error ? error.message : String(error)
-                    }`
+                    `Failed to start assessment session: ${error instanceof Error ? error.message : String(error)}`
                 );
             } finally {
                 setLoading(false);
@@ -102,10 +128,15 @@ export default function AssessmentSessionScreen() {
     useEffect(() => {
         if (hasStarted && timeRemaining !== null && timeRemaining > 0) {
             const timer = setTimeout(() => {
-                setTimeRemaining(prev => prev! - 1);
+                setTimeRemaining(prev => {
+                    const newTime = (prev || 0) - 1;
+                    console.log('⏱️ Time remaining:', newTime, 'seconds');
+                    return newTime;
+                });
             }, 1000);
             return () => clearTimeout(timer);
         } else if (hasStarted && timeRemaining === 0) {
+            console.log('⏰ Time is up! Auto-submitting assessment...');
             handleAutoSubmit();
         }
     }, [timeRemaining, hasStarted]);
@@ -194,9 +225,11 @@ export default function AssessmentSessionScreen() {
         if (!sessionData?.submission_id) return;
 
         try {
+            console.log('🚀 Auto-submitting assessment due to time up...');
             await assessmentService.submitAssessment(sessionData.submission_id);
             setShowTimeUpModal(true);
         } catch (error) {
+            console.error('❌ Failed to auto-submit assessment:', error);
             setShowTimeUpModal(true);
         }
     };
@@ -236,12 +269,28 @@ export default function AssessmentSessionScreen() {
                 }
             },
             onCancel: () => {
+                // User cancelled submission
             }
         });
     };
 
     const getSavedCount = () => {
         return Object.keys(selectedAnswers).length;
+    };
+
+    // ✅ Format time remaining for display
+    const formatTimeRemaining = (seconds: number): string => {
+        if (seconds <= 0) return "00:00";
+        
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+        
+        if (hours > 0) {
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
     };
 
     if (loading) {
