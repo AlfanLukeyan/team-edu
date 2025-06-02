@@ -57,7 +57,7 @@ export function WeeklyCard({
 }: WeeklyCardProps) {
     const router = useRouter();
     const theme = useColorScheme() ?? "light";
-    const { hasTeacherPermissions } = useUserRole(); // ✅ Add role check
+    const { hasTeacherPermissions } = useUserRole();
     const screenWidth = Dimensions.get("window").width;
     const videoHeight = screenWidth * 0.5625;
     const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -178,6 +178,7 @@ export function WeeklyCard({
                         <AttachmentCard
                             name={attachment.name}
                             url={attachment.url}
+                            downloadable={true}
                         />
                     </View>
                 )}

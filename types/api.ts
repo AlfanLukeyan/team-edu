@@ -302,10 +302,24 @@ export interface CreateSubmissionRequest {
 
 export interface SubmitAnswerRequest {
     submission_id: string;
-    id_question: string;
-    id_choice: string;
+    question_id: string;
+    choice_id: string;
 }
 
+export interface SubmitAnswerResponse {
+    answer_id: string;
+    choice_choice: string;
+    created_at: string;
+    question_id: string;
+    submission_id: string;
+}
+
+export interface UpdateAnswerRequest {
+    answer_id: string;
+    submission_id: string;
+    question_id: string;
+    choice_id: string;
+}
 export interface SubmitAssessmentResponse {
     submission_id: string;
     user_id: string;
@@ -379,7 +393,7 @@ export type StudentAssessmentDetailsResponse = ApiResponse<StudentAssessmentDeta
 
 // ✅ Assessment Session specific types
 export type AssessmentSessionApiResponse = ApiResponse<AssessmentSessionResponse>;
-export type SubmitAnswerApiResponse = ApiResponse<any>;
+export type SubmitAnswerApiResponse = ApiResponse<SubmitAnswerResponse>;
 export type SubmitAssessmentApiResponse = ApiResponse<SubmitAssessmentResponse>;
 export type GetSubmissionAnswersResponse = ApiResponse<SubmissionAnswer[]>;
 export type UpdateAnswerResponse = ApiResponse<any>;

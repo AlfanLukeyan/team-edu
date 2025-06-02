@@ -9,7 +9,7 @@ import {
     CreateChoiceItem,
     CreateQuestionItem,
     CreateSubmissionRequest,
-    StudentAssessmentDetails, SubmissionAnswer, SubmitAnswerRequest, // ✅ Add this import
+    StudentAssessmentDetails, SubmissionAnswer, SubmitAnswerRequest, SubmitAnswerResponse,
     SubmitAssessmentResponse,
     UpdateAnswerRequest
 } from '@/types/api';
@@ -71,16 +71,16 @@ class AssessmentService {
         }
     }
 
-    // ✅ Submit answer for a question
-    async submitAnswer(submissionId: string, questionId: string, choiceId: string): Promise<void> {
+    async submitAnswer(submissionId: string, questionId: string, choiceId: string): Promise<SubmitAnswerResponse> {
         try {
             const payload: SubmitAnswerRequest = {
                 submission_id: submissionId,
-                id_question: questionId,
-                id_choice: choiceId
+                question_id: questionId,
+                choice_id: choiceId
             };
 
-            await assessmentApi.submitAnswer(payload);
+            const response = await assessmentApi.submitAnswer(payload);
+            return response.data;
         } catch (error) {
             console.error('Failed to submit answer:', error);
             throw error;

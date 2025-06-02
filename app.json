@@ -18,7 +18,11 @@
                 "backgroundColor": "#ffffff"
             },
             "edgeToEdgeEnabled": true,
-            "package": "com.anonymous.teamedu"
+            "package": "com.anonymous.teamedu",
+            "permissions": [
+                "android.permission.READ_EXTERNAL_STORAGE",
+                "android.permission.WRITE_EXTERNAL_STORAGE"
+            ]
         },
         "web": {
             "bundler": "metro",
@@ -43,6 +47,14 @@
                     "cameraPermission": "Allow Team Edu to access your camera",
                     "microphonePermission": "Allow Team Edu to access your microphone",
                     "recordAudioAndroid": true
+                }
+            ],
+            [
+                "expo-media-library",
+                {
+                    "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to save downloaded files.",
+                    "savePhotosPermission": "Allow $(PRODUCT_NAME) to save downloaded files to your photo library.",
+                    "isAccessMediaLocationEnabled": true
                 }
             ]
         ],

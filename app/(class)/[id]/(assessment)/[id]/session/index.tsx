@@ -115,6 +115,7 @@ export default function AssessmentSessionScreen() {
         const existingAnswerId = answerIds[currentQuestion.question_id];
 
         try {
+            // ✅ Optimistically update UI first
             setSelectedAnswers(prev => ({
                 ...prev,
                 [currentQuestion.question_id]: choiceId
@@ -122,21 +123,57 @@ export default function AssessmentSessionScreen() {
 
             if (sessionData?.submission_id) {
                 if (existingAnswerId) {
+                    // ✅ Update existing answer
+                    console.log('🔄 Updating existing answer:', {
+                        answerId: existingAnswerId,
+                        questionId: currentQuestion.question_id,
+                        choiceId
+                    });
+                    
                     await assessmentService.updateAnswer(
                         existingAnswerId,
                         sessionData.submission_id,
                         currentQuestion.question_id,
                         choiceId
                     );
+                    
+                    console.log('✅ Answer updated successfully');
                 } else {
-                    await assessmentService.submitAnswer(
+                    // ✅ Create new answer and store the answer_id
+                    console.log('➕ Creating new answer:', {
+                        submissionId: sessionData.submission_id,
+                        questionId: currentQuestion.question_id,
+                        choiceId
+                    });
+                    
+                    const newAnswer = await assessmentService.submitAnswer(
                         sessionData.submission_id,
                         currentQuestion.question_id,
                         choiceId
                     );
+                    
+                    // ✅ Store the answer_id for future updates
+                    setAnswerIds(prev => ({
+                        ...prev,
+                        [currentQuestion.question_id]: newAnswer.answer_id
+                    }));
+                    
+                    console.log('✅ New answer created:', {
+                        answerId: newAnswer.answer_id,
+                        questionId: currentQuestion.question_id
+                    });
                 }
             }
         } catch (error) {
+            console.error('❌ Failed to save answer:', error);
+            
+            // ✅ Revert optimistic update on error
+            setSelectedAnswers(prev => {
+                const updated = { ...prev };
+                delete updated[currentQuestion.question_id];
+                return updated;
+            });
+            
             ModalEmitter.showError('Failed to save answer. Please try again.');
         }
     };
