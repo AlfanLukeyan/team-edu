@@ -16,7 +16,7 @@ export const authApi = {
             name: 'face_auth.jpg',
         } as any);
 
-        return simplePostFormData('/auth/login-face', formData, false);
+        return simplePostFormData('/auth/login-face', formData, 'POST', false);
     },
 
     crucialVerify: async (faceImage: string) => {
@@ -52,7 +52,7 @@ export const authApi = {
             } as any);
         });
 
-        return simplePostFormData('/user/register', formData, false);
+        return simplePostFormData('/user/register', formData, 'POST', false);
     },
 
     logout: async () => {

@@ -38,6 +38,13 @@ export default function ProfileLayout() {
                     title: "Edit Profile",
                 }} 
             />
+            <Stack.Screen 
+                name="change_face_reference" 
+                options={{ 
+                    headerShown: true,
+                    title: "Change Face Reference",
+                }}
+            />
         </Stack>
     );
 }

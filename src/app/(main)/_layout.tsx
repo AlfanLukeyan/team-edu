@@ -104,6 +104,7 @@ export default function MainLayout() {
 
     const renderTabBar = useCallback(({ navigation, state }: any) => {
         const shouldHideTabBar = pathname.includes('/profile/edit_profile') ||
+            pathname.includes('/profile/change_face_reference') ||
             (pathname.includes('/profile/') && pathname !== '/profile');
 
         if (shouldHideTabBar) return null;

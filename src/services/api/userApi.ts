@@ -27,4 +27,8 @@ export const userApi = {
     updateProfilePicture: async (formData: FormData): Promise<any> => {
         return simplePostFormData('/user/update/profile-picture', formData);
     },
+
+    updateFaceReference: async (formData: FormData): Promise<any> => {
+        return simplePostFormData('/user/update/face-reference', formData, 'POST', true);
+    },
 };

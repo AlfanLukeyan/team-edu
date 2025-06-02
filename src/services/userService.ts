@@ -49,6 +49,24 @@ class UserService {
         }
     }
 
+    async updateFaceReference(faceImages: string[]): Promise<any> {
+        try {
+            const formData = new FormData();
+
+            faceImages.forEach((image, index) => {
+                formData.append('images', {
+                    uri: image,
+                    type: 'image/jpeg',
+                    name: `face_reference_${index + 1}.jpg`,
+                } as any);
+            });
+
+            return await userApi.updateFaceReference(formData);
+        } catch (error) {
+            throw error;
+        }
+    }
+
     getRoleText(roleId?: number): string {
         switch (roleId) {
             case 1: return 'Admin';

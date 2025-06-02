@@ -1,4 +1,4 @@
-import ActionMenu, { ActionMenuItem } from '@/components/ActionMenu';
+import ProfileActionMenu from '@/components/ProfileActionMenu';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
@@ -10,7 +10,7 @@ import { UserProfile } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRouter } from 'expo-router';
 import { useEffect, useLayoutEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
     const { user, logout } = useAuth();
@@ -57,21 +57,17 @@ export default function ProfileScreen() {
     const handleRefresh = () => fetchProfile(true);
 
     const handleLogout = () => {
-        Alert.alert(
-            'Confirm Logout',
-            'Are you sure you want to logout?',
-            [
-                {
-                    text: 'Cancel',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Logout',
-                    style: 'destructive',
-                    onPress: performLogout,
-                },
-            ]
-        );
+        ModalEmitter.showAlert({
+            title: 'Confirm Logout',
+            message: 'Are you sure you want to logout?',
+            confirmText: 'Logout',
+            cancelText: 'Cancel',
+            type: 'warning',
+            onConfirm: performLogout,
+            onCancel: () => {
+                // Optional: Add any cancel logic here
+            }
+        });
     };
 
     const performLogout = async () => {
@@ -84,10 +80,6 @@ export default function ProfileScreen() {
             const message = response?.msg || response?.data?.message || 'Logged out successfully';
             ModalEmitter.hideLoading();
             ModalEmitter.showSuccess(message);
-
-            setTimeout(() => {
-                router.replace('/(auth)/onboarding');
-            }, 1500);
         } catch (error: any) {
             ModalEmitter.hideLoading();
         } finally {
@@ -103,7 +95,7 @@ export default function ProfileScreen() {
     const handleChangeFaceReference = () => {
         console.log('Change face reference pressed');
         setShowActionMenu(false);
-        // TODO: Navigate to face reference screen
+        router.push('/(main)/profile/change_face_reference');
     };
 
     useLayoutEffect(() => {
@@ -130,28 +122,6 @@ export default function ProfileScreen() {
             ),
         });
     }, [navigation, colorScheme, isLoggingOut, showActionMenu]);
-
-    const actionMenuItems: ActionMenuItem[] = [
-        {
-            id: 'edit-profile',
-            title: 'Edit Profile',
-            icon: 'create-outline',
-            onPress: handleEditProfile,
-        },
-        {
-            id: 'change-face-reference',
-            title: 'Change Face Reference',
-            icon: 'camera-outline',
-            onPress: handleChangeFaceReference,
-        },
-        {
-            id: 'logout',
-            title: isLoggingOut ? 'Logging out...' : 'Log Out',
-            icon: 'log-out-outline',
-            onPress: handleLogout,
-            destructive: true,
-        },
-    ];
 
     if (loading) {
         return (
@@ -205,7 +175,7 @@ export default function ProfileScreen() {
                                         uri: `${apiURL}/${userProfile.profile_picture}`,
                                         cache: 'reload',
                                     }}
-                                    
+
                                     style={styles.profileImage}
                                 />
                             ) : (
@@ -273,12 +243,14 @@ export default function ProfileScreen() {
                 )}
             </ScrollView>
 
-            {/* Action Menu */}
-            <ActionMenu
+            {/* Profile Action Menu */}
+            <ProfileActionMenu
                 visible={showActionMenu && !isLoggingOut}
                 onClose={() => setShowActionMenu(false)}
-                items={actionMenuItems}
-                position="top-right"
+                onEditProfile={handleEditProfile}
+                onChangeFaceReference={handleChangeFaceReference}
+                onLogout={handleLogout}
+                isLoggingOut={isLoggingOut}
             />
         </ThemedView>
     );
@@ -390,7 +362,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
     },
-        placeholderImage: {
+    placeholderImage: {
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
