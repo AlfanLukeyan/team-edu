@@ -1,4 +1,4 @@
-import { AssessmentData, Class, ClassInfo, ClassMember, WeeklySection } from '@/types/api';
+import { AdminClass, AssessmentData, Class, ClassInfo, ClassMember, PaginationInfo, WeeklySection } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
 import { classApi } from "./api/classApi";
 import { tokenService } from "./tokenService";
@@ -11,6 +11,23 @@ class ClassService {
             ClassService.instance = new ClassService();
         }
         return ClassService.instance;
+    }
+
+    async getAdminClasses(params?: {
+        search?: string;
+        page?: number;
+        max_page?: number;
+        per_page?: number;
+    }): Promise<{ classes: AdminClass[]; pagination: PaginationInfo }> {
+        try {
+            const response = await classApi.getAdminClasses(params);
+            return {
+                classes: response.data.data,
+                pagination: response.data.pagination
+            };
+        } catch (error) {
+            throw error;
+        }
     }
 
     async getClasses(userID?: string): Promise<Class[]> {

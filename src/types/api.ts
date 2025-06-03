@@ -412,5 +412,27 @@ export type UpdateAnswerResponse = ApiResponse<any>;
 export type GetSubmissionSessionResponse = ApiResponse<SubmissionSessionData>;
 
 export type StudentAssignmentDetailsResponse = ApiResponse<StudentAssignment>;
-
 export type SubmitAssignmentResponse = ApiResponse<AssignmentSubmissionResponse>;
+
+
+export interface AdminClass {
+    id: string;
+    name: string;
+    description: string;
+    teacher: string;
+    teacher_id: string;
+}
+
+export interface PaginationInfo {
+    count: number;
+    max_page: number;
+    page: number;
+    per_page: number;
+}
+
+export interface AdminClassesData {
+    data: AdminClass[];
+    pagination: PaginationInfo;
+}
+
+export type AdminClassesResponse = ApiResponse<AdminClassesData>;

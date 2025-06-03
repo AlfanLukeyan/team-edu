@@ -5,6 +5,23 @@ import { httpClient } from '../httpClient';
 import { tokenService } from '../tokenService';
 
 export const classApi = {
+
+    getAdminClasses: async (params?: {
+        search?: string;
+        page?: number;
+        max_page?: number;
+        per_page?: number;
+    }) => {
+        const queryParams = new URLSearchParams();
+        if (params?.search) queryParams.append('search', params.search);
+        if (params?.page) queryParams.append('page', params.page.toString());
+        if (params?.max_page) queryParams.append('max_page', params.max_page.toString());
+        if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
+
+        const queryString = queryParams.toString();
+        return httpClient.get(`/kelas/admin${queryString ? `?${queryString}` : ''}`);
+    },
+
     getAllClasses: async (userID?: string) => {
         const finalUserID = userID || tokenService.getUserId();
         return httpClient.get(`/public/user/class/?userID=${finalUserID}`);

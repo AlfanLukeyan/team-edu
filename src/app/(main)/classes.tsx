@@ -1,42 +1,62 @@
 import { ClassCard } from "@/components/ClassCard";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useUserRole } from "@/hooks/useUserRole";
 import { classService } from "@/services/classService";
-import { Class } from "@/types/class";
+import { AdminClass, Class, PaginationInfo } from "@/types/api";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, useColorScheme, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, useColorScheme, View } from "react-native";
 
 export default function ClassesScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
+    const { isAdmin } = useUserRole();
 
-    // State management
-    const [classes, setClasses] = useState<Class[]>([]);
+    const [classes, setClasses] = useState<(Class | AdminClass)[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    // Fetch classes function
-    const fetchClasses = async () => {
+    const fetchClasses = async (page: number = 1, append: boolean = false) => {
         try {
             setError(null);
-            const classesData = await classService.getClasses();
-            setClasses(classesData);
+            if (!append) setLoading(true);
+
+            if (isAdmin()) {
+                const { classes: classesData, pagination: paginationData } = await classService.getAdminClasses({
+                    page,
+                    per_page: 10
+                });
+
+                if (append) {
+                    setClasses(prev => [...prev, ...classesData]);
+                } else {
+                    setClasses(classesData);
+                }
+                setPagination(paginationData);
+                setCurrentPage(page);
+            } else {
+                const classesData = await classService.getClasses();
+                setClasses(classesData);
+                setPagination(null);
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     };
 
-    // Refresh classes function
     const refetchClasses = async () => {
         try {
             setRefreshing(true);
-            setError(null);
-            const classesData = await classService.getClasses();
-            setClasses(classesData);
+            setCurrentPage(1);
+            await fetchClasses(1, false);
         } catch (err: any) {
             setError(err.message || 'Failed to refresh classes');
         } finally {
@@ -44,13 +64,54 @@ export default function ClassesScreen() {
         }
     };
 
-    // Load classes on component mount
+    const loadMoreClasses = useCallback(async () => {
+        if (!isAdmin() || !pagination || loadingMore || currentPage >= pagination.max_page) {
+            return;
+        }
+
+        setLoadingMore(true);
+        const nextPage = currentPage + 1;
+        await fetchClasses(nextPage, true);
+    }, [isAdmin, pagination, loadingMore, currentPage]);
+
     useEffect(() => {
         fetchClasses();
     }, []);
 
-    // Loading state
-    if (loading) {
+    const renderClassItem = ({ item }: { item: Class | AdminClass }) => (
+        <ClassCard
+            key={item.id}
+            title={item.name || 'Untitled Class'}
+            classCode={'tag' in item ? item.tag || 'No Code' : 'No Code'}
+            description={item.description || 'No description available'}
+            onPress={() => {
+                router.push(`/(class)/${item.id}/(tabs)`);
+            }}
+        />
+    );
+
+    const renderFooter = () => {
+        if (!loadingMore) return null;
+        return (
+            <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" />
+                <ThemedText style={styles.loadingText}>Loading more classes...</ThemedText>
+            </View>
+        );
+    };
+
+    const renderEmptyState = () => (
+        <ThemedView style={styles.emptyState}>
+            <ThemedText style={styles.emptyText}>
+                No classes found
+            </ThemedText>
+            <ThemedText style={styles.emptySubText}>
+                Pull down to refresh or check back later
+            </ThemedText>
+        </ThemedView>
+    );
+
+    if (loading && classes.length === 0) {
         return (
             <ThemedView style={styles.centered}>
                 <ActivityIndicator size="large" />
@@ -60,13 +121,14 @@ export default function ClassesScreen() {
 
     return (
         <ThemedView style={{ flex: 1 }}>
-            <ScrollView
-                style={{ flex: 1, borderRadius: 15 }}
-                contentContainerStyle={{
-                    paddingHorizontal: 24,
-                    paddingVertical: 16,
-                    flexGrow: 1
-                }}
+            <FlatList
+                data={classes}
+                renderItem={renderClassItem}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={[
+                    styles.container,
+                    classes.length === 0 && { flex: 1 }
+                ]}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
@@ -74,53 +136,26 @@ export default function ClassesScreen() {
                         onRefresh={refetchClasses}
                     />
                 }
-            >
-                {classes.length === 0 ? (
-                    <ThemedView style={styles.emptyState}>
-                        <ThemedText style={styles.emptyText}>
-                            No classes found
-                        </ThemedText>
-                        <ThemedText style={styles.emptySubText}>
-                            Pull down to refresh or check back later
-                        </ThemedText>
-                    </ThemedView>
-                ) : (
-                    <>
-                        {classes.map((classItem) => (
-                            <ClassCard
-                                key={classItem.id}
-                                title={classItem.name || 'Untitled Class'}
-                                classCode={classItem.tag || 'No Code'}
-                                description={classItem.description || 'No description available'}
-                                onPress={() => {
-                                    router.push(`/(class)/${classItem.id}/(tabs)`);
-                                }}
-                            />
-                        ))}
-                        <View style={{ height: 80 }} />
-                    </>
-                )}
-            </ScrollView>
+                onEndReached={isAdmin() ? loadMoreClasses : undefined}
+                onEndReachedThreshold={0.1}
+                ListEmptyComponent={renderEmptyState}
+                ListFooterComponent={renderFooter}
+                ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            />
         </ThemedView>
     );
 }
 
 const styles = StyleSheet.create({
+    container: {
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+    },
     centered: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 24,
-    },
-    errorText: {
-        color: 'red',
-        textAlign: 'center',
-        marginBottom: 16,
-    },
-    retryText: {
-        color: '#007AFF',
-        textAlign: 'center',
-        textDecorationLine: 'underline',
     },
     emptyState: {
         flex: 1,
@@ -138,8 +173,13 @@ const styles = StyleSheet.create({
         opacity: 0.7,
         textAlign: 'center',
     },
-    errorIcon: {
-        marginBottom: 16,
-        opacity: 0.5,
+    footerLoader: {
+        paddingVertical: 16,
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 8,
+        opacity: 0.7,
+        fontSize: 14,
     },
 });
