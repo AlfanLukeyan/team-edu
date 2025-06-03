@@ -1,7 +1,7 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Dimensions, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { ButtonWithDescription } from "@/components/ButtonWithDescription";
@@ -37,6 +37,10 @@ const STEP_INSTRUCTIONS = [
     }
 ];
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
+const isTablet = screenWidth > 768;
+
 export default function ChangeFaceReferenceScreen() {
     const router = useRouter();
     const navigation = useNavigation();
@@ -49,10 +53,12 @@ export default function ChangeFaceReferenceScreen() {
     const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
-        setMaxBrightness();
-        return () => {
-            restoreBrightness();
-        };
+        if (!isWeb) {
+            setMaxBrightness();
+            return () => {
+                restoreBrightness();
+            };
+        }
     }, []);
 
     useEffect(() => {
@@ -63,22 +69,24 @@ export default function ChangeFaceReferenceScreen() {
 
     // Header setup
     useEffect(() => {
-        navigation.setOptions({
-            headerTitle: "Change Face Reference",
-            headerLeft: () => (
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    style={styles.headerButton}
-                    disabled={isUpdating}
-                >
-                    <Ionicons
-                        name="arrow-back"
-                        size={24}
-                        color={Colors[colorScheme ?? 'light'].tint}
-                    />
-                </TouchableOpacity>
-            ),
-        });
+        if (!isWeb) {
+            navigation.setOptions({
+                headerTitle: "Change Face Reference",
+                headerLeft: () => (
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={styles.headerButton}
+                        disabled={isUpdating}
+                    >
+                        <Ionicons
+                            name="arrow-back"
+                            size={24}
+                            color={Colors[colorScheme ?? 'light'].tint}
+                        />
+                    </TouchableOpacity>
+                ),
+            });
+        }
     }, [navigation, colorScheme, isUpdating, router]);
 
     const handleUpdateComplete = useCallback(async () => {
@@ -148,7 +156,7 @@ export default function ChangeFaceReferenceScreen() {
     if (!permission?.granted) {
         return (
             <ThemedView style={styles.container}>
-                <ThemedView style={styles.content}>
+                <View style={[styles.content, isWeb && styles.webContent]}>
                     <ThemedText type="title" style={styles.title}>
                         Camera Permission Required
                     </ThemedText>
@@ -158,11 +166,98 @@ export default function ChangeFaceReferenceScreen() {
                     <Button onPress={requestPermission}>
                         Allow Camera Access
                     </Button>
-                </ThemedView>
+                </View>
             </ThemedView>
         );
     }
 
+    // Current step instruction
+    const currentInstruction = STEP_INSTRUCTIONS[currentStep - 1];
+
+    // Web/Desktop Layout
+    if (isWeb) {
+        return (
+            <ThemedView style={styles.container}>
+                <ScrollView contentContainerStyle={styles.webScrollContainer}>
+                    <View style={styles.webMainContainer}>
+                        <View style={styles.webLeftSection}>
+                            <View style={styles.webHeader}>
+                                <ThemedText type="title" style={styles.webTitle}>
+                                    Change Face Reference
+                                </ThemedText>
+                                <ThemedText style={styles.webSubtitle}>
+                                    Take 3 photos for improved recognition
+                                </ThemedText>
+                            </View>
+
+                            <View style={styles.webProgressSection}>
+                                <RegistrationProgress
+                                    steps={STEP_INSTRUCTIONS}
+                                    currentStep={currentStep}
+                                    completedSteps={capturedPhotos.length}
+                                />
+                            </View>
+
+                            <View style={styles.webInstructionContainer}>
+                                <ThemedText style={styles.webInstruction}>
+                                    Step {currentStep} of {FACE_REFERENCE_CONFIG.TOTAL_STEPS}
+                                </ThemedText>
+                                <ThemedText style={styles.webInstructionDetail}>
+                                    {currentInstruction.desc}
+                                </ThemedText>
+                            </View>
+
+                            <View style={styles.webButtonContainer}>
+                                <ButtonWithDescription
+                                    description={`Capture photo ${currentStep} of ${FACE_REFERENCE_CONFIG.TOTAL_STEPS} for face reference update`}
+                                    onPress={handleTakePicture}
+                                    disabled={isUpdating}
+                                    style={styles.webButton}
+                                >
+                                    {isUpdating ? "Processing..." : "Take Picture"}
+                                </ButtonWithDescription>
+
+                                {capturedPhotos.length > 0 && !isUpdating && (
+                                    <Button
+                                        onPress={resetCapture}
+                                        style={styles.resetButton}
+                                    >
+                                        Start Over
+                                    </Button>
+                                )}
+                            </View>
+                        </View>
+
+                        <View style={styles.webRightSection}>
+                            <View style={styles.webCameraContainer}>
+                                <CameraView
+                                    ref={cameraRef}
+                                    style={styles.webCamera}
+                                    facing="front"
+                                    ratio="1:1"
+                                    pictureSize='1088x1088'
+                                    autofocus="on"
+                                />
+                                <View style={styles.overlay}>
+                                    <View style={styles.faceOutline} />
+                                </View>
+                                {isUpdating && (
+                                    <View style={styles.processingOverlay}>
+                                        <ActivityIndicator size="large" color="white" />
+                                        <ThemedText style={styles.processingText}>
+                                            Processing...
+                                        </ThemedText>
+                                    </View>
+                                )}
+                            </View>
+                        </View>
+                    </View>
+                </ScrollView>
+            </ThemedView>
+        );
+    }
+
+    // Mobile Layout
     return (
         <ThemedView style={styles.container}>
             {/* Header Info */}
@@ -239,6 +334,10 @@ const styles = StyleSheet.create({
         padding: 20,
         gap: 20,
     },
+    webContent: {
+        maxWidth: 400,
+        alignSelf: 'center',
+    },
     title: {
         textAlign: "center",
     },
@@ -312,5 +411,89 @@ const styles = StyleSheet.create({
     },
     resetButton: {
         marginTop: 10,
+    },
+
+    // Web Styles
+    webScrollContainer: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        minHeight: screenHeight,
+        padding: 20,
+    },
+    webMainContainer: {
+        flexDirection: isTablet ? 'row' : 'column',
+        maxWidth: isTablet ? 1200 : 600,
+        alignSelf: 'center',
+        gap: isTablet ? 40 : 30,
+        alignItems: 'center',
+    },
+    webLeftSection: {
+        flex: isTablet ? 1 : undefined,
+        width: isTablet ? undefined : '100%',
+        maxWidth: isTablet ? undefined : 400,
+        gap: 24,
+    },
+    webRightSection: {
+        flex: isTablet ? 1 : undefined,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    webHeader: {
+        gap: 8,
+    },
+    webTitle: {
+        textAlign: isTablet ? "left" : "center",
+        fontSize: 28,
+    },
+    webSubtitle: {
+        textAlign: isTablet ? "left" : "center",
+        opacity: 0.8,
+        fontSize: 16,
+    },
+    webProgressSection: {
+        width: '100%',
+    },
+    webInstructionContainer: {
+        gap: 8,
+    },
+    webInstruction: {
+        textAlign: isTablet ? "left" : "center",
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    webInstructionDetail: {
+        textAlign: isTablet ? "left" : "center",
+        opacity: 0.7,
+        fontSize: 16,
+    },
+    webButtonContainer: {
+        width: '100%',
+        gap: 12,
+    },
+    webButton: {
+        width: '100%',
+    },
+    webCameraContainer: {
+        width: isTablet ? 350 : Math.min(screenWidth - 40, 350),
+        height: isTablet ? 350 : Math.min(screenWidth - 40, 350),
+        borderRadius: 20,
+        overflow: "hidden",
+        position: "relative",
+        ...Platform.select({
+            web: {
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            },
+            default: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+                elevation: 8,
+            },
+        }),
+    },
+    webCamera: {
+        width: '100%',
+        height: '100%',
     },
 });
