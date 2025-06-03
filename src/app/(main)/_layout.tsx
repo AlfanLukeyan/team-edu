@@ -6,7 +6,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const TAB_WIDTH = (width - 190) / 3;
+
+const TAB_BAR_PADDING = 20;
+const TAB_BAR_WIDTH = Math.min(width - 40, 400);
+const SLIDER_SIZE = 45;
+const TAB_COUNT = 3;
+const AVAILABLE_WIDTH = TAB_BAR_WIDTH - (TAB_BAR_PADDING * 2);
+const TAB_WIDTH = AVAILABLE_WIDTH / TAB_COUNT;
 
 const TAB_CONFIG = {
     animationSpeed: 12,
@@ -33,10 +39,16 @@ export default function MainLayout() {
         new Animated.Value(TAB_CONFIG.inactiveScale),
     ]).current;
 
+    // Calculate slider position based on tab index and center it within each tab
+    const getSliderPosition = useCallback((index: number) => {
+        const tabCenter = (index * TAB_WIDTH) + (TAB_WIDTH / 2);
+        return tabCenter - (SLIDER_SIZE / 2);
+    }, []);
+
     // Extract common animation logic
     const animateToIndex = useCallback((index: number) => {
         Animated.spring(translateX, {
-            toValue: index * TAB_WIDTH,
+            toValue: getSliderPosition(index),
             useNativeDriver: true,
             speed: TAB_CONFIG.animationSpeed,
             bounciness: TAB_CONFIG.bounciness,
@@ -50,14 +62,14 @@ export default function MainLayout() {
                 bounciness: TAB_CONFIG.bounciness,
             }).start();
         });
-    }, [translateX, scaleValues]);
+    }, [translateX, scaleValues, getSliderPosition]);
 
     const initializeAnimations = useCallback(() => {
-        translateX.setValue(0);
+        translateX.setValue(getSliderPosition(0));
         scaleValues.forEach((scale, index) => {
             scale.setValue(index === 0 ? TAB_CONFIG.activeScale : TAB_CONFIG.inactiveScale);
         });
-    }, [translateX, scaleValues]);
+    }, [translateX, scaleValues, getSliderPosition]);
 
     useEffect(() => {
         initializeAnimations();
@@ -122,7 +134,8 @@ export default function MainLayout() {
                 styles.tabBarContainer,
                 {
                     backgroundColor: Colors[colorScheme].background,
-                    shadowColor: Colors[colorScheme].tint
+                    shadowColor: Colors[colorScheme].tint,
+                    width: TAB_BAR_WIDTH,
                 }
             ]}>
                 <Animated.View
@@ -182,7 +195,7 @@ const TabButton = React.memo(({
     getIconName: (routeName: keyof typeof ICON_MAP, isFocused: boolean) => string;
     colorScheme: 'light' | 'dark';
 }) => (
-    <Pressable style={styles.tabButton} onPress={onPress}>
+    <Pressable style={[styles.tabButton, { width: TAB_WIDTH }]} onPress={onPress}>
         <Animated.View
             style={[
                 styles.iconContainer,
@@ -204,33 +217,40 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: Platform.select({ ios: 24, default: 18 }),
         alignSelf: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         alignItems: 'center',
         height: 65,
         borderRadius: 30,
-        padding: 10,
-        elevation: 4,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
+        paddingHorizontal: TAB_BAR_PADDING,
+        ...Platform.select({
+            web: {
+                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+            },
+            default: {
+                elevation: 4,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+            },
+        }),
     },
     tabBar: { display: 'none' },
     slider: {
         position: 'absolute',
-        width: 45,
-        height: 45,
-        borderRadius: 22.5,
-        top: 10,
-        left: 20,
+        width: SLIDER_SIZE,
+        height: SLIDER_SIZE,
+        borderRadius: SLIDER_SIZE / 2,
+        top: (65 - SLIDER_SIZE) / 2,
+        left: TAB_BAR_PADDING,
     },
     tabButton: {
-        width: TAB_WIDTH,
         justifyContent: 'center',
         alignItems: 'center',
+        height: '100%',
     },
     iconContainer: {
-        width: 45,
-        height: 45,
+        width: SLIDER_SIZE,
+        height: SLIDER_SIZE,
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1,
