@@ -1,4 +1,4 @@
-import { Assignment, AssignmentSubmission, CreateAssignmentData, StudentAssignment, UpdateAssignmentData } from '@/types/api';
+import { Assignment, AssignmentSubmission, AssignmentSubmissionResponse, CreateAssignmentData, StudentAssignment, UpdateAssignmentData } from '@/types/api';
 import { AssignmentFormData } from '@/types/common';
 import { assignmentApi } from './api/assignmentApi';
 import { tokenService } from './tokenService';
@@ -6,6 +6,15 @@ import { tokenService } from './tokenService';
 class AssignmentService {
     private static instance: AssignmentService;
 
+    async submitAssignment(assignmentId: string, file: any): Promise<AssignmentSubmissionResponse> {
+        try {
+            const response = await assignmentApi.submitAssignment(assignmentId, file);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to submit assignment:', error);
+            throw error;
+        }
+    }
     static getInstance(): AssignmentService {
         if (!AssignmentService.instance) {
             AssignmentService.instance = new AssignmentService();

@@ -368,11 +368,21 @@ export interface StudentAssignment {
     title: string;
 }
 
+export interface AssignmentSubmissionResponse {
+    id: string;
+    assignment_id: number;
+    user_id: string;
+    id_file: string;
+    score: number;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+}
 
-// ✅ Type aliases
+
 export type AssessmentData = Assessment | StudentAssessment;
 
-// ✅ API Response types
 export type StudentAssessmentResponse = ApiResponse<StudentAssessment[]>;
 export type TeacherAssessmentResponse = ApiResponse<Assessment[]>;
 export type UpcomingAssessmentsResponse = ApiResponse<ClassAssessment[]>;
@@ -402,3 +412,5 @@ export type UpdateAnswerResponse = ApiResponse<any>;
 export type GetSubmissionSessionResponse = ApiResponse<SubmissionSessionData>;
 
 export type StudentAssignmentDetailsResponse = ApiResponse<StudentAssignment>;
+
+export type SubmitAssignmentResponse = ApiResponse<AssignmentSubmissionResponse>;

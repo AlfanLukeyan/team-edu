@@ -1,4 +1,6 @@
 import { AttachmentCard } from "@/components/AttachmentCard";
+import { Button } from "@/components/Button";
+import { FilePicker } from "@/components/FilePicker";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -6,16 +8,21 @@ import { Colors } from "@/constants/Colors";
 import { useAssignment } from "@/contexts/AssignmentContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useUserRole } from "@/hooks/useUserRole";
+import { assignmentService } from "@/services/assignmentService";
+import { ModalEmitter } from "@/services/modalEmitter";
 import { Assignment, StudentAssignment } from "@/types/api";
 import { formatDateTime } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useEffect } from "react";
+import * as DocumentPicker from "expo-document-picker";
+import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 export default function AboutAssignmentScreen() {
     const theme = useColorScheme() ?? 'light';
     const { assignmentInfo, loading, error, refetchAssignmentInfo } = useAssignment();
     const { isStudent } = useUserRole();
+    const [selectedFile, setSelectedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+    const [submitting, setSubmitting] = useState(false);
 
     const handleRefresh = useCallback(async () => {
         await refetchAssignmentInfo();
@@ -35,6 +42,45 @@ export default function AboutAssignmentScreen() {
                 return { color: '#F44336', text: 'Not Started', icon: 'alert-circle' as const };
             default:
                 return { color: '#9E9E9E', text: 'Unknown', icon: 'help-circle' as const };
+        }
+    };
+
+    const handleFileSelected = (file: DocumentPicker.DocumentPickerAsset | null) => {
+        setSelectedFile(file);
+    };
+
+    const handleSubmitAssignment = async () => {
+        if (!selectedFile || !assignmentInfo) {
+            ModalEmitter.showError("Please select a file to submit");
+            return;
+        }
+
+        setSubmitting(true);
+        ModalEmitter.showLoading("Submitting assignment...");
+
+        try {
+            const fileToUpload = {
+                uri: selectedFile.uri,
+                type: selectedFile.mimeType || 'application/octet-stream',
+                name: selectedFile.name,
+            };
+
+            await assignmentService.submitAssignment(
+                assignmentInfo.assignment_id.toString(),
+                fileToUpload
+            );
+
+            ModalEmitter.hideLoading();
+            ModalEmitter.showSuccess("Assignment submitted successfully!");
+
+            // Reset form and refresh data
+            setSelectedFile(null);
+            await refetchAssignmentInfo();
+        } catch (error: any) {
+            ModalEmitter.hideLoading();
+            ModalEmitter.showError(error.message || "Failed to submit assignment");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -68,7 +114,9 @@ export default function AboutAssignmentScreen() {
     const teacherAssignment = !isStudent() ? assignmentInfo as Assignment : null;
     const statusInfo = studentAssignment ? getStatusInfo(studentAssignment.status) : null;
 
-    // Get assignment file info based on user role
+    const isSubmitted = studentAssignment?.status === 'submitted';
+    const hasSubmittedFile = studentAssignment?.file_link_submission;
+
     const getAssignmentFileInfo = () => {
         if (studentAssignment) {
             return {
@@ -139,24 +187,63 @@ export default function AboutAssignmentScreen() {
                         {assignmentInfo.description}
                     </ThemedText>
 
-                    {/* Assignment File */}
                     {assignmentFileInfo.url && (
-                        <AttachmentCard
-                            name={assignmentFileInfo.name || 'Assignment File'}
-                            url={assignmentFileInfo.url}
-                        />
-                    )}
-
-                    {/* Student's Submitted File */}
-                    {studentAssignment?.file_link_submission && (
-                        <View style={styles.submissionSection}>
-                            <ThemedText type="defaultSemiBold" style={styles.submissionTitle}>
-                                Your Submission
+                        <View style={styles.assignmentFileSection}>
+                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+                                Assignment File
                             </ThemedText>
                             <AttachmentCard
-                                name="Submitted File"
-                                url={studentAssignment.file_link_submission}
+                                name={assignmentFileInfo.name || 'Assignment File'}
+                                url={assignmentFileInfo.url}
                             />
+                        </View>
+                    )}
+
+                    {isStudent() && (
+                        <View style={styles.submissionSection}>
+                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+                                Your Submission
+                            </ThemedText>
+
+                            {hasSubmittedFile ? (
+                                <View style={styles.submittedFileContainer}>
+                                    <AttachmentCard
+                                        name="Submitted File"
+                                        url={studentAssignment.file_link_submission!}
+                                    />
+                                    {isSubmitted && (
+                                        <View style={styles.submittedIndicator}>
+                                            <Ionicons
+                                                name="checkmark-circle"
+                                                size={16}
+                                                color="#4CAF50"
+                                            />
+                                            <ThemedText style={[styles.submittedText, { color: '#4CAF50' }]}>
+                                                Successfully submitted
+                                            </ThemedText>
+                                        </View>
+                                    )}
+                                </View>
+                            ) : (
+                                <View style={styles.submissionForm}>
+                                    <FilePicker
+                                        onFileSelected={handleFileSelected}
+                                        selectedFile={selectedFile}
+                                        placeholder="Choose file to submit"
+                                        disabled={submitting}
+                                    />
+
+                                    {selectedFile && (
+                                        <Button
+                                            onPress={handleSubmitAssignment}
+                                            disabled={submitting}
+                                            style={styles.submitButton}
+                                        >
+                                            {submitting ? "Submitting..." : "Submit Assignment"}
+                                        </Button>
+                                    )}
+                                </View>
+                            )}
                         </View>
                     )}
                 </View>
@@ -209,12 +296,33 @@ const styles = StyleSheet.create({
         fontSize: 14,
         flex: 1,
     },
-    submissionSection: {
-        marginTop: 8,
+    assignmentFileSection: {
         gap: 8,
     },
-    submissionTitle: {
+    submissionSection: {
+        marginTop: 8,
+        gap: 12,
+    },
+    sectionTitle: {
         fontSize: 16,
         marginBottom: 4,
+    },
+    submissionForm: {
+        gap: 16,
+    },
+    submitButton: {
+        alignSelf: 'stretch',
+    },
+    submittedFileContainer: {
+        gap: 12,
+    },
+    submittedIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    submittedText: {
+        fontSize: 14,
+        fontWeight: '500',
     },
 });
