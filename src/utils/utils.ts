@@ -120,43 +120,31 @@ export const cleanFileName = (fileName: string): string => {
     }
 };
 
-/**
- * Converts YouTube URLs to embed format for WebView
- * Supports: youtube.com/watch?v=, youtu.be/, and existing embed URLs
- * @param url - YouTube URL in any format
- * @returns Embed URL or empty string if invalid
- */
-export const getYoutubeEmbedUrl = (url: string): string => {
-    if (!url || typeof url !== 'string') return "";
-
-    if (url.includes("youtube.com/embed/")) return url;
-
-    let videoId = "";
-
-    try {
-        if (url.includes("youtube.com/watch?v=")) {
-            videoId = url.split("v=")[1];
-            const ampersandPosition = videoId.indexOf("&");
-            if (ampersandPosition !== -1) {
-                videoId = videoId.substring(0, ampersandPosition);
-            }
-        } else if (url.includes("youtu.be/")) {
-            videoId = url.split("youtu.be/")[1];
-            const questionPosition = videoId.indexOf("?");
-            if (questionPosition !== -1) {
-                videoId = videoId.substring(0, questionPosition);
-            }
-        } else if (url.includes("youtube.com/embed/")) {
-            return url;
+export const getYoutubeVideoId = (url: string): string | null => {
+    if (!url) return null;
+    
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+        /youtube\.com\/v\/([^&\n?#]+)/,
+        /youtube\.com\/embed\/([^&\n?#]+)/,
+        /youtu\.be\/([^&\n?#]+)/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
         }
-
-        return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
-    } catch (error) {
-        console.error('Error parsing YouTube URL:', error);
-        return "";
     }
+    
+    return null;
 };
 
+// Keep your existing getYoutubeEmbedUrl function as fallback
+export const getYoutubeEmbedUrl = (url: string): string => {
+    const videoId = getYoutubeVideoId(url);
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+};
 
 export const calculateDaysRemaining = (endDate: string): number => {
     const end = new Date(endDate);
