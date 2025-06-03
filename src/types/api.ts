@@ -436,3 +436,4 @@ export interface AdminClassesData {
 }
 
 export type AdminClassesResponse = ApiResponse<AdminClassesData>;
+export type DeleteClassResponse = ApiResponse<string>;

@@ -1,4 +1,4 @@
-import { AdminClass, AssessmentData, Class, ClassInfo, ClassMember, PaginationInfo, WeeklySection } from '@/types/api';
+import { AdminClass, AssessmentData, Class, ClassInfo, ClassMember, DeleteClassResponse, PaginationInfo, WeeklySection } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
 import { classApi } from "./api/classApi";
 import { tokenService } from "./tokenService";
@@ -11,6 +11,16 @@ class ClassService {
             ClassService.instance = new ClassService();
         }
         return ClassService.instance;
+    }
+
+
+    async deleteClass(classId: string): Promise<DeleteClassResponse> {
+        try {
+            const response = await classApi.deleteAdminClass(classId);
+            return response;
+        } catch (error) {
+            throw error;
+        }
     }
 
     async getAdminClasses(params?: {

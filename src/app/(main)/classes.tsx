@@ -1,15 +1,17 @@
 import { ClassCard } from "@/components/ClassCard";
+import { SearchBar } from "@/components/SearchBar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useUserRole } from "@/hooks/useUserRole";
 import { classService } from "@/services/classService";
+import { ModalEmitter } from "@/services/modalEmitter";
 import { AdminClass, Class, PaginationInfo } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, TextInput, TouchableOpacity, useColorScheme, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, TouchableOpacity, useColorScheme, View } from "react-native";
 
 export default function ClassesScreen() {
     const router = useRouter();
@@ -24,7 +26,8 @@ export default function ClassesScreen() {
     const [error, setError] = useState<string | null>(null);
     const [pagination, setPagination] = useState<PaginationInfo | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    
+    const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
+
     // Search states
     const [showSearch, setShowSearch] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -88,7 +91,7 @@ export default function ClassesScreen() {
     // Search functionality
     const handleSearch = useCallback(async (query: string) => {
         if (!isAdmin()) return;
-        
+
         setSearchQuery(query);
         setIsSearching(true);
         setCurrentPage(1);
@@ -108,6 +111,80 @@ export default function ClassesScreen() {
         setSearchQuery('');
         handleSearch('');
     }, [handleSearch]);
+
+    // Class actions handlers
+    const handleEditClass = useCallback((classId: string) => {
+        console.log('Edit class:', classId);
+
+        ModalEmitter.showAlert({
+            title: "Edit Class",
+            message: "Edit class functionality will be implemented soon.",
+            type: "info",
+            confirmText: "OK",
+            cancelText: "", // Hide cancel button
+            onConfirm: () => {
+                ModalEmitter.hideAlert();
+            },
+            onCancel: () => {
+                ModalEmitter.hideAlert();
+            }
+        });
+    }, []);
+
+    const handleDeleteClass = useCallback((classId: string) => {
+        const classToDelete = classes.find(cls => cls.id === classId);
+        const className = classToDelete ? classToDelete.name : 'this class';
+
+        ModalEmitter.showAlert({
+            title: "Delete Class",
+            message: `Are you sure you want to delete "${className}"? This action cannot be undone.`,
+            type: "danger",
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            onConfirm: () => {
+                ModalEmitter.hideAlert();
+                confirmDeleteClass(classId);
+            },
+            onCancel: () => {
+                ModalEmitter.hideAlert();
+            }
+        });
+    }, [classes]);
+
+    const confirmDeleteClass = async (classId: string) => {
+        try {
+            setDeletingClassId(classId);
+
+            const response = await classService.deleteClass(classId);
+
+            // Check if deletion was successful
+            if (response.status === 'success') {
+                // Remove the deleted class from the local state
+                setClasses(prev => prev.filter(cls => cls.id !== classId));
+
+                // Update pagination count if available
+                if (pagination) {
+                    setPagination(prev => prev ? {
+                        ...prev,
+                        count: Math.max(0, prev.count - 1)
+                    } : null);
+                }
+
+                ModalEmitter.showSuccess(
+                    response.message || "Class deleted successfully."
+                );
+            } else {
+                throw new Error(response.message || 'Failed to delete class');
+            }
+        } catch (error: any) {
+            console.error('Delete class error:', error);
+            ModalEmitter.showError(
+                error.message || "Failed to delete class. Please try again."
+            );
+        } finally {
+            setDeletingClassId(null);
+        }
+    };
 
     // Set up header right component for search
     useLayoutEffect(() => {
@@ -152,6 +229,12 @@ export default function ClassesScreen() {
             onPress={() => {
                 router.push(`/(class)/${item.id}/(tabs)`);
             }}
+            // Only show actions for admin users
+            showActions={isAdmin()}
+            onEdit={() => handleEditClass(item.id)}
+            onDelete={() => handleDeleteClass(item.id)}
+            // Show loading state for the class being deleted
+            isDeleting={deletingClassId === item.id}
         />
     );
 
@@ -176,56 +259,6 @@ export default function ClassesScreen() {
         </ThemedView>
     );
 
-    const renderSearchHeader = () => {
-        if (!isAdmin() || !showSearch) return null;
-
-        return (
-            <View style={styles.searchContainer}>
-                <View style={[
-                    styles.searchInputContainer,
-                    { 
-                        backgroundColor: Colors[colorScheme ?? 'light'].background,
-                        borderColor: Colors[colorScheme ?? 'light'].border 
-                    }
-                ]}>
-                    <Ionicons
-                        name="search"
-                        size={20}
-                        color={Colors[colorScheme ?? 'light'].icon}
-                        style={styles.searchIcon}
-                    />
-                    <TextInput
-                        style={[
-                            styles.searchInput,
-                            { color: Colors[colorScheme ?? 'light'].text }
-                        ]}
-                        placeholder="Search classes..."
-                        placeholderTextColor={Colors[colorScheme ?? 'light'].icon}
-                        value={searchQuery}
-                        onChangeText={handleSearch}
-                        autoFocus
-                    />
-                    {searchQuery.length > 0 && (
-                        <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-                            <Ionicons
-                                name="close-circle"
-                                size={20}
-                                color={Colors[colorScheme ?? 'light'].icon}
-                            />
-                        </TouchableOpacity>
-                    )}
-                    {isSearching && (
-                        <ActivityIndicator
-                            size="small"
-                            color={Colors[colorScheme ?? 'light'].tint}
-                            style={styles.searchLoader}
-                        />
-                    )}
-                </View>
-            </View>
-        );
-    };
-
     if (loading && classes.length === 0) {
         return (
             <ThemedView style={styles.centered}>
@@ -240,7 +273,16 @@ export default function ClassesScreen() {
                 data={classes}
                 renderItem={renderClassItem}
                 keyExtractor={(item) => item.id}
-                ListHeaderComponent={renderSearchHeader}
+                ListHeaderComponent={
+                    <SearchBar
+                        visible={isAdmin() && showSearch}
+                        value={searchQuery}
+                        onChangeText={handleSearch}
+                        onClear={clearSearch}
+                        placeholder="Search classes..."
+                        loading={isSearching}
+                    />
+                }
                 contentContainerStyle={[
                     styles.container,
                     classes.length === 0 && { flex: 1 }
@@ -305,33 +347,5 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    // Search container styles
-    searchContainer: {
-        paddingHorizontal: 0,
-        paddingBottom: 16,
-    },
-    searchInputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 12,
-        borderWidth: 1,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-    },
-    searchIcon: {
-        marginRight: 8,
-    },
-    searchInput: {
-        flex: 1,
-        fontSize: 16,
-        paddingVertical: 4,
-    },
-    clearButton: {
-        marginLeft: 8,
-        padding: 4,
-    },
-    searchLoader: {
-        marginLeft: 8,
     },
 });

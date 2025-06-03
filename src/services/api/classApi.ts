@@ -1,10 +1,14 @@
-import { AssessmentResponse, ClassInfoResponse, ClassMemberResponse, StudentAssessmentResponse, WeeklySectionResponse } from '@/types/api';
+import { AssessmentResponse, ClassInfoResponse, ClassMemberResponse, DeleteClassResponse, StudentAssessmentResponse, WeeklySectionResponse } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
 import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
 import { tokenService } from '../tokenService';
 
 export const classApi = {
+
+    deleteAdminClass: async (classId: string): Promise<DeleteClassResponse> => {
+        return httpClient.delete(`/kelas/admin/?id=${classId}`);
+    },
 
     getAdminClasses: async (params?: {
         search?: string;
