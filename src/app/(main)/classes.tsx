@@ -1,15 +1,19 @@
 import { ClassCard } from "@/components/ClassCard";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
 import { useUserRole } from "@/hooks/useUserRole";
 import { classService } from "@/services/classService";
 import { AdminClass, Class, PaginationInfo } from "@/types/api";
-import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, useColorScheme, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, TextInput, TouchableOpacity, useColorScheme, View } from "react-native";
 
 export default function ClassesScreen() {
     const router = useRouter();
+    const navigation = useNavigation();
     const colorScheme = useColorScheme();
     const { isAdmin } = useUserRole();
 
@@ -20,8 +24,13 @@ export default function ClassesScreen() {
     const [error, setError] = useState<string | null>(null);
     const [pagination, setPagination] = useState<PaginationInfo | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    
+    // Search states
+    const [showSearch, setShowSearch] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
 
-    const fetchClasses = async (page: number = 1, append: boolean = false) => {
+    const fetchClasses = async (page: number = 1, append: boolean = false, search?: string) => {
         try {
             setError(null);
             if (!append) setLoading(true);
@@ -29,7 +38,8 @@ export default function ClassesScreen() {
             if (isAdmin()) {
                 const { classes: classesData, pagination: paginationData } = await classService.getAdminClasses({
                     page,
-                    per_page: 10
+                    per_page: 10,
+                    search: search || undefined
                 });
 
                 if (append) {
@@ -49,6 +59,7 @@ export default function ClassesScreen() {
         } finally {
             setLoading(false);
             setLoadingMore(false);
+            setIsSearching(false);
         }
     };
 
@@ -56,7 +67,7 @@ export default function ClassesScreen() {
         try {
             setRefreshing(true);
             setCurrentPage(1);
-            await fetchClasses(1, false);
+            await fetchClasses(1, false, searchQuery);
         } catch (err: any) {
             setError(err.message || 'Failed to refresh classes');
         } finally {
@@ -71,8 +82,62 @@ export default function ClassesScreen() {
 
         setLoadingMore(true);
         const nextPage = currentPage + 1;
-        await fetchClasses(nextPage, true);
-    }, [isAdmin, pagination, loadingMore, currentPage]);
+        await fetchClasses(nextPage, true, searchQuery);
+    }, [isAdmin, pagination, loadingMore, currentPage, searchQuery]);
+
+    // Search functionality
+    const handleSearch = useCallback(async (query: string) => {
+        if (!isAdmin()) return;
+        
+        setSearchQuery(query);
+        setIsSearching(true);
+        setCurrentPage(1);
+        await fetchClasses(1, false, query);
+    }, [isAdmin]);
+
+    const toggleSearch = useCallback(() => {
+        setShowSearch(!showSearch);
+        if (showSearch && searchQuery) {
+            // Clear search when hiding search bar
+            setSearchQuery('');
+            handleSearch('');
+        }
+    }, [showSearch, searchQuery, handleSearch]);
+
+    const clearSearch = useCallback(() => {
+        setSearchQuery('');
+        handleSearch('');
+    }, [handleSearch]);
+
+    // Set up header right component for search
+    useLayoutEffect(() => {
+        if (isAdmin()) {
+            navigation.setOptions({
+                headerRight: () => (
+                    <TouchableOpacity
+                        onPress={toggleSearch}
+                        style={styles.headerSearchButton}
+                    >
+                        <Ionicons
+                            name={showSearch ? "close" : "search"}
+                            size={20}
+                            color={Colors[colorScheme ?? 'light'].text}
+                        />
+                    </TouchableOpacity>
+                ),
+            });
+        }
+    }, [navigation, isAdmin, showSearch, toggleSearch, colorScheme]);
+
+    // Clean up header on unmount
+    useFocusEffect(
+        useCallback(() => {
+            return () => {
+                setShowSearch(false);
+                setSearchQuery('');
+            };
+        }, [])
+    );
 
     useEffect(() => {
         fetchClasses();
@@ -103,13 +168,63 @@ export default function ClassesScreen() {
     const renderEmptyState = () => (
         <ThemedView style={styles.emptyState}>
             <ThemedText style={styles.emptyText}>
-                No classes found
+                {searchQuery ? 'No classes found for your search' : 'No classes found'}
             </ThemedText>
             <ThemedText style={styles.emptySubText}>
-                Pull down to refresh or check back later
+                {searchQuery ? 'Try adjusting your search terms' : 'Pull down to refresh or check back later'}
             </ThemedText>
         </ThemedView>
     );
+
+    const renderSearchHeader = () => {
+        if (!isAdmin() || !showSearch) return null;
+
+        return (
+            <View style={styles.searchContainer}>
+                <View style={[
+                    styles.searchInputContainer,
+                    { 
+                        backgroundColor: Colors[colorScheme ?? 'light'].background,
+                        borderColor: Colors[colorScheme ?? 'light'].border 
+                    }
+                ]}>
+                    <Ionicons
+                        name="search"
+                        size={20}
+                        color={Colors[colorScheme ?? 'light'].icon}
+                        style={styles.searchIcon}
+                    />
+                    <TextInput
+                        style={[
+                            styles.searchInput,
+                            { color: Colors[colorScheme ?? 'light'].text }
+                        ]}
+                        placeholder="Search classes..."
+                        placeholderTextColor={Colors[colorScheme ?? 'light'].icon}
+                        value={searchQuery}
+                        onChangeText={handleSearch}
+                        autoFocus
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                            <Ionicons
+                                name="close-circle"
+                                size={20}
+                                color={Colors[colorScheme ?? 'light'].icon}
+                            />
+                        </TouchableOpacity>
+                    )}
+                    {isSearching && (
+                        <ActivityIndicator
+                            size="small"
+                            color={Colors[colorScheme ?? 'light'].tint}
+                            style={styles.searchLoader}
+                        />
+                    )}
+                </View>
+            </View>
+        );
+    };
 
     if (loading && classes.length === 0) {
         return (
@@ -125,6 +240,7 @@ export default function ClassesScreen() {
                 data={classes}
                 renderItem={renderClassItem}
                 keyExtractor={(item) => item.id}
+                ListHeaderComponent={renderSearchHeader}
                 contentContainerStyle={[
                     styles.container,
                     classes.length === 0 && { flex: 1 }
@@ -181,5 +297,41 @@ const styles = StyleSheet.create({
         marginTop: 8,
         opacity: 0.7,
         fontSize: 14,
+    },
+    // Header search button
+    headerSearchButton: {
+        padding: 8,
+        paddingRight: 24,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    // Search container styles
+    searchContainer: {
+        paddingHorizontal: 0,
+        paddingBottom: 16,
+    },
+    searchInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 12,
+        borderWidth: 1,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        paddingVertical: 4,
+    },
+    clearButton: {
+        marginLeft: 8,
+        padding: 4,
+    },
+    searchLoader: {
+        marginLeft: 8,
     },
 });

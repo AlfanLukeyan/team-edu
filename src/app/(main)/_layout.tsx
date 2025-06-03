@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, usePathname } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -30,6 +31,7 @@ const ICON_MAP = {
 
 export default function MainLayout() {
     const colorScheme = useColorScheme() || 'light';
+    const { isAdmin } = useUserRole();
     const pathname = usePathname();
     const [activeIndex, setActiveIndex] = useState(0);
     const translateX = useRef(new Animated.Value(0)).current;
@@ -177,8 +179,15 @@ export default function MainLayout() {
             }}
             tabBar={renderTabBar}
         >
-            <Tabs.Screen name="index" options={{ title: "Hi, Team Edu" }} />
-            <Tabs.Screen name="classes" options={{ title: "Assigned Classes" }} />
+            <Tabs.Screen name="index" options={{
+                title: isAdmin() ? "Hi, Admin Team Edu" : "Hi, Team Edu"
+            }} />
+            <Tabs.Screen
+                name="classes"
+                options={{
+                    title: isAdmin() ? "Class Management" : "Assigned Classes"
+                }}
+            />
             <Tabs.Screen name="profile" options={{ headerShown: false }} />
         </Tabs>
     );
