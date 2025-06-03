@@ -1,10 +1,12 @@
+import { Button } from "@/components/Button";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { ModalEmitter } from "@/services/modalEmitter";
 import { formatDate, readableHash } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import React, { useState } from "react";
-import { Alert, Animated, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -21,6 +23,7 @@ interface AssignmentSubmissionCardProps {
     isSelected?: boolean;
     onLongPress?: (id: string) => void;
     onPress?: (id: string) => void;
+    onDelete?: (id: string, userName: string) => void;
 }
 
 export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> = ({
@@ -35,7 +38,8 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
     file_url,
     isSelected = false,
     onLongPress,
-    onPress
+    onPress,
+    onDelete
 }) => {
     const theme = useColorScheme() || "light";
     const [isExpanded, setIsExpanded] = useState(false);
@@ -55,11 +59,17 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                 if (canOpen) {
                     await Linking.openURL(file_url);
                 } else {
-                    Alert.alert("Error", "Cannot open the submission file");
+                    ModalEmitter.showError("Cannot open the submission file");
                 }
             } catch (error) {
-                Alert.alert("Error", "Failed to open submission");
+                ModalEmitter.showError("Failed to open submission");
             }
+        }
+    };
+
+    const handleDeleteSubmission = () => {
+        if (onDelete) {
+            onDelete(id, user_name);
         }
     };
 
@@ -76,7 +86,7 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
 
     const expandedHeight = animation.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, status === "submitted" ? 110 : 20],
+        outputRange: [0, status === "submitted" ? 180 : 20],
     });
 
     const rotateChevron = animation.interpolate({
@@ -189,6 +199,7 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                                     </ThemedText>
                                 </View>
                             )}
+
                             {file_name && (
                                 <TouchableOpacity
                                     onPress={handleDownloadSubmission}
@@ -212,6 +223,23 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                                         style={{ marginLeft: 4 }}
                                     />
                                 </TouchableOpacity>
+                            )}
+
+                            {/* Delete Button - Only show for submitted status */}
+                            {onDelete && (
+                                <View style={styles.deleteButtonContainer}>
+                                    <Button
+                                        type="delete"
+                                        onPress={handleDeleteSubmission}
+                                        style={styles.deleteButton}
+                                        icon={{
+                                            name: "trash",
+                                            size: 16
+                                        }}
+                                    >
+                                        Delete Submission
+                                    </Button>
+                                </View>
                             )}
                         </View>
                     </Animated.View>
@@ -328,6 +356,16 @@ const styles = StyleSheet.create({
         marginLeft: 4,
         fontSize: 12,
         flex: 1,
+    },
+    deleteButtonContainer: {
+        marginTop: 12,
+        paddingTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(128, 128, 128, 0.2)',
+    },
+    deleteButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
     },
     pendingContainer: {
         marginTop: 8,

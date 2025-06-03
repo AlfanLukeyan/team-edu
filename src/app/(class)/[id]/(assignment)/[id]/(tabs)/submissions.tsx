@@ -4,12 +4,13 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useAssignment } from '@/contexts/AssignmentContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { ModalEmitter } from '@/services/modalEmitter';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function AssignmentSubmissionsScreen() {
     const theme = useColorScheme() ?? 'light';
-    const { submissions, loading, error, refetchSubmissions } = useAssignment();
+    const { submissions, loading, error, refetchSubmissions, deleteSubmission } = useAssignment();
     const [refreshing, setRefreshing] = useState(false);
 
     const handleRefresh = useCallback(async () => {
@@ -17,6 +18,30 @@ export default function AssignmentSubmissionsScreen() {
         await refetchSubmissions();
         setRefreshing(false);
     }, [refetchSubmissions]);
+
+    const handleDeleteSubmission = useCallback((submissionId: string, userName: string) => {
+        ModalEmitter.showAlert({
+            title: "Delete Submission",
+            message: `Are you sure you want to delete ${userName}'s submission? This action cannot be undone.`,
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    ModalEmitter.showLoading("Deleting submission...");
+                    await deleteSubmission(submissionId);
+                    ModalEmitter.hideLoading();
+                    ModalEmitter.showSuccess("Submission deleted successfully");
+                } catch (error) {
+                    ModalEmitter.hideLoading();
+                    ModalEmitter.showError("Failed to delete submission");
+                }
+            },
+            onCancel: () => {
+                // Do nothing on cancel
+            }
+        });
+    }, [deleteSubmission]);
 
     useEffect(() => {
         refetchSubmissions();
@@ -81,6 +106,9 @@ export default function AssignmentSubmissionsScreen() {
                                 submitted_at={submission.created_at}
                                 file_name={submission.filename}
                                 file_url={submission.link_file}
+                                onDelete={submission.status === 'submitted' && submission.id_submission ?
+                                    handleDeleteSubmission : undefined
+                                }
                             />
                         ))
                     )}

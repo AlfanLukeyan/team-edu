@@ -41,6 +41,10 @@ export const assignmentApi = {
         return httpClient.get(`/kelas/assignment-submission?${params.toString()}`);
     },
 
+    deleteAssignmentSubmission: async (submissionId: string): Promise<DeleteAssignmentResponse> => {
+        return httpClient.delete(`/kelas/assignment-submission?assignment_submission_id=${submissionId}`);
+    },
+
     createAssignment: async (formData: FormData): Promise<CreateAssignmentResponse> => {
         return simplePostFormData('/teacher/kelas/assignment', formData);
     },

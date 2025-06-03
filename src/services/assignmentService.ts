@@ -15,6 +15,7 @@ class AssignmentService {
             throw error;
         }
     }
+
     static getInstance(): AssignmentService {
         if (!AssignmentService.instance) {
             AssignmentService.instance = new AssignmentService();
@@ -53,6 +54,17 @@ class AssignmentService {
             return response.data;
         } catch (error) {
             console.error('Failed to fetch assignment submissions:', error);
+            throw error;
+        }
+    }
+
+    async deleteAssignmentSubmission(submissionId: string): Promise<{ status: string; message: string; data: string }> {
+        try {
+            const response = await assignmentApi.deleteAssignmentSubmission(submissionId);
+            console.log('Assignment submission deleted successfully:', response);
+            return response;
+        } catch (error) {
+            console.error('Failed to delete assignment submission:', error);
             throw error;
         }
     }
