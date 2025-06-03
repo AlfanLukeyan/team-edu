@@ -15,7 +15,7 @@ import { formatDateTime } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 export default function AboutAssignmentScreen() {
     const theme = useColorScheme() ?? 'light';
@@ -59,12 +59,21 @@ export default function AboutAssignmentScreen() {
         ModalEmitter.showLoading("Submitting assignment...");
 
         try {
-            const fileToUpload = {
-                uri: selectedFile.uri,
-                type: selectedFile.mimeType || 'application/octet-stream',
-                name: selectedFile.name,
-            };
+            let fileToUpload;
 
+            if (Platform.OS === 'web') {
+                if (selectedFile.file) {
+                    fileToUpload = selectedFile.file;
+                } else {
+                    throw new Error('File not properly selected for web upload');
+                }
+            } else {
+                fileToUpload = {
+                    uri: selectedFile.uri,
+                    type: selectedFile.mimeType || 'application/octet-stream',
+                    name: selectedFile.name,
+                };
+            }
             await assignmentService.submitAssignment(
                 assignmentInfo.assignment_id.toString(),
                 fileToUpload
@@ -73,7 +82,6 @@ export default function AboutAssignmentScreen() {
             ModalEmitter.hideLoading();
             ModalEmitter.showSuccess("Assignment submitted successfully!");
 
-            // Reset form and refresh data
             setSelectedFile(null);
             await refetchAssignmentInfo();
         } catch (error: any) {
