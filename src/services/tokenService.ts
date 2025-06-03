@@ -1,5 +1,5 @@
 import { DecodedJWT } from "@/types/auth";
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
 import { refreshTokens } from "./tokenRefreshService";
 
@@ -26,23 +26,23 @@ class TokenService {
         this.decoded = jwtDecode(accessToken);
 
         const storeOperations = [
-            SecureStore.setItemAsync("access_token", accessToken),
-            SecureStore.setItemAsync("refresh_token", refreshToken),
-            SecureStore.setItemAsync("user_email", email),
-            SecureStore.setItemAsync("decoded_jwt", JSON.stringify(this.decoded)),
+            AsyncStorage.setItem("access_token", accessToken),
+            AsyncStorage.setItem("refresh_token", refreshToken),
+            AsyncStorage.setItem("user_email", email),
+            AsyncStorage.setItem("decoded_jwt", JSON.stringify(this.decoded)),
         ];
 
         const userId = this.decoded?.uuid || this.decoded?.sub;
         if (userId) {
-            storeOperations.push(SecureStore.setItemAsync("user_uuid", userId));
+            storeOperations.push(AsyncStorage.setItem("user_uuid", userId));
         }
 
         if (this.decoded?.role_id !== undefined) {
-            storeOperations.push(SecureStore.setItemAsync("user_role_id", this.decoded.role_id.toString()));
+            storeOperations.push(AsyncStorage.setItem("user_role_id", this.decoded.role_id.toString()));
         }
 
         if (this.decoded?.permissions) {
-            storeOperations.push(SecureStore.setItemAsync("user_permissions", JSON.stringify(this.decoded.permissions)));
+            storeOperations.push(AsyncStorage.setItem("user_permissions", JSON.stringify(this.decoded.permissions)));
         }
 
         await Promise.all(storeOperations);
@@ -51,10 +51,10 @@ class TokenService {
     async loadTokens(): Promise<boolean> {
         try {
             const [accessToken, refreshToken, decodedJWT, storedRoleId] = await Promise.all([
-                SecureStore.getItemAsync("access_token"),
-                SecureStore.getItemAsync("refresh_token"),
-                SecureStore.getItemAsync("decoded_jwt"),
-                SecureStore.getItemAsync("user_role_id"),
+                AsyncStorage.getItem("access_token"),
+                AsyncStorage.getItem("refresh_token"),
+                AsyncStorage.getItem("decoded_jwt"),
+                AsyncStorage.getItem("user_role_id"),
             ]);
 
             if (!accessToken || !refreshToken) return false;
@@ -117,21 +117,21 @@ class TokenService {
                 }
 
                 const updateOperations = [
-                    SecureStore.setItemAsync("access_token", response.access_token),
-                    SecureStore.setItemAsync("decoded_jwt", JSON.stringify(this.decoded)),
+                    AsyncStorage.setItem("access_token", response.access_token),
+                    AsyncStorage.setItem("decoded_jwt", JSON.stringify(this.decoded)),
                 ];
 
                 const userId = this.decoded?.uuid || this.decoded?.sub;
                 if (userId) {
-                    updateOperations.push(SecureStore.setItemAsync("user_uuid", userId));
+                    updateOperations.push(AsyncStorage.setItem("user_uuid", userId));
                 }
 
                 if (this.decoded?.role_id !== undefined) {
-                    updateOperations.push(SecureStore.setItemAsync("user_role_id", this.decoded.role_id.toString()));
+                    updateOperations.push(AsyncStorage.setItem("user_role_id", this.decoded.role_id.toString()));
                 }
 
                 if (this.decoded?.permissions) {
-                    updateOperations.push(SecureStore.setItemAsync("user_permissions", JSON.stringify(this.decoded.permissions)));
+                    updateOperations.push(AsyncStorage.setItem("user_permissions", JSON.stringify(this.decoded.permissions)));
                 }
 
                 await Promise.all(updateOperations);
@@ -149,13 +149,13 @@ class TokenService {
         this.decoded = null;
 
         await Promise.all([
-            SecureStore.deleteItemAsync("access_token").catch(() => { }),
-            SecureStore.deleteItemAsync("refresh_token").catch(() => { }),
-            SecureStore.deleteItemAsync("user_email").catch(() => { }),
-            SecureStore.deleteItemAsync("user_uuid").catch(() => { }),
-            SecureStore.deleteItemAsync("user_role_id").catch(() => { }),
-            SecureStore.deleteItemAsync("user_permissions").catch(() => { }),
-            SecureStore.deleteItemAsync("decoded_jwt").catch(() => { }),
+            AsyncStorage.removeItem("access_token").catch(() => { }),
+            AsyncStorage.removeItem("refresh_token").catch(() => { }),
+            AsyncStorage.removeItem("user_email").catch(() => { }),
+            AsyncStorage.removeItem("user_uuid").catch(() => { }),
+            AsyncStorage.removeItem("user_role_id").catch(() => { }),
+            AsyncStorage.removeItem("user_permissions").catch(() => { }),
+            AsyncStorage.removeItem("decoded_jwt").catch(() => { }),
         ]);
     }
 
@@ -165,7 +165,7 @@ class TokenService {
 
     async getStoredRole(): Promise<number> {
         try {
-            const storedRole = await SecureStore.getItemAsync("user_role_id");
+            const storedRole = await AsyncStorage.getItem("user_role_id");
             return storedRole ? parseInt(storedRole) : this.getUserRole();
         } catch {
             return this.getUserRole();
@@ -238,7 +238,7 @@ class TokenService {
 
     async getStoredUuid(): Promise<string | null> {
         try {
-            return await SecureStore.getItemAsync("user_uuid");
+            return await AsyncStorage.getItem("user_uuid");
         } catch {
             return null;
         }
@@ -246,7 +246,7 @@ class TokenService {
 
     async getStoredPermissions(): Promise<string[]> {
         try {
-            const permissions = await SecureStore.getItemAsync("user_permissions");
+            const permissions = await AsyncStorage.getItem("user_permissions");
             return permissions ? JSON.parse(permissions) : [];
         } catch {
             return [];
@@ -255,7 +255,7 @@ class TokenService {
 
     async getStoredEmail(): Promise<string | null> {
         try {
-            return await SecureStore.getItemAsync("user_email");
+            return await AsyncStorage.getItem("user_email");
         } catch {
             return null;
         }
