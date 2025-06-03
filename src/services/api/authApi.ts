@@ -100,5 +100,9 @@ export const authApi = {
         return httpClient.postNoAuth('/auth/refresh', { refreshToken }, {
             headers: { "Authorization": `Bearer ${refreshToken}` }
         });
+    },
+    
+    requestPasswordReset: async (email: string) => {
+        return httpClient.postNoAuth('/user/reset-password/request', { email });
     }
 };
