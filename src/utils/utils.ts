@@ -57,11 +57,6 @@ export const formatDateTime = (dateString: string): { date: string; time: string
 export const isOverdue = (endTime: string): boolean => {
     return new Date(endTime) < new Date();
 };
-
-export const convertMinutesToSeconds = (minutes: number): number => {
-    return minutes * 60;
-};
-
 /**
  * Creates a human-readable short hash
  * Example: "550e8400-e29b-41d4-a716-446655440001" → "ID-550E84"
@@ -159,5 +154,82 @@ export const getYoutubeEmbedUrl = (url: string): string => {
     } catch (error) {
         console.error('Error parsing YouTube URL:', error);
         return "";
+    }
+};
+
+
+export const calculateDaysRemaining = (endDate: string): number => {
+    const end = new Date(endDate);
+    const now = new Date();
+
+    end.setHours(23, 59, 59, 999);
+    now.setHours(0, 0, 0, 0);
+
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+};
+
+export const getDaysRemainingText = (endDate: string): string => {
+    const daysRemaining = calculateDaysRemaining(endDate);
+
+    if (daysRemaining <= 0) {
+        return "Expired";
+    } else if (daysRemaining === 1) {
+        return "Due Today";
+    } else if (daysRemaining === 2) {
+        return "Due Tomorrow";
+    } else if (daysRemaining <= 7) {
+        return `Due in ${daysRemaining} days`;
+    } else if (daysRemaining <= 30) {
+        return `Due in ${daysRemaining} days`;
+    } else {
+        const weeks = Math.floor(daysRemaining / 7);
+        if (weeks < 4) {
+            return `Due in ${weeks} week${weeks > 1 ? 's' : ''}`;
+        } else {
+            const months = Math.floor(daysRemaining / 30);
+            return `Due in ${months} month${months > 1 ? 's' : ''}`;
+        }
+    }
+};
+
+export interface DurationFormat {
+    hours: number;
+    minutes: number;
+    seconds: number;
+    totalMinutes: number;
+}
+
+export const convertSecondsToTime = (totalSeconds: number): DurationFormat => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const totalMinutes = Math.floor(totalSeconds / 60);
+
+    return {
+        hours,
+        minutes,
+        seconds,
+        totalMinutes
+    };
+};
+
+export const formatDuration = (totalSeconds: number, showSeconds: boolean = false): string => {
+    const { hours, minutes, seconds } = convertSecondsToTime(totalSeconds);
+
+    if (hours > 0) {
+        if (showSeconds) {
+            return `${hours}h ${minutes}m ${seconds}s`;
+        }
+        return `${hours}h ${minutes}m`;
+    } else if (minutes > 0) {
+        if (showSeconds) {
+            return `${minutes}m ${seconds}s`;
+        }
+        return `${minutes}m`;
+    } else {
+        return `${seconds}s`;
     }
 };

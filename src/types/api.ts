@@ -29,7 +29,7 @@ export interface ComponentAssessment {
     start_date: string;
     end_date: string;
     days_remaining: number;
-    submission_status: string;
+    submission_status?: 'todo' | 'in_progress' | 'submitted';
 }
 
 export interface Assignment {

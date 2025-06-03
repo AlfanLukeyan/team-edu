@@ -1,24 +1,33 @@
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, ViewStyle } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
 interface QuestionSavedCountCardProps {
     savedCount: number;
     totalCount: number;
+    style?: ViewStyle;
 }
 
 export const QuestionSavedCountCard: React.FC<QuestionSavedCountCardProps> = ({
     savedCount,
     totalCount,
+    style,
 }) => {
     const theme = useColorScheme() || "light";
 
     return (
-        <ThemedView isCard={true} style={styles.container}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <ThemedText type="title">{savedCount}</ThemedText>
-                <ThemedText>/{totalCount} saved</ThemedText>
+        <ThemedView isCard={true} style={[styles.container, style]}>
+            <ThemedText type="subtitle" style={styles.header}>
+                Questions
+            </ThemedText>
+            <View style={styles.countContainer}>
+                <ThemedText type="title" style={styles.countValue}>
+                    {savedCount}
+                </ThemedText>
+                <ThemedText style={styles.totalText}>
+                    /{totalCount} saved
+                </ThemedText>
             </View>
         </ThemedView>
     );
@@ -26,11 +35,24 @@ export const QuestionSavedCountCard: React.FC<QuestionSavedCountCardProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        width: "100%",
-        gap: 18,
-        padding: 8,
+        padding: 12,
         borderRadius: 15,
         justifyContent: "center",
         alignItems: "center",
+    },
+    header: {
+        textAlign: "center",
+        marginBottom: 6,
+    },
+    countContainer: {
+        flexDirection: "row",
+        alignItems: "baseline",
+        gap: 2,
+    },
+    countValue: {
+        fontSize: 18,
+    },
+    totalText: {
+        opacity: 0.7,
     },
 });

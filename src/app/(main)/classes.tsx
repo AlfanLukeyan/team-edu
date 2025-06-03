@@ -5,7 +5,7 @@ import { classService } from "@/services/classService";
 import { Class } from "@/types/class";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, useColorScheme } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, useColorScheme, View } from "react-native";
 
 export default function ClassesScreen() {
     const router = useRouter();
@@ -61,12 +61,13 @@ export default function ClassesScreen() {
     return (
         <ThemedView style={{ flex: 1 }}>
             <ScrollView
-                style={{ flex: 1 }}
+                style={{ flex: 1, borderRadius: 15 }}
                 contentContainerStyle={{
                     paddingHorizontal: 24,
                     paddingVertical: 16,
                     flexGrow: 1
                 }}
+                showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -84,7 +85,7 @@ export default function ClassesScreen() {
                         </ThemedText>
                     </ThemedView>
                 ) : (
-                    <ThemedView>
+                    <>
                         {classes.map((classItem) => (
                             <ClassCard
                                 key={classItem.id}
@@ -96,7 +97,8 @@ export default function ClassesScreen() {
                                 }}
                             />
                         ))}
-                    </ThemedView>
+                        <View style={{ height: 80 }} />
+                    </>
                 )}
             </ScrollView>
         </ThemedView>

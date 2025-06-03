@@ -7,7 +7,7 @@ import { assessmentService } from "@/services/assessmentService";
 import { ClassAssessment, ComponentAssessment } from "@/types/api";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, View } from "react-native";
 
 interface ClassAssessmentData {
     classTitle: string;
@@ -81,7 +81,8 @@ export default function HomeScreen() {
     return (
         <ThemedView style={{ flex: 1 }}>
             <ScrollView 
-                style={{ flex: 1, margin: 16 }}
+                style={{ flex: 1, margin: 16, borderRadius: 15}}
+                showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -94,8 +95,6 @@ export default function HomeScreen() {
                 <ThemedText type="title" style={{ marginBottom: 20 }}>
                     Upcoming Assessments
                 </ThemedText>
-                <>
-                </>
                 {componentData.map((classData) => (
                     <UpcomingAssessmentCard
                         key={classData.classId}
@@ -106,6 +105,7 @@ export default function HomeScreen() {
                         onAssessmentPress={handleAssessmentPress}
                     />
                 ))}
+                <View style={{ height: 80 }} />
 
                 {componentData.length === 0 && (
                     <ThemedView isCard={true} style={{ padding: 20, alignItems: 'center' }}>
