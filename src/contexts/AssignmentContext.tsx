@@ -15,6 +15,7 @@ interface AssignmentContextType {
     refetchSubmissions: () => Promise<void>;
     refetchSubmissionsByStatus: (status: string) => Promise<void>;
     deleteSubmission: (submissionId: string) => Promise<void>;
+    updateSubmissionScore: (submissionId: string, score: number) => Promise<void>;
 }
 
 const AssignmentContext = createContext<AssignmentContextType | undefined>(undefined);
@@ -94,11 +95,25 @@ export const AssignmentProvider: React.FC<AssignmentProviderProps> = ({ children
         try {
             await assignmentService.deleteAssignmentSubmission(submissionId);
 
+            // Refresh submissions after successful deletion
             await refetchSubmissions();
         } catch (err: any) {
             console.error('Failed to delete assignment submission:', err);
             setError(err.message || 'Failed to delete assignment submission');
-            throw err;
+            throw err; // Re-throw to handle in UI
+        }
+    }, [refetchSubmissions]);
+
+    const updateSubmissionScore = useCallback(async (submissionId: string, score: number) => {
+        try {
+            await assignmentService.updateSubmissionScore(submissionId, score);
+
+            // Refresh submissions after successful score update
+            await refetchSubmissions();
+        } catch (err: any) {
+            console.error('Failed to update submission score:', err);
+            setError(err.message || 'Failed to update submission score');
+            throw err; // Re-throw to handle in UI
         }
     }, [refetchSubmissions]);
 
@@ -115,6 +130,7 @@ export const AssignmentProvider: React.FC<AssignmentProviderProps> = ({ children
         refetchSubmissions,
         refetchSubmissionsByStatus,
         deleteSubmission,
+        updateSubmissionScore,
     };
 
     return (

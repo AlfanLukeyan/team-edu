@@ -45,6 +45,10 @@ export const assignmentApi = {
         return httpClient.delete(`/kelas/assignment-submission?assignment_submission_id=${submissionId}`);
     },
 
+    updateSubmissionScore: async (submissionId: string, score: number): Promise<{ status: string; message: string; data: string }> => {
+        return httpClient.put(`/kelas/assignment-submission?assignment_submission_id=${submissionId}&score=${score}`);
+    },
+
     createAssignment: async (formData: FormData): Promise<CreateAssignmentResponse> => {
         return simplePostFormData('/teacher/kelas/assignment', formData);
     },

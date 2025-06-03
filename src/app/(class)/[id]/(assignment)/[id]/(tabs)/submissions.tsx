@@ -10,7 +10,7 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 
 
 export default function AssignmentSubmissionsScreen() {
     const theme = useColorScheme() ?? 'light';
-    const { submissions, loading, error, refetchSubmissions, deleteSubmission } = useAssignment();
+    const { submissions, loading, error, refetchSubmissions, deleteSubmission, updateSubmissionScore } = useAssignment();
     const [refreshing, setRefreshing] = useState(false);
 
     const handleRefresh = useCallback(async () => {
@@ -42,6 +42,18 @@ export default function AssignmentSubmissionsScreen() {
             }
         });
     }, [deleteSubmission]);
+
+    const handleUpdateScore = useCallback(async (submissionId: string, score: number) => {
+        try {
+            ModalEmitter.showLoading("Updating score...");
+            await updateSubmissionScore(submissionId, score);
+            ModalEmitter.hideLoading();
+            ModalEmitter.showSuccess("Score updated successfully");
+        } catch (error) {
+            ModalEmitter.hideLoading();
+            ModalEmitter.showError("Failed to update score");
+        }
+    }, [updateSubmissionScore]);
 
     useEffect(() => {
         refetchSubmissions();
@@ -108,6 +120,9 @@ export default function AssignmentSubmissionsScreen() {
                                 file_url={submission.link_file}
                                 onDelete={submission.status === 'submitted' && submission.id_submission ?
                                     handleDeleteSubmission : undefined
+                                }
+                                onUpdateScore={submission.status === 'submitted' && submission.id_submission ?
+                                    handleUpdateScore : undefined
                                 }
                             />
                         ))

@@ -69,6 +69,17 @@ class AssignmentService {
         }
     }
 
+    async updateSubmissionScore(submissionId: string, score: number): Promise<{ status: string; message: string; data: string }> {
+        try {
+            const response = await assignmentApi.updateSubmissionScore(submissionId, score);
+            console.log('Assignment submission score updated successfully:', response);
+            return response;
+        } catch (error) {
+            console.error('Failed to update assignment submission score:', error);
+            throw error;
+        }
+    }
+
     async createAssignment(weekId: string, data: AssignmentFormData): Promise<CreateAssignmentData> {
         try {
             const formData = new FormData();
