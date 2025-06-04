@@ -54,10 +54,6 @@ class AuthService {
         }
     }
 
-    /**
-     * Crucial verification for sensitive operations
-     * This doesn't store new tokens, just validates the user for 15 minutes
-     */
     async crucialVerify(faceImage: string): Promise<CrucialVerifyResponse> {
         try {
             const response = await authApi.crucialVerify(faceImage);
@@ -114,7 +110,7 @@ class AuthService {
             uuid: decoded.uuid,
             email: decoded.sub,
             name: '',
-            permissions: decoded.permissions
+            role_name: decoded.role_name || tokenService.getRoleText()
         };
     }
 
@@ -125,10 +121,6 @@ class AuthService {
 
     async initializeAuth(): Promise<boolean> {
         return await tokenService.loadTokens();
-    }
-
-    hasPermission(permission: string): boolean {
-        return tokenService.hasPermission(permission);
     }
 
     getUserId(): string | null {

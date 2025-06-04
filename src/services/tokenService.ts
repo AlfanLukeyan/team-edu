@@ -24,6 +24,7 @@ class TokenService {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.decoded = jwtDecode(accessToken);
+        console.log("Decoded JWT:", this.decoded);
 
         const storeOperations = [
             AsyncStorage.setItem("access_token", accessToken),
@@ -41,8 +42,8 @@ class TokenService {
             storeOperations.push(AsyncStorage.setItem("user_role_id", this.decoded.role_id.toString()));
         }
 
-        if (this.decoded?.permissions) {
-            storeOperations.push(AsyncStorage.setItem("user_permissions", JSON.stringify(this.decoded.permissions)));
+        if (this.decoded?.role_name) {
+            storeOperations.push(AsyncStorage.setItem("user_role_name", this.decoded.role_name));
         }
 
         await Promise.all(storeOperations);
@@ -50,11 +51,12 @@ class TokenService {
 
     async loadTokens(): Promise<boolean> {
         try {
-            const [accessToken, refreshToken, decodedJWT, storedRoleId] = await Promise.all([
+            const [accessToken, refreshToken, decodedJWT, storedRoleId, storedRoleName] = await Promise.all([
                 AsyncStorage.getItem("access_token"),
                 AsyncStorage.getItem("refresh_token"),
                 AsyncStorage.getItem("decoded_jwt"),
                 AsyncStorage.getItem("user_role_id"),
+                AsyncStorage.getItem("user_role_name"),
             ]);
 
             if (!accessToken || !refreshToken) return false;
@@ -67,10 +69,16 @@ class TokenService {
                 if (this.decoded && this.decoded.role_id === undefined && storedRoleId) {
                     this.decoded.role_id = parseInt(storedRoleId);
                 }
+                if (this.decoded && !this.decoded.role_name && storedRoleName) {
+                    this.decoded.role_name = storedRoleName;
+                }
             } else {
                 this.decoded = jwtDecode(accessToken);
                 if (this.decoded && this.decoded.role_id === undefined && storedRoleId) {
                     this.decoded.role_id = parseInt(storedRoleId);
+                }
+                if (this.decoded && !this.decoded.role_name && storedRoleName) {
+                    this.decoded.role_name = storedRoleName;
                 }
             }
 
@@ -105,6 +113,7 @@ class TokenService {
             if (response.access_token) {
                 const oldUuid = this.decoded?.uuid;
                 const oldRoleId = this.decoded?.role_id;
+                const oldRoleName = this.decoded?.role_name;
 
                 this.accessToken = response.access_token;
                 this.decoded = jwtDecode(response.access_token);
@@ -114,6 +123,9 @@ class TokenService {
                 }
                 if (this.decoded && this.decoded.role_id === undefined && oldRoleId !== undefined) {
                     this.decoded.role_id = oldRoleId;
+                }
+                if (this.decoded && !this.decoded.role_name && oldRoleName) {
+                    this.decoded.role_name = oldRoleName;
                 }
 
                 const updateOperations = [
@@ -130,8 +142,8 @@ class TokenService {
                     updateOperations.push(AsyncStorage.setItem("user_role_id", this.decoded.role_id.toString()));
                 }
 
-                if (this.decoded?.permissions) {
-                    updateOperations.push(AsyncStorage.setItem("user_permissions", JSON.stringify(this.decoded.permissions)));
+                if (this.decoded?.role_name) {
+                    updateOperations.push(AsyncStorage.setItem("user_role_name", this.decoded.role_name));
                 }
 
                 await Promise.all(updateOperations);
@@ -154,7 +166,7 @@ class TokenService {
             AsyncStorage.removeItem("user_email").catch(() => { }),
             AsyncStorage.removeItem("user_uuid").catch(() => { }),
             AsyncStorage.removeItem("user_role_id").catch(() => { }),
-            AsyncStorage.removeItem("user_permissions").catch(() => { }),
+            AsyncStorage.removeItem("user_role_name").catch(() => { }),
             AsyncStorage.removeItem("decoded_jwt").catch(() => { }),
         ]);
     }
@@ -169,6 +181,19 @@ class TokenService {
             return storedRole ? parseInt(storedRole) : this.getUserRole();
         } catch {
             return this.getUserRole();
+        }
+    }
+
+    getRoleName(): string {
+        return this.decoded?.role_name || 'Guest';
+    }
+
+    async getStoredRoleName(): Promise<string> {
+        try {
+            const storedRoleName = await AsyncStorage.getItem("user_role_name");
+            return storedRoleName || this.getRoleName();
+        } catch {
+            return this.getRoleName();
         }
     }
 
@@ -220,14 +245,6 @@ class TokenService {
         return this.decoded;
     }
 
-    hasPermission(permission: string): boolean {
-        return this.decoded?.permissions?.includes(permission) || false;
-    }
-
-    getPermissions(): string[] {
-        return this.decoded?.permissions || [];
-    }
-
     isTokenExpired(): boolean {
         return this.decoded ? this.isExpired(this.decoded) : true;
     }
@@ -244,15 +261,6 @@ class TokenService {
         }
     }
 
-    async getStoredPermissions(): Promise<string[]> {
-        try {
-            const permissions = await AsyncStorage.getItem("user_permissions");
-            return permissions ? JSON.parse(permissions) : [];
-        } catch {
-            return [];
-        }
-    }
-
     async getStoredEmail(): Promise<string | null> {
         try {
             return await AsyncStorage.getItem("user_email");
@@ -262,6 +270,10 @@ class TokenService {
     }
 
     getRoleText(): string {
+        return this.getRoleName() || this.getDefaultRoleText();
+    }
+
+    private getDefaultRoleText(): string {
         const role = this.getUserRole();
         switch (role) {
             case 1: return 'Admin';
