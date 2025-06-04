@@ -57,10 +57,9 @@ class ClassService {
         }
     }
 
-    async getClasses(userID?: string): Promise<Class[]> {
+    async getClasses(): Promise<Class[]> {
         try {
-            const finalUserID = userID ?? tokenService.getUserId() ?? undefined;
-            const response = await classApi.getAllClasses(finalUserID);
+            const response = await classApi.getAllClasses();
 
             return response.data?.map((classItem: any) => ({
                 id: classItem.id,
@@ -74,7 +73,6 @@ class ClassService {
             throw error;
         }
     }
-
     async getClassInfo(classId: string): Promise<ClassInfo> {
         try {
             const response = await classApi.getClassInfo(classId);
@@ -101,17 +99,11 @@ class ClassService {
 
     async getClassAssessments(classId: string): Promise<AssessmentData[]> {
         try {
-            const userRole = tokenService.getUserRole();
-            const userId = tokenService.getUserId();
-
             if (tokenService.hasTeacherPermissions()) {
                 const response = await classApi.getTeacherClassAssessments(classId);
                 return response.data;
             } else {
-                if (!userId) {
-                    throw new Error('User ID is required for student assessments');
-                }
-                const response = await classApi.getStudentClassAssessments(classId, userId);
+                const response = await classApi.getStudentClassAssessments(classId);
                 return response.data;
             }
         } catch (error) {

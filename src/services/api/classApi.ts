@@ -2,7 +2,6 @@ import { AssessmentResponse, ClassInfoResponse, ClassMemberResponse, CreateClass
 import { WeeklySectionFormData } from '@/types/common';
 import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
-import { tokenService } from '../tokenService';
 
 export const classApi = {
 
@@ -34,9 +33,8 @@ export const classApi = {
         return httpClient.get(`/kelas/admin${queryString ? `?${queryString}` : ''}`);
     },
 
-    getAllClasses: async (userID?: string) => {
-        const finalUserID = userID || tokenService.getUserId();
-        return httpClient.get(`/public/user/class/?userID=${finalUserID}`);
+    getAllClasses: async () => {
+        return httpClient.get('/public/user/class');
     },
 
     getClassInfo: async (classId: string): Promise<ClassInfoResponse> => {
@@ -55,8 +53,8 @@ export const classApi = {
         return httpClient.get(`/teacher/assessment/class/?classID=${classId}`);
     },
 
-    getStudentClassAssessments: async (classId: string, userId: string): Promise<StudentAssessmentResponse> => {
-        return httpClient.get(`/student/assessment/class/?classID=${classId}&userID=${userId}`);
+    getStudentClassAssessments: async (classId: string): Promise<StudentAssessmentResponse> => {
+        return httpClient.get(`/student/assessment/class/?classID=${classId}`);
     },
 
     getClassMembers: async (classId: string): Promise<ClassMemberResponse> => {

@@ -292,7 +292,6 @@ export interface AssessmentSessionResponse {
 }
 
 export interface CreateSubmissionRequest {
-    user_id: string;
     assessment_id: string;
 }
 

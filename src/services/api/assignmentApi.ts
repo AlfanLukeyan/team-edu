@@ -9,13 +9,11 @@ import {
 } from '@/types/api';
 import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
-import { tokenService } from '../tokenService';
 
 export const assignmentApi = {
     submitAssignment: async (assignmentId: string, file: any): Promise<SubmitAssignmentResponse> => {
         const formData = new FormData();
         formData.append('assignment_id', assignmentId);
-        formData.append('user_id', tokenService.getUserId() || '');
         formData.append('file', file);
 
         return simplePostFormData('/student/kelas/assignment-submission', formData);
@@ -25,9 +23,8 @@ export const assignmentApi = {
         return httpClient.get(`/teacher/kelas/assignment/?assignment_id=${assignmentId}`);
     },
 
-    getStudentAssignmentDetails: async (assignmentId: string, userId?: string): Promise<StudentAssignmentDetailsResponse> => {
-        const finalUserId = userId || tokenService.getUserId();
-        return httpClient.get(`/student/kelas/assignment/?assignment_id=${assignmentId}&user_id=${finalUserId}`);
+    getStudentAssignmentDetails: async (assignmentId: string): Promise<StudentAssignmentDetailsResponse> => {
+        return httpClient.get(`/student/kelas/assignment/?assignment_id=${assignmentId}`);
     },
 
     getAssignmentSubmissions: async (

@@ -23,7 +23,6 @@ import {
     UpdateQuestionResponse
 } from '@/types/api';
 import { httpClient } from '../httpClient';
-import { tokenService } from '../tokenService';
 
 export const assessmentApi = {
     createSubmission: async (data: CreateSubmissionRequest): Promise<AssessmentSessionApiResponse> => {
@@ -50,18 +49,16 @@ export const assessmentApi = {
         return httpClient.delete(`/assessment/submission/?id=${submissionId}`);
     },
 
-    getUpcomingAssessments: async (userID?: string): Promise<UpcomingAssessmentsResponse> => {
-        const finalUserID = userID || tokenService.getUserId();
-        return httpClient.get(`/public/assessment/upcoming/?userID=${finalUserID}`);
+    getUpcomingAssessments: async (): Promise<UpcomingAssessmentsResponse> => {
+        return httpClient.get('/public/assessment/upcoming');
     },
 
     getAssessmentDetails: async (assessmentId: string): Promise<AssessmentDetailsResponse> => {
         return httpClient.get(`/teacher/assessment/?id=${assessmentId}`);
     },
 
-    getStudentAssessmentDetails: async (assessmentId: string, userId?: string): Promise<StudentAssessmentDetailsResponse> => {
-        const finalUserId = userId || tokenService.getUserId();
-        return httpClient.get(`/student/assessment/?id=${assessmentId}&userID=${finalUserId}`);
+    getStudentAssessmentDetails: async (assessmentId: string): Promise<StudentAssessmentDetailsResponse> => {
+        return httpClient.get(`/student/assessment/?id=${assessmentId}`);
     },
 
     getAssessmentSubmissions: async (
