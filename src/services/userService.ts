@@ -1,3 +1,4 @@
+import { UserByRole } from "@/types/api";
 import { UserProfile } from "@/types/user";
 import { Platform } from "react-native";
 import { userApi } from "./api/userApi";
@@ -80,6 +81,15 @@ class UserService {
         }
     }
 
+    async getUsersByRole(roleId: number): Promise<UserByRole[]> {
+        try {
+            const response = await userApi.getUsersByRole(roleId);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     getRoleText(roleId?: number): string {
         switch (roleId) {
             case 1: return 'Admin';
@@ -100,6 +110,22 @@ class UserService {
 
     isProfileComplete(profile: UserProfile): boolean {
         return !!(profile.name && profile.email && profile.phone);
+    }
+
+    async getTeachers(): Promise<UserByRole[]> {
+        return this.getUsersByRole(2);
+    }
+
+    async getStudents(): Promise<UserByRole[]> {
+        return this.getUsersByRole(3);
+    }
+
+    async getAdmins(): Promise<UserByRole[]> {
+        return this.getUsersByRole(1);
+    }
+
+    isUserVerified(user: UserByRole): boolean {
+        return user.is_verified;
     }
 }
 

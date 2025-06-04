@@ -437,3 +437,59 @@ export interface AdminClassesData {
 
 export type AdminClassesResponse = ApiResponse<AdminClassesData>;
 export type DeleteClassResponse = ApiResponse<string>;
+
+
+export interface UserByRole {
+    created_at: string;
+    email: string;
+    face_model_preference: number;
+    id: number;
+    is_verified: boolean;
+    name: string;
+    phone: string | null;
+    profile_picture: string;
+    role_id: number;
+    updated_at: string;
+    uuid: string;
+}
+
+export type GetUsersByRoleResponse = ApiResponse<UserByRole[]>;
+
+
+export interface CreateClassRequest {
+    Name: string;
+    Tag: string;
+    Description: string;
+    Teacher: string;
+    Teacher_ID: string;
+}
+
+export interface CreateClassResponseData {
+    description: string;
+    id: string;
+    name: string;
+    tag: string;
+    teacher: string;
+    teacher_id: string;
+}
+
+export type CreateClassResponse = ApiResponse<CreateClassResponseData>;
+
+export interface UpdateClassRequest {
+    Name: string;
+    Tag: string;
+    Description: string;
+    Teacher: string;
+    Teacher_ID: string;
+}
+
+export interface UpdateClassResponseData {
+    description: string;
+    id: string;
+    name: string;
+    tag: string;
+    teacher: string;
+    teacher_id: string;
+}
+
+export type UpdateClassResponse = ApiResponse<UpdateClassResponseData>;

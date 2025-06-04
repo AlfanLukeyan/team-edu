@@ -1,3 +1,4 @@
+import { GetUsersByRoleResponse } from '@/types/api';
 import { UserProfile } from '@/types/user';
 import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
@@ -30,5 +31,9 @@ export const userApi = {
 
     updateFaceReference: async (formData: FormData): Promise<any> => {
         return simplePostFormData('/user/update/face-reference', formData, 'POST', true);
+    },
+
+    getUsersByRole: async (roleId: number): Promise<GetUsersByRoleResponse> => {
+        return httpClient.get(`/admin/get-user?role_id=${roleId}`);
     },
 };

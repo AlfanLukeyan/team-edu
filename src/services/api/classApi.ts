@@ -1,10 +1,18 @@
-import { AssessmentResponse, ClassInfoResponse, ClassMemberResponse, DeleteClassResponse, StudentAssessmentResponse, WeeklySectionResponse } from '@/types/api';
+import { AssessmentResponse, ClassInfoResponse, ClassMemberResponse, CreateClassRequest, CreateClassResponse, DeleteClassResponse, StudentAssessmentResponse, UpdateClassRequest, UpdateClassResponse, WeeklySectionResponse } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
 import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
 import { tokenService } from '../tokenService';
 
 export const classApi = {
+
+    createAdminClass: async (data: CreateClassRequest): Promise<CreateClassResponse> => {
+        return httpClient.post('/kelas/admin', data);
+    },
+
+    updateAdminClass: async (classId: string, data: UpdateClassRequest): Promise<UpdateClassResponse> => {
+        return httpClient.put(`/kelas/admin/?id=${classId}`, data);
+    },
 
     deleteAdminClass: async (classId: string): Promise<DeleteClassResponse> => {
         return httpClient.delete(`/kelas/admin/?id=${classId}`);

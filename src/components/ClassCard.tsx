@@ -4,7 +4,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import ClassActionsMenu from "./ClassActionsMenu";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
@@ -18,7 +18,6 @@ interface ClassCardProps {
     onEdit?: () => void;
     onDelete?: () => void;
     showActions?: boolean;
-    isDeleting?: boolean;
 }
 
 export function ClassCard({
@@ -28,8 +27,7 @@ export function ClassCard({
     onPress,
     onEdit,
     onDelete,
-    showActions = false,
-    isDeleting = false
+    showActions = false
 }: ClassCardProps) {
     const theme = useColorScheme() ?? "light";
     const { isAdmin } = useUserRole();
@@ -57,11 +55,8 @@ export function ClassCard({
                 />
             )}
 
-            <Pressable onPress={onPress} disabled={isDeleting}>
-                <ThemedView style={[
-                    { borderRadius: 15, marginBottom: 16 },
-                    isDeleting && styles.deletingCard
-                ]} isCard>
+            <Pressable onPress={onPress}>
+                <ThemedView style={{ borderRadius: 15, marginBottom: 5 }} isCard>
                     <View style={{ position: 'relative' }}>
                         {/* Bookmark Icon */}
                         <View
@@ -69,7 +64,7 @@ export function ClassCard({
                                 zIndex: 2,
                                 position: "absolute",
                                 margin: 18,
-                                right: 0,
+                                left: 0,
                             }}
                         >
                             <IconSymbol
@@ -79,23 +74,18 @@ export function ClassCard({
                             />
                         </View>
 
-                        {/* Ellipsis Button or Loading Indicator */}
+                        {/* Ellipsis Button */}
                         {isAdmin() && showActions && onEdit && onDelete && (
                             <View style={styles.ellipsisButton}>
-                                {isDeleting ? (
-                                    <ActivityIndicator size="small" color={Colors[theme].background} />
-                                ) : (
-                                    <TouchableOpacity
-                                        onPress={() => setShowActionsMenu(true)}
-                                        disabled={isDeleting}
-                                    >
-                                        <Ionicons
-                                            name="ellipsis-horizontal"
-                                            size={14}
-                                            color={Colors[theme].background}
-                                        />
-                                    </TouchableOpacity>
-                                )}
+                                <TouchableOpacity
+                                    onPress={() => setShowActionsMenu(true)}
+                                >
+                                    <Ionicons
+                                        name="ellipsis-horizontal"
+                                        size={14}
+                                        color={Colors[theme].background}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         )}
 
@@ -111,12 +101,12 @@ export function ClassCard({
                         />
                     </View>
 
-                    <View style={[styles.content, isDeleting && styles.deletingContent]}>
-                        <ThemedText type="defaultSemiBold" style={isDeleting ? styles.deletingText : undefined}>
+                    <View style={styles.content}>
+                        <ThemedText type="defaultSemiBold">
                             {title}
                         </ThemedText>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                            <ThemedText type="default" style={isDeleting ? styles.deletingText : undefined}>
+                            <ThemedText type="default">
                                 {classCode}
                             </ThemedText>
                             <IconSymbol
@@ -127,10 +117,7 @@ export function ClassCard({
                             />
                             <ThemedText
                                 type="default"
-                                style={[
-                                    { flexShrink: 1, flex: 1 },
-                                    isDeleting ? styles.deletingText : undefined
-                                ]}
+                                style={{ flexShrink: 1, flex: 1 }}
                                 numberOfLines={1}
                             >
                                 {description}
@@ -153,14 +140,5 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 16,
-    },
-    deletingCard: {
-        opacity: 0.6,
-    },
-    deletingContent: {
-        opacity: 0.7,
-    },
-    deletingText: {
-        opacity: 0.5,
     },
 });

@@ -1,12 +1,13 @@
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useRef } from "react";
 import { ActivityIndicator, StyleSheet, TextInput, TouchableOpacity, useColorScheme, View } from "react-native";
 
 interface SearchBarProps {
     visible: boolean;
     value: string;
     onChangeText: (text: string) => void;
+    onEndEditing?: (text: string) => void; // Add this prop
     onClear: () => void;
     placeholder?: string;
     loading?: boolean;
@@ -17,14 +18,29 @@ export function SearchBar({
     visible,
     value,
     onChangeText,
+    onEndEditing,
     onClear,
     placeholder = "Search...",
     loading = false,
     autoFocus = true
 }: SearchBarProps) {
     const colorScheme = useColorScheme();
+    const inputRef = useRef<TextInput>(null);
 
     if (!visible) return null;
+
+    const handleClear = () => {
+        onClear();
+        // Trigger search with empty string when clearing
+        onEndEditing?.('');
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 100);
+    };
+
+    const handleEndEditing = () => {
+        onEndEditing?.(value);
+    };
 
     return (
         <View style={styles.searchContainer}>
@@ -42,6 +58,7 @@ export function SearchBar({
                     style={styles.searchIcon}
                 />
                 <TextInput
+                    ref={inputRef}
                     style={[
                         styles.searchInput,
                         { color: Colors[colorScheme ?? 'light'].text }
@@ -49,11 +66,14 @@ export function SearchBar({
                     placeholder={placeholder}
                     placeholderTextColor={Colors[colorScheme ?? 'light'].icon}
                     value={value}
-                    onChangeText={onChangeText}
+                    onChangeText={onChangeText} // Only update the text, no API calls
+                    onEndEditing={handleEndEditing} // Trigger search when done editing
                     autoFocus={autoFocus}
+                    returnKeyType="search"
+                    blurOnSubmit={false}
                 />
                 {value.length > 0 && (
-                    <TouchableOpacity onPress={onClear} style={styles.clearButton}>
+                    <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
                         <Ionicons
                             name="close-circle"
                             size={20}

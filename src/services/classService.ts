@@ -1,4 +1,4 @@
-import { AdminClass, AssessmentData, Class, ClassInfo, ClassMember, DeleteClassResponse, PaginationInfo, WeeklySection } from '@/types/api';
+import { AdminClass, AssessmentData, Class, ClassInfo, ClassMember, CreateClassRequest, CreateClassResponseData, DeleteClassResponse, PaginationInfo, UpdateClassRequest, UpdateClassResponseData, WeeklySection } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
 import { classApi } from "./api/classApi";
 import { tokenService } from "./tokenService";
@@ -13,6 +13,23 @@ class ClassService {
         return ClassService.instance;
     }
 
+    async createClass(data: CreateClassRequest): Promise<CreateClassResponseData> {
+        try {
+            const response = await classApi.createAdminClass(data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async updateClass(classId: string, data: UpdateClassRequest): Promise<UpdateClassResponseData> {
+        try {
+            const response = await classApi.updateAdminClass(classId, data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
 
     async deleteClass(classId: string): Promise<DeleteClassResponse> {
         try {
