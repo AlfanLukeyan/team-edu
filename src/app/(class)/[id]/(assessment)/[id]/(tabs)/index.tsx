@@ -11,7 +11,7 @@ import { useAssessment } from "@/contexts/AssessmentContext";
 import { useClass } from "@/contexts/ClassContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useUserRole } from "@/hooks/useUserRole";
-import { convertMinutesToSeconds, formatDateTime } from "@/utils/utils";
+import { formatDateTime } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback } from "react";
@@ -47,8 +47,28 @@ export default function AboutAssessmentScreen() {
         const startTime = new Date(assessmentInfo.start_time);
         const currentTime = new Date();
         const timeDiff = startTime.getTime() - currentTime.getTime();
-        return Math.max(0, Math.floor(timeDiff / 1000)); // Return seconds
+        return Math.max(0, Math.floor(timeDiff / 1000));
     }, [assessmentInfo?.start_time]);
+
+    const getTimeRemaining = useCallback(() => {
+        if (assessmentInfo?.time_remaining !== null && assessmentInfo?.time_remaining !== undefined) {
+            return assessmentInfo.time_remaining;
+        }
+        
+        return assessmentInfo?.duration || 0;
+    }, [assessmentInfo?.time_remaining, assessmentInfo?.duration]);
+
+    const getTimeRemainingLabel = useCallback(() => {
+        if (!isAssessmentStarted()) {
+            return "Time until start";
+        }
+        
+        if (assessmentInfo?.time_remaining !== null && assessmentInfo?.time_remaining !== undefined) {
+            return "Time remaining";
+        }
+        
+        return "Assessment duration";
+    }, [isAssessmentStarted, assessmentInfo?.time_remaining]);
 
     const getStatusInfo = (status: string) => {
         if (isStudent() && !isAssessmentStarted()) {
@@ -128,9 +148,9 @@ export default function AboutAssessmentScreen() {
         if (!isStudent()) return false;
         
         return (
-            !isAssessmentStarted() || // Not started yet
-            isAssessmentEnded() || // Already ended
-            assessmentInfo?.submission_status === 'submitted' // Already submitted
+            !isAssessmentStarted() ||
+            isAssessmentEnded() ||
+            assessmentInfo?.submission_status === 'submitted'
         );
     };
 
@@ -161,7 +181,6 @@ export default function AboutAssessmentScreen() {
 
     const startDateTime = formatDateTime(assessmentInfo.start_time);
     const endDateTime = formatDateTime(assessmentInfo.end_time);
-    const durationInSeconds = convertMinutesToSeconds(assessmentInfo.duration);
 
     const statusInfo = isStudent() && assessmentInfo?.submission_status
         ? getStatusInfo(assessmentInfo.submission_status)
@@ -239,15 +258,12 @@ export default function AboutAssessmentScreen() {
                     <DurationCard
                         duration={assessmentInfo.duration}
                     />
-                    
-                    {isStudent() && !isAssessmentStarted() ? (
+
+                    {/* TimeRemainingCard - Only show for students */}
+                    {isStudent() && (
                         <TimeRemainingCard
-                            timeRemaining={getTimeUntilStart()}
-                            label="Time until start"
-                        />
-                    ) : (
-                        <TimeRemainingCard
-                            timeRemaining={assessmentInfo.time_remaining || durationInSeconds}
+                            timeRemaining={getTimeRemaining()}
+                            label={getTimeRemainingLabel()}
                         />
                     )}
 

@@ -37,9 +37,9 @@ export default function AssessmentSessionScreen() {
         const endTime = new Date(endedTime);
         const currentTime = new Date();
         const remainingMs = endTime.getTime() - currentTime.getTime();
-        
+
         const remainingSeconds = Math.floor(remainingMs / 1000);
-        
+
         return Math.max(0, remainingSeconds);
     };
 
@@ -281,11 +281,11 @@ export default function AssessmentSessionScreen() {
     // ✅ Format time remaining for display
     const formatTimeRemaining = (seconds: number): string => {
         if (seconds <= 0) return "00:00";
-        
+
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         const remainingSeconds = seconds % 60;
-        
+
         if (hours > 0) {
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
         } else {
@@ -325,15 +325,15 @@ export default function AssessmentSessionScreen() {
         <ThemedView style={styles.container}>
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 <View style={styles.headerCards}>
-                    <View style={{ flex: 1 }}>
-                        <TimeRemainingCard timeRemaining={timeRemaining || 0} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <QuestionSavedCountCard
-                            savedCount={getSavedCount()}
-                            totalCount={questions.length}
-                        />
-                    </View>
+                    <TimeRemainingCard
+                        timeRemaining={timeRemaining || 0}
+                        style={styles.headerCard}
+                    />
+                    <QuestionSavedCountCard
+                        savedCount={getSavedCount()}
+                        totalCount={questions.length}
+                        style={styles.headerCard}
+                    />
                 </View>
 
                 <View style={styles.questionContainer}>
@@ -431,6 +431,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 12,
         marginBottom: 24,
+        height: 80,
+    },
+    headerCard: {
+        flex: 1,
     },
     questionContainer: {
         marginBottom: 24,

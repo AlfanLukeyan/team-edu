@@ -12,12 +12,16 @@ import {
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Dimensions, Platform, ScrollView, StyleSheet, View } from "react-native";
 
 const STEP_INSTRUCTION = {
     image: require('../../../assets/images/step_1_instruction.png'),
     desc: "Look straight at the camera"
 };
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
+const isTablet = screenWidth > 768;
 
 export default function FaceAuthScreen() {
     const router = useRouter();
@@ -28,10 +32,12 @@ export default function FaceAuthScreen() {
     const [email, setEmail] = useState("");
 
     useEffect(() => {
-        setMaxBrightness();
-        return () => {
-            restoreBrightness();
-        };
+        if (!isWeb) {
+            setMaxBrightness();
+            return () => {
+                restoreBrightness();
+            };
+        }
     }, []);
 
     const handleVerify = async () => {
@@ -43,7 +49,7 @@ export default function FaceAuthScreen() {
         if (!cameraRef.current) return;
 
         ModalEmitter.showLoading("Verifying your identity...");
-        
+
         try {
             const photo = await cameraRef.current.takePictureAsync({
                 shutterSound: false,
@@ -53,12 +59,11 @@ export default function FaceAuthScreen() {
             console.log("Photo taken for face auth:", photo);
 
             const userData = await faceLoginUser(email.trim(), photo.uri);
-            
+
             if (userData) {
                 ModalEmitter.hideLoading();
                 ModalEmitter.showSuccess("Face verification successful!");
-                
-                // Delay navigation to allow user to see success message
+
                 setTimeout(() => {
                     router.replace("/(main)");
                 }, 1500);
@@ -67,7 +72,6 @@ export default function FaceAuthScreen() {
         } catch (error: any) {
             console.error("Face verification error:", error);
             ModalEmitter.hideLoading();
-            // Error is already handled by the HTTP client, but we can add specific handling here if needed
             ModalEmitter.showError(error.message || "Face verification failed. Please try again.");
         }
     };
@@ -75,7 +79,7 @@ export default function FaceAuthScreen() {
     if (!permission?.granted) {
         return (
             <ThemedView style={styles.container}>
-                <ThemedView style={styles.content}>
+                <View style={[styles.content, isWeb && styles.webContent]}>
                     <ThemedText type="title" style={styles.title}>
                         Face Authentication
                     </ThemedText>
@@ -85,11 +89,68 @@ export default function FaceAuthScreen() {
                     <Button onPress={requestPermission}>
                         Allow Camera Access
                     </Button>
-                </ThemedView>
+                </View>
             </ThemedView>
         );
     }
 
+    if (isWeb) {
+        return (
+            <ThemedView style={styles.container}>
+                <ScrollView contentContainerStyle={styles.webScrollContainer}>
+                    <View style={styles.webMainContainer}>
+                        <View style={styles.webLeftSection}>
+                            <ThemedText type="title" style={styles.webTitle}>
+                                Face Authentication
+                            </ThemedText>
+                            <ThemedText style={styles.webInstruction}>
+                                {STEP_INSTRUCTION.desc}
+                            </ThemedText>
+
+                            <View style={styles.webForm}>
+                                <TextInput
+                                    label="Email"
+                                    placeholder="Enter your email"
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    leftIcon="person.fill"
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                />
+                            </View>
+
+                            <ButtonWithDescription
+                                description="Ready for authentication? Tap verify!"
+                                onPress={handleVerify}
+                                disabled={!email.trim()}
+                                style={styles.webButton}
+                            >
+                                Verify Identity
+                            </ButtonWithDescription>
+                        </View>
+
+                        <View style={styles.webRightSection}>
+                            <View style={styles.webCameraContainer}>
+                                <CameraView
+                                    ref={cameraRef}
+                                    style={styles.webCamera}
+                                    facing="front"
+                                    ratio="1:1"
+                                    pictureSize="1088x1088"
+                                    autofocus="on"
+                                />
+                                <View style={styles.overlay}>
+                                    <View style={styles.faceOutline} />
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </ScrollView>
+            </ThemedView>
+        );
+    }
+
+    // Mobile Layout
     return (
         <ThemedView style={styles.container}>
             <View style={styles.instructionContainer}>
@@ -124,7 +185,7 @@ export default function FaceAuthScreen() {
                 </View>
             </View>
 
-            <View style={[styles.bottom]}>
+            <View style={styles.bottom}>
                 <ButtonWithDescription
                     description="Ready for authentication? Tap verify!"
                     onPress={handleVerify}
@@ -147,6 +208,10 @@ const styles = StyleSheet.create({
         padding: 20,
         gap: 20,
     },
+    webContent: {
+        maxWidth: 400,
+        alignSelf: 'center',
+    },
     title: {
         textAlign: "center",
     },
@@ -154,6 +219,8 @@ const styles = StyleSheet.create({
         textAlign: "center",
         opacity: 0.7,
     },
+
+    // Mobile Styles
     instructionContainer: {
         paddingHorizontal: 20,
         marginBottom: 20,
@@ -177,6 +244,77 @@ const styles = StyleSheet.create({
     camera: {
         flex: 1,
     },
+    bottom: {
+        padding: 20,
+        gap: 15,
+    },
+
+    // Web Styles
+    webScrollContainer: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        minHeight: screenHeight,
+        padding: 20,
+    },
+    webMainContainer: {
+        flexDirection: isTablet ? 'row' : 'column',
+        maxWidth: isTablet ? 1200 : 600,
+        alignSelf: 'center',
+        gap: isTablet ? 40 : 30,
+        alignItems: 'center',
+    },
+    webLeftSection: {
+        flex: isTablet ? 1 : undefined,
+        width: isTablet ? undefined : '100%',
+        maxWidth: isTablet ? undefined : 400,
+        gap: 24,
+    },
+    webRightSection: {
+        flex: isTablet ? 1 : undefined,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    webTitle: {
+        textAlign: isTablet ? "left" : "center",
+        fontSize: 28,
+        marginBottom: 8,
+    },
+    webInstruction: {
+        textAlign: isTablet ? "left" : "center",
+        opacity: 0.7,
+        fontSize: 16,
+    },
+    webForm: {
+        width: '100%',
+    },
+    webButton: {
+        width: '100%',
+    },
+    webCameraContainer: {
+        width: isTablet ? 350 : Math.min(screenWidth - 40, 350),
+        height: isTablet ? 350 : Math.min(screenWidth - 40, 350),
+        borderRadius: 20,
+        overflow: "hidden",
+        position: "relative",
+        ...Platform.select({
+            web: {
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            },
+            default: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+                elevation: 8,
+            },
+        }),
+    },
+    webCamera: {
+        width: '100%',
+        height: '100%',
+    },
+
+    // Shared Styles
     overlay: {
         position: "absolute",
         top: 0,
@@ -187,15 +325,17 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     faceOutline: {
-        width: 150,
-        height: 200,
-        borderRadius: 100,
+        width: 120,
+        height: 160,
+        borderRadius: 80,
         borderWidth: 3,
         borderColor: "white",
         borderStyle: "dashed",
-    },
-    bottom: {
-        padding: 20,
-        gap: 15,
+        ...Platform.select({
+            web: {
+                borderStyle: 'dashed',
+            },
+            default: {},
+        }),
     },
 });

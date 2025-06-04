@@ -1,10 +1,12 @@
+import { Button } from "@/components/Button";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { ModalEmitter } from "@/services/modalEmitter";
 import { formatDate, readableHash } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import React, { useState } from "react";
-import { Alert, Animated, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -21,6 +23,8 @@ interface AssignmentSubmissionCardProps {
     isSelected?: boolean;
     onLongPress?: (id: string) => void;
     onPress?: (id: string) => void;
+    onDelete?: (id: string, userName: string) => void;
+    onUpdateScore?: (id: string, score: number) => void;
 }
 
 export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> = ({
@@ -35,12 +39,16 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
     file_url,
     isSelected = false,
     onLongPress,
-    onPress
+    onPress,
+    onDelete,
+    onUpdateScore
 }) => {
     const theme = useColorScheme() || "light";
     const [isExpanded, setIsExpanded] = useState(false);
     const [animation] = useState(new Animated.Value(0));
     const [imageError, setImageError] = useState(false);
+    const [isEditingScore, setIsEditingScore] = useState(false);
+    const [editingScore, setEditingScore] = useState(score.toString());
 
     const handleImageError = () => {
         setImageError(true);
@@ -55,12 +63,44 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                 if (canOpen) {
                     await Linking.openURL(file_url);
                 } else {
-                    Alert.alert("Error", "Cannot open the submission file");
+                    ModalEmitter.showError("Cannot open the submission file");
                 }
             } catch (error) {
-                Alert.alert("Error", "Failed to open submission");
+                ModalEmitter.showError("Failed to open submission");
             }
         }
+    };
+
+    const handleDeleteSubmission = () => {
+        if (onDelete) {
+            onDelete(id, user_name);
+        }
+    };
+
+    const handleEditScore = () => {
+        setIsEditingScore(true);
+        setEditingScore(score.toString());
+    };
+
+    const handleSaveScore = () => {
+        const newScore = parseInt(editingScore);
+
+        // Validate score
+        if (isNaN(newScore) || newScore < 0 || newScore > 100) {
+            ModalEmitter.showError("Please enter a valid score between 0 and 100");
+            return;
+        }
+
+        if (onUpdateScore) {
+            onUpdateScore(id, newScore);
+        }
+
+        setIsEditingScore(false);
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditingScore(false);
+        setEditingScore(score.toString());
     };
 
     const toggleExpanded = () => {
@@ -76,7 +116,7 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
 
     const expandedHeight = animation.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, status === "submitted" ? 110 : 20],
+        outputRange: [0, status === "submitted" ? 180 : 20],
     });
 
     const rotateChevron = animation.interpolate({
@@ -174,11 +214,61 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                 {status === "submitted" && (
                     <Animated.View style={[styles.expandableContainer, { height: expandedHeight }]}>
                         <View style={styles.submittedDetails}>
+                            {/* Score Row with Edit Functionality */}
                             <View style={styles.detailRow}>
                                 <ThemedText style={styles.detailLabel}>Score:</ThemedText>
-                                <ThemedText type="defaultSemiBold" style={styles.detailValue}>
-                                    {score}/100
-                                </ThemedText>
+                                <View style={styles.scoreContainer}>
+                                    {isEditingScore ? (
+                                        <View style={styles.scoreEditContainer}>
+                                            <TextInput
+                                                style={[
+                                                    styles.scoreInput,
+                                                    {
+                                                        color: Colors[theme].text,
+                                                        borderColor: Colors[theme].tint,
+                                                        backgroundColor: Colors[theme].background,
+                                                    }
+                                                ]}
+                                                value={editingScore}
+                                                onChangeText={setEditingScore}
+                                                keyboardType="numeric"
+                                                maxLength={3}
+                                                autoFocus
+                                                onSubmitEditing={handleSaveScore}
+                                            />
+                                            <ThemedText style={styles.scoreSlash}>/100</ThemedText>
+                                            <TouchableOpacity onPress={handleSaveScore} style={styles.iconButton}>
+                                                <Ionicons
+                                                    name="checkmark"
+                                                    size={16}
+                                                    color="#4CAF50"
+                                                />
+                                            </TouchableOpacity>
+                                            <TouchableOpacity onPress={handleCancelEdit} style={styles.iconButton}>
+                                                <Ionicons
+                                                    name="close"
+                                                    size={16}
+                                                    color="#F44336"
+                                                />
+                                            </TouchableOpacity>
+                                        </View>
+                                    ) : (
+                                        <View style={styles.scoreDisplayContainer}>
+                                            <ThemedText type="defaultSemiBold" style={styles.detailValue}>
+                                                {score}/100
+                                            </ThemedText>
+                                            {onUpdateScore && (
+                                                <TouchableOpacity onPress={handleEditScore} style={styles.iconButton}>
+                                                    <Ionicons
+                                                        name="pencil"
+                                                        size={14}
+                                                        color={Colors[theme].tint}
+                                                    />
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                    )}
+                                </View>
                             </View>
 
                             {submitted_at && (
@@ -189,6 +279,7 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                                     </ThemedText>
                                 </View>
                             )}
+
                             {file_name && (
                                 <TouchableOpacity
                                     onPress={handleDownloadSubmission}
@@ -212,6 +303,23 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                                         style={{ marginLeft: 4 }}
                                     />
                                 </TouchableOpacity>
+                            )}
+
+                            {/* Delete Button - Only show for submitted status */}
+                            {onDelete && (
+                                <View style={styles.deleteButtonContainer}>
+                                    <Button
+                                        type="delete"
+                                        onPress={handleDeleteSubmission}
+                                        style={styles.deleteButton}
+                                        icon={{
+                                            name: "trash",
+                                            size: 16
+                                        }}
+                                    >
+                                        Delete Submission
+                                    </Button>
+                                </View>
                             )}
                         </View>
                     </Animated.View>
@@ -315,6 +423,36 @@ const styles = StyleSheet.create({
     detailValue: {
         fontSize: 12,
     },
+    scoreContainer: {
+        alignItems: 'flex-end',
+    },
+    scoreDisplayContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    scoreEditContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    scoreInput: {
+        borderWidth: 1,
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        fontSize: 12,
+        fontWeight: '600',
+        minWidth: 30,
+        textAlign: 'center',
+    },
+    scoreSlash: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    iconButton: {
+        padding: 2,
+    },
     downloadButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -328,6 +466,16 @@ const styles = StyleSheet.create({
         marginLeft: 4,
         fontSize: 12,
         flex: 1,
+    },
+    deleteButtonContainer: {
+        marginTop: 12,
+        paddingTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(128, 128, 128, 0.2)',
+    },
+    deleteButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
     },
     pendingContainer: {
         marginTop: 8,

@@ -1,56 +1,128 @@
+import { Button } from "@/components/Button";
+import ClassBottomSheet from "@/components/ClassBottomSheet";
 import { ClassCard } from "@/components/ClassCard";
+import { SearchBar } from "@/components/SearchBar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { classService } from "@/services/classService";
-import { Class } from "@/types/class";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, useColorScheme } from "react-native";
+import { Colors } from "@/constants/Colors";
+import { useClassControl } from "@/hooks/useClassControl";
+import { useUserRole } from "@/hooks/useUserRole";
+import { AdminClass, Class } from "@/types/api";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useLayoutEffect } from "react";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, TouchableOpacity, useColorScheme, View } from "react-native";
 
 export default function ClassesScreen() {
-    const router = useRouter();
+    const navigation = useNavigation();
     const colorScheme = useColorScheme();
+    const { isAdmin } = useUserRole();
 
-    // State management
-    const [classes, setClasses] = useState<Class[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const {
+        classes,
+        loading,
+        refreshing,
+        loadingMore,
+        showSearch,
+        searchQuery,
+        isSearching,
+        classBottomSheetRef,
+        refetchClasses,
+        loadMoreClasses,
+        handleSearch,
+        toggleSearch,
+        clearSearch,
+        handleClassSubmit,
+        handleOpenCreateSheet,
+        handleEditClass,
+        handleDeleteClass,
+        handleClassPress,
+    } = useClassControl();
 
-    // Fetch classes function
-    const fetchClasses = async () => {
-        try {
-            setError(null);
-            const classesData = await classService.getClasses();
-            setClasses(classesData);
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
+    useLayoutEffect(() => {
+        if (isAdmin()) {
+            navigation.setOptions({
+                headerRight: () => (
+                    <TouchableOpacity
+                        onPress={toggleSearch}
+                        style={styles.headerSearchButton}
+                    >
+                        <Ionicons
+                            name={showSearch ? "close" : "search"}
+                            size={20}
+                            color={Colors[colorScheme ?? 'light'].text}
+                        />
+                    </TouchableOpacity>
+                ),
+            });
         }
+    }, [navigation, isAdmin, showSearch, toggleSearch, colorScheme]);
+
+    useFocusEffect(
+        useCallback(() => {
+            return () => {
+                // Cleanup handled in hook
+            };
+        }, [])
+    );
+
+    const renderClassItem = ({ item }: { item: Class | AdminClass }) => (
+        <ClassCard
+            key={item.id}
+            title={item.name || 'Untitled Class'}
+            classCode={'tag' in item ? item.tag || 'No Code' : 'No Code'}
+            description={item.description || 'No description available'}
+            onPress={() => handleClassPress(item.id)}
+            showActions={isAdmin()}
+            onEdit={() => handleEditClass(item.id)}
+            onDelete={() => handleDeleteClass(item.id)}
+        />
+    );
+
+    const renderFooter = () => {
+        if (!loadingMore) return null;
+        return (
+            <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" />
+                <ThemedText style={styles.loadingText}>Loading more classes...</ThemedText>
+            </View>
+        );
     };
 
-    // Refresh classes function
-    const refetchClasses = async () => {
-        try {
-            setRefreshing(true);
-            setError(null);
-            const classesData = await classService.getClasses();
-            setClasses(classesData);
-        } catch (err: any) {
-            setError(err.message || 'Failed to refresh classes');
-        } finally {
-            setRefreshing(false);
-        }
-    };
+    const renderEmptyState = () => (
+        <ThemedView style={styles.emptyState}>
+            <ThemedText style={styles.emptyText}>
+                {searchQuery ? 'No classes found for your search' : 'No classes found'}
+            </ThemedText>
+            <ThemedText style={styles.emptySubText}>
+                {searchQuery ? 'Try adjusting your search terms' : 'Pull down to refresh or check back later'}
+            </ThemedText>
+        </ThemedView>
+    );
 
-    // Load classes on component mount
-    useEffect(() => {
-        fetchClasses();
-    }, []);
+    const renderListHeader = () => (
+        <View>
+            {isAdmin() && (
+                <Button
+                    onPress={handleOpenCreateSheet}
+                    style={{ marginBottom: 16 }}
+                >
+                    Create Class
+                </Button>
+            )}
+            <SearchBar
+                visible={isAdmin() && showSearch}
+                value={searchQuery}
+                onChangeText={handleSearch}
+                onClear={clearSearch}
+                placeholder="Search classes..."
+                loading={isSearching}
+            />
+        </View>
+    );
 
-    // Loading state
-    if (loading) {
+    if (loading && classes.length === 0) {
         return (
             <ThemedView style={styles.centered}>
                 <ActivityIndicator size="large" />
@@ -59,66 +131,52 @@ export default function ClassesScreen() {
     }
 
     return (
-        <ThemedView style={{ flex: 1 }}>
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{
-                    paddingHorizontal: 24,
-                    paddingVertical: 16,
-                    flexGrow: 1
-                }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={refetchClasses}
-                    />
-                }
-            >
-                {classes.length === 0 ? (
-                    <ThemedView style={styles.emptyState}>
-                        <ThemedText style={styles.emptyText}>
-                            No classes found
-                        </ThemedText>
-                        <ThemedText style={styles.emptySubText}>
-                            Pull down to refresh or check back later
-                        </ThemedText>
-                    </ThemedView>
-                ) : (
-                    <ThemedView>
-                        {classes.map((classItem) => (
-                            <ClassCard
-                                key={classItem.id}
-                                title={classItem.name || 'Untitled Class'}
-                                classCode={classItem.tag || 'No Code'}
-                                description={classItem.description || 'No description available'}
-                                onPress={() => {
-                                    router.push(`/(class)/${classItem.id}/(tabs)`);
-                                }}
+        <>
+            <ThemedView style={{ flex: 1 }}>
+                <View style={{ margin: 16, borderRadius: 15, flex: 1, overflow: 'hidden' }}>
+                    <FlatList
+                        data={classes}
+                        renderItem={renderClassItem}
+                        keyExtractor={(item) => item.id}
+                        ListHeaderComponent={renderListHeader}
+                        contentContainerStyle={[
+                            styles.container,
+                            classes.length === 0 && { flex: 1 }
+                        ]}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={refetchClasses}
                             />
-                        ))}
-                    </ThemedView>
-                )}
-            </ScrollView>
-        </ThemedView>
+                        }
+                        onEndReached={isAdmin() ? loadMoreClasses : undefined}
+                        onEndReachedThreshold={0.1}
+                        ListEmptyComponent={renderEmptyState}
+                        ListFooterComponent={renderFooter}
+                        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+                    />
+                </View>
+            </ThemedView>
+            {isAdmin() && (
+                <ClassBottomSheet
+                    ref={classBottomSheetRef}
+                    onSubmit={handleClassSubmit}
+                />
+            )}
+        </>
     );
 }
 
 const styles = StyleSheet.create({
+    container: {
+        paddingBottom: 80,
+    },
     centered: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 24,
-    },
-    errorText: {
-        color: 'red',
-        textAlign: 'center',
-        marginBottom: 16,
-    },
-    retryText: {
-        color: '#007AFF',
-        textAlign: 'center',
-        textDecorationLine: 'underline',
     },
     emptyState: {
         flex: 1,
@@ -136,8 +194,20 @@ const styles = StyleSheet.create({
         opacity: 0.7,
         textAlign: 'center',
     },
-    errorIcon: {
-        marginBottom: 16,
-        opacity: 0.5,
+    footerLoader: {
+        paddingVertical: 16,
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 8,
+        opacity: 0.7,
+        fontSize: 14,
+    },
+    headerSearchButton: {
+        padding: 8,
+        paddingRight: 24,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

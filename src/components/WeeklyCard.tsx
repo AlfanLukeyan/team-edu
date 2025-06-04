@@ -5,12 +5,13 @@ import WeeklySectionActionsMenu from "@/components/WeeklySectionActionsMenu";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useUserRole } from "@/hooks/useUserRole";
-import { getYoutubeEmbedUrl } from "@/utils/utils";
+import { getYoutubeEmbedUrl, getYoutubeVideoId } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Dimensions, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { Button } from "./Button";
 import { ThemedText } from "./ThemedText";
@@ -59,10 +60,12 @@ export function WeeklyCard({
     const theme = useColorScheme() ?? "light";
     const { hasTeacherPermissions } = useUserRole();
     const screenWidth = Dimensions.get("window").width;
-    const videoHeight = screenWidth * 0.5625;
+    const videoHeight = screenWidth * 0.5625; // 16:9 aspect ratio
     const [showActionsMenu, setShowActionsMenu] = useState(false);
 
     const embedUrl = videoUrl ? getYoutubeEmbedUrl(videoUrl) : "";
+    const videoId = videoUrl ? getYoutubeVideoId(videoUrl) : null;
+    const isValidYouTubeUrl = !!videoId;
 
     const handleEdit = () => {
         if (weekId && onEdit) {
@@ -94,6 +97,65 @@ export function WeeklyCard({
         if (weekId && onDeleteAssignment) {
             onDeleteAssignment(assignmentId, weekId);
         }
+    };
+
+    const handleOpenVideo = async () => {
+        if (videoUrl) {
+            try {
+                await Linking.openURL(videoUrl);
+            } catch (error) {
+                console.error('Failed to open video URL:', error);
+            }
+        }
+    };
+
+    const renderVideoSection = () => {
+        if (!videoUrl) return null;
+
+        // For web platform, show clickable link
+        if (Platform.OS === 'web') {
+            if (!isValidYouTubeUrl) {
+                return (
+                    <View style={styles.invalidVideoContainer}>
+                        <Ionicons name="videocam-off" size={24} color={Colors[theme].text} style={{ opacity: 0.5 }} />
+                        <ThemedText style={styles.invalidVideoText}>Invalid video URL</ThemedText>
+                    </View>
+                );
+            }
+
+            return (
+                <TouchableOpacity style={styles.webVideoLink} onPress={handleOpenVideo}>
+                    <Ionicons name="logo-youtube" size={24} color="#FF0000" />
+                    <ThemedText style={[styles.webVideoLinkText, { color: Colors[theme].tint }]}>
+                        Watch YouTube Video
+                    </ThemedText>
+                    <Ionicons name="open-outline" size={16} color={Colors[theme].tint} />
+                </TouchableOpacity>
+            );
+        }
+
+        // For mobile platforms, use WebView
+        if (!isValidYouTubeUrl) {
+            return (
+                <View style={styles.invalidVideoContainer}>
+                    <Ionicons name="videocam-off" size={24} color={Colors[theme].text} style={{ opacity: 0.5 }} />
+                    <ThemedText style={styles.invalidVideoText}>Invalid video URL</ThemedText>
+                </View>
+            );
+        }
+
+        return (
+            <View style={styles.videoContainer}>
+                <WebView
+                    style={[styles.webview, { height: videoHeight }]}
+                    source={{ uri: embedUrl }}
+                    allowsFullscreenVideo
+                    javaScriptEnabled
+                    startInLoadingState
+                    scalesPageToFit
+                />
+            </View>
+        );
     };
 
     return (
@@ -158,16 +220,7 @@ export function WeeklyCard({
                 </View>
 
                 {/* Video Section */}
-                {videoUrl && (
-                    <View style={styles.videoContainer}>
-                        <WebView
-                            style={[styles.webview, { height: videoHeight }]}
-                            source={{ uri: embedUrl }}
-                            allowsFullscreenVideo
-                            javaScriptEnabled
-                        />
-                    </View>
-                )}
+                {renderVideoSection()}
 
                 {/* Attachment Section */}
                 {attachment && (
@@ -230,7 +283,6 @@ export function WeeklyCard({
     );
 }
 
-// ... styles remain the same
 const styles = StyleSheet.create({
     ellipsisButton: {
         position: 'absolute',
@@ -243,9 +295,40 @@ const styles = StyleSheet.create({
         marginTop: 8,
         borderRadius: 8,
         overflow: "hidden",
+        backgroundColor: '#000',
     },
     webview: {
         width: "100%",
+        backgroundColor: 'transparent',
+    },
+    webVideoLink: {
+        marginTop: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 8,
+        backgroundColor: 'rgba(255, 0, 0, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 0, 0, 0.2)',
+        gap: 8,
+    },
+    webVideoLinkText: {
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    invalidVideoContainer: {
+        marginTop: 8,
+        padding: 16,
+        alignItems: 'center',
+        borderRadius: 8,
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+        gap: 8,
+    },
+    invalidVideoText: {
+        opacity: 0.7,
+        fontSize: 14,
+        textAlign: 'center',
     },
     attachmentContainer: {
         paddingVertical: 8,

@@ -4,12 +4,13 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useAssignment } from '@/contexts/AssignmentContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { ModalEmitter } from '@/services/modalEmitter';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function CompletedAssignmentsScreen() {
     const theme = useColorScheme() ?? 'light';
-    const { submittedSubmissions, loading, error, refetchSubmissionsByStatus } = useAssignment();
+    const { submittedSubmissions, loading, error, refetchSubmissionsByStatus, deleteSubmission, updateSubmissionScore } = useAssignment();
     const [refreshing, setRefreshing] = useState(false);
 
     const handleRefresh = useCallback(async () => {
@@ -17,6 +18,46 @@ export default function CompletedAssignmentsScreen() {
         await refetchSubmissionsByStatus('submitted');
         setRefreshing(false);
     }, [refetchSubmissionsByStatus]);
+
+    const handleDeleteSubmission = useCallback((submissionId: string, userName: string) => {
+        ModalEmitter.showAlert({
+            title: "Delete Submission",
+            message: `Are you sure you want to delete ${userName}'s submission? This action cannot be undone.`,
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    ModalEmitter.showLoading("Deleting submission...");
+                    await deleteSubmission(submissionId);
+                    ModalEmitter.hideLoading();
+                    ModalEmitter.showSuccess("Submission deleted successfully");
+                    // Refresh the completed submissions after deletion
+                    await refetchSubmissionsByStatus('submitted');
+                } catch (error) {
+                    ModalEmitter.hideLoading();
+                    ModalEmitter.showError("Failed to delete submission");
+                }
+            },
+            onCancel: () => {
+                // Do nothing on cancel
+            }
+        });
+    }, [deleteSubmission, refetchSubmissionsByStatus]);
+
+    const handleUpdateScore = useCallback(async (submissionId: string, score: number) => {
+        try {
+            ModalEmitter.showLoading("Updating score...");
+            await updateSubmissionScore(submissionId, score);
+            ModalEmitter.hideLoading();
+            ModalEmitter.showSuccess("Score updated successfully");
+            // Refresh the completed submissions after score update
+            await refetchSubmissionsByStatus('submitted');
+        } catch (error) {
+            ModalEmitter.hideLoading();
+            ModalEmitter.showError("Failed to update score");
+        }
+    }, [updateSubmissionScore, refetchSubmissionsByStatus]);
 
     useEffect(() => {
         refetchSubmissionsByStatus('submitted');
@@ -62,8 +103,7 @@ export default function CompletedAssignmentsScreen() {
                 }
             >
                 <View style={styles.submissionsList}>
-
-                    {submittedSubmissions === null ? (
+                    {submittedSubmissions.length === 0 ? (
                         <ThemedView style={styles.emptyState}>
                             <ThemedText style={{ textAlign: 'center', opacity: 0.7 }}>
                                 No completed submissions
@@ -82,6 +122,12 @@ export default function CompletedAssignmentsScreen() {
                                 submitted_at={submission.created_at}
                                 file_name={submission.filename}
                                 file_url={submission.link_file}
+                                onDelete={submission.status === 'submitted' && submission.id_submission ?
+                                    handleDeleteSubmission : undefined
+                                }
+                                onUpdateScore={submission.status === 'submitted' && submission.id_submission ?
+                                    handleUpdateScore : undefined
+                                }
                             />
                         ))
                     )}

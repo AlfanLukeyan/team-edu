@@ -29,7 +29,7 @@ export interface ComponentAssessment {
     start_date: string;
     end_date: string;
     days_remaining: number;
-    submission_status: string;
+    submission_status?: 'todo' | 'in_progress' | 'submitted';
 }
 
 export interface Assignment {
@@ -368,11 +368,21 @@ export interface StudentAssignment {
     title: string;
 }
 
+export interface AssignmentSubmissionResponse {
+    id: string;
+    assignment_id: number;
+    user_id: string;
+    id_file: string;
+    score: number;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+}
 
-// ✅ Type aliases
+
 export type AssessmentData = Assessment | StudentAssessment;
 
-// ✅ API Response types
 export type StudentAssessmentResponse = ApiResponse<StudentAssessment[]>;
 export type TeacherAssessmentResponse = ApiResponse<Assessment[]>;
 export type UpcomingAssessmentsResponse = ApiResponse<ClassAssessment[]>;
@@ -402,3 +412,84 @@ export type UpdateAnswerResponse = ApiResponse<any>;
 export type GetSubmissionSessionResponse = ApiResponse<SubmissionSessionData>;
 
 export type StudentAssignmentDetailsResponse = ApiResponse<StudentAssignment>;
+export type SubmitAssignmentResponse = ApiResponse<AssignmentSubmissionResponse>;
+
+
+export interface AdminClass {
+    id: string;
+    name: string;
+    description: string;
+    teacher: string;
+    teacher_id: string;
+}
+
+export interface PaginationInfo {
+    count: number;
+    max_page: number;
+    page: number;
+    per_page: number;
+}
+
+export interface AdminClassesData {
+    data: AdminClass[];
+    pagination: PaginationInfo;
+}
+
+export type AdminClassesResponse = ApiResponse<AdminClassesData>;
+export type DeleteClassResponse = ApiResponse<string>;
+
+
+export interface UserByRole {
+    created_at: string;
+    email: string;
+    face_model_preference: number;
+    id: number;
+    is_verified: boolean;
+    name: string;
+    phone: string | null;
+    profile_picture: string;
+    role_id: number;
+    updated_at: string;
+    uuid: string;
+}
+
+export type GetUsersByRoleResponse = ApiResponse<UserByRole[]>;
+
+
+export interface CreateClassRequest {
+    Name: string;
+    Tag: string;
+    Description: string;
+    Teacher: string;
+    Teacher_ID: string;
+}
+
+export interface CreateClassResponseData {
+    description: string;
+    id: string;
+    name: string;
+    tag: string;
+    teacher: string;
+    teacher_id: string;
+}
+
+export type CreateClassResponse = ApiResponse<CreateClassResponseData>;
+
+export interface UpdateClassRequest {
+    Name: string;
+    Tag: string;
+    Description: string;
+    Teacher: string;
+    Teacher_ID: string;
+}
+
+export interface UpdateClassResponseData {
+    description: string;
+    id: string;
+    name: string;
+    tag: string;
+    teacher: string;
+    teacher_id: string;
+}
+
+export type UpdateClassResponse = ApiResponse<UpdateClassResponseData>;

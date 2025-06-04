@@ -1,10 +1,20 @@
-import { Assignment, AssignmentSubmission, CreateAssignmentData, StudentAssignment, UpdateAssignmentData } from '@/types/api';
+import { Assignment, AssignmentSubmission, AssignmentSubmissionResponse, CreateAssignmentData, StudentAssignment, UpdateAssignmentData } from '@/types/api';
 import { AssignmentFormData } from '@/types/common';
 import { assignmentApi } from './api/assignmentApi';
 import { tokenService } from './tokenService';
 
 class AssignmentService {
     private static instance: AssignmentService;
+
+    async submitAssignment(assignmentId: string, file: any): Promise<AssignmentSubmissionResponse> {
+        try {
+            const response = await assignmentApi.submitAssignment(assignmentId, file);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to submit assignment:', error);
+            throw error;
+        }
+    }
 
     static getInstance(): AssignmentService {
         if (!AssignmentService.instance) {
@@ -44,6 +54,28 @@ class AssignmentService {
             return response.data;
         } catch (error) {
             console.error('Failed to fetch assignment submissions:', error);
+            throw error;
+        }
+    }
+
+    async deleteAssignmentSubmission(submissionId: string): Promise<{ status: string; message: string; data: string }> {
+        try {
+            const response = await assignmentApi.deleteAssignmentSubmission(submissionId);
+            console.log('Assignment submission deleted successfully:', response);
+            return response;
+        } catch (error) {
+            console.error('Failed to delete assignment submission:', error);
+            throw error;
+        }
+    }
+
+    async updateSubmissionScore(submissionId: string, score: number): Promise<{ status: string; message: string; data: string }> {
+        try {
+            const response = await assignmentApi.updateSubmissionScore(submissionId, score);
+            console.log('Assignment submission score updated successfully:', response);
+            return response;
+        } catch (error) {
+            console.error('Failed to update assignment submission score:', error);
             throw error;
         }
     }

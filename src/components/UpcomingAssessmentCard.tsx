@@ -1,6 +1,7 @@
 import { Colors } from "@/constants/Colors";
+import { useUserRole } from "@/hooks/useUserRole";
 import { ComponentAssessment } from "@/types/api";
-import { formatDate } from "@/utils/utils";
+import { formatDate, getDaysRemainingText } from "@/utils/utils";
 import React from "react";
 import { StyleSheet, useColorScheme, View } from "react-native";
 import { AssessmentCard } from "./AssessmentCard";
@@ -23,12 +24,7 @@ export function UpcomingAssessmentCard({
     onAssessmentPress
 }: UpcomingAssessmentCardProps) {
     const theme = useColorScheme();
-
-    const getDaysRemainingText = (daysRemaining: number) => {
-        if (daysRemaining === 0) return "Today";
-        if (daysRemaining === 1) return "Tomorrow";
-        return `${daysRemaining} days`;
-    };
+    const { isStudent } = useUserRole();
 
     return (
         <ThemedView isCard={true} style={styles.container}>
@@ -49,8 +45,11 @@ export function UpcomingAssessmentCard({
                         <AssessmentCard
                             title={assessment.title}
                             startDate={formatDate(assessment.start_date)}
-                            endDate={getDaysRemainingText(assessment.days_remaining)}
+                            daysRemaining={getDaysRemainingText(assessment.end_date)}
                             onPress={() => onAssessmentPress?.(assessment, classId)}
+                            endDate={formatDate(assessment.end_date)}
+                            submissionStatus={assessment.submission_status}
+                            showSubmissionStatus={isStudent()}
                         />
                         {index < assessments.length - 1 && (
                             <View style={[

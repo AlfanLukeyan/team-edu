@@ -57,11 +57,6 @@ export const formatDateTime = (dateString: string): { date: string; time: string
 export const isOverdue = (endTime: string): boolean => {
     return new Date(endTime) < new Date();
 };
-
-export const convertMinutesToSeconds = (minutes: number): number => {
-    return minutes * 60;
-};
-
 /**
  * Creates a human-readable short hash
  * Example: "550e8400-e29b-41d4-a716-446655440001" → "ID-550E84"
@@ -125,39 +120,104 @@ export const cleanFileName = (fileName: string): string => {
     }
 };
 
-/**
- * Converts YouTube URLs to embed format for WebView
- * Supports: youtube.com/watch?v=, youtu.be/, and existing embed URLs
- * @param url - YouTube URL in any format
- * @returns Embed URL or empty string if invalid
- */
-export const getYoutubeEmbedUrl = (url: string): string => {
-    if (!url || typeof url !== 'string') return "";
-
-    if (url.includes("youtube.com/embed/")) return url;
-
-    let videoId = "";
-
-    try {
-        if (url.includes("youtube.com/watch?v=")) {
-            videoId = url.split("v=")[1];
-            const ampersandPosition = videoId.indexOf("&");
-            if (ampersandPosition !== -1) {
-                videoId = videoId.substring(0, ampersandPosition);
-            }
-        } else if (url.includes("youtu.be/")) {
-            videoId = url.split("youtu.be/")[1];
-            const questionPosition = videoId.indexOf("?");
-            if (questionPosition !== -1) {
-                videoId = videoId.substring(0, questionPosition);
-            }
-        } else if (url.includes("youtube.com/embed/")) {
-            return url;
+export const getYoutubeVideoId = (url: string): string | null => {
+    if (!url) return null;
+    
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+        /youtube\.com\/v\/([^&\n?#]+)/,
+        /youtube\.com\/embed\/([^&\n?#]+)/,
+        /youtu\.be\/([^&\n?#]+)/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
         }
+    }
+    
+    return null;
+};
 
-        return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
-    } catch (error) {
-        console.error('Error parsing YouTube URL:', error);
-        return "";
+// Keep your existing getYoutubeEmbedUrl function as fallback
+export const getYoutubeEmbedUrl = (url: string): string => {
+    const videoId = getYoutubeVideoId(url);
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+};
+
+export const calculateDaysRemaining = (endDate: string): number => {
+    const end = new Date(endDate);
+    const now = new Date();
+
+    end.setHours(23, 59, 59, 999);
+    now.setHours(0, 0, 0, 0);
+
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+};
+
+export const getDaysRemainingText = (endDate: string): string => {
+    const daysRemaining = calculateDaysRemaining(endDate);
+
+    if (daysRemaining <= 0) {
+        return "Expired";
+    } else if (daysRemaining === 1) {
+        return "Due Today";
+    } else if (daysRemaining === 2) {
+        return "Due Tomorrow";
+    } else if (daysRemaining <= 7) {
+        return `Due in ${daysRemaining} days`;
+    } else if (daysRemaining <= 30) {
+        return `Due in ${daysRemaining} days`;
+    } else {
+        const weeks = Math.floor(daysRemaining / 7);
+        if (weeks < 4) {
+            return `Due in ${weeks} week${weeks > 1 ? 's' : ''}`;
+        } else {
+            const months = Math.floor(daysRemaining / 30);
+            return `Due in ${months} month${months > 1 ? 's' : ''}`;
+        }
+    }
+};
+
+export interface DurationFormat {
+    hours: number;
+    minutes: number;
+    seconds: number;
+    totalMinutes: number;
+}
+
+export const convertSecondsToTime = (totalSeconds: number): DurationFormat => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const totalMinutes = Math.floor(totalSeconds / 60);
+
+    return {
+        hours,
+        minutes,
+        seconds,
+        totalMinutes
+    };
+};
+
+export const formatDuration = (totalSeconds: number, showSeconds: boolean = false): string => {
+    const { hours, minutes, seconds } = convertSecondsToTime(totalSeconds);
+
+    if (hours > 0) {
+        if (showSeconds) {
+            return `${hours}h ${minutes}m ${seconds}s`;
+        }
+        return `${hours}h ${minutes}m`;
+    } else if (minutes > 0) {
+        if (showSeconds) {
+            return `${minutes}m ${seconds}s`;
+        }
+        return `${minutes}m`;
+    } else {
+        return `${seconds}s`;
     }
 };

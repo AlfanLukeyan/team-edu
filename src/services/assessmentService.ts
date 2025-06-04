@@ -382,7 +382,7 @@ class AssessmentService {
                 start_date: assessment.start_time,
                 end_date: assessment.end_time,
                 days_remaining: getDaysRemaining(assessment.end_time),
-                submission_status: assessment.submission_status
+                submission_status: assessment.submission_status === "completed" ? "submitted" : assessment.submission_status
             }))
         }));
     }

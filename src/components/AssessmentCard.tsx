@@ -16,6 +16,7 @@ interface AssessmentCardProps {
     isSelected?: boolean;
     submissionStatus?: 'todo' | 'submitted' | 'in_progress';
     showSubmissionStatus?: boolean;
+    daysRemaining?: string;
 }
 
 export function AssessmentCard({
@@ -26,7 +27,8 @@ export function AssessmentCard({
     onLongPress,
     isSelected = false,
     submissionStatus,
-    showSubmissionStatus = false
+    showSubmissionStatus = false,
+    daysRemaining,
 }: AssessmentCardProps) {
     const theme = useColorScheme() ?? "light";
 
@@ -76,6 +78,11 @@ export function AssessmentCard({
                         <ThemedText type="defaultSemiBold" style={styles.title}>
                             {title}
                         </ThemedText>
+                        {daysRemaining && (
+                            <ThemedText type="default" style={{ fontSize: 12, opacity: 0.6 }}>
+                                {daysRemaining}
+                            </ThemedText>
+                        )}
                         <View style={styles.dateRow}>
                             <ThemedText type="default" style={styles.dateText}>
                                 {startDate}

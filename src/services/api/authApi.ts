@@ -1,4 +1,5 @@
 import { simplePostFormData } from '@/utils/httpUtils';
+import { Platform } from 'react-native';
 import { httpClient } from '../httpClient';
 
 export const authApi = {
@@ -10,11 +11,22 @@ export const authApi = {
         const formData = new FormData();
         formData.append('email', email);
         formData.append('face_model_preference', '2');
-        formData.append('face_image', {
-            uri: faceImage,
-            type: 'image/jpeg',
-            name: 'face_auth.jpg',
-        } as any);
+
+        if (Platform.OS === 'web') {
+            try {
+                const response = await fetch(faceImage);
+                const blob = await response.blob();
+                formData.append('face_image', blob, 'face_auth.jpg');
+            } catch (error) {
+                throw new Error('Failed to process image for upload');
+            }
+        } else {
+            formData.append('face_image', {
+                uri: faceImage,
+                type: 'image/jpeg',
+                name: 'face_auth.jpg',
+            } as any);
+        }
 
         return simplePostFormData('/auth/login-face', formData, 'POST', false);
     },
@@ -22,11 +34,23 @@ export const authApi = {
     crucialVerify: async (faceImage: string) => {
         const formData = new FormData();
         formData.append('face_model_preference', '2');
-        formData.append('image', {
-            uri: faceImage,
-            type: 'image/jpeg',
-            name: 'crucial_auth.jpg',
-        } as any);
+
+        if (Platform.OS === 'web') {
+            try {
+                const response = await fetch(faceImage);
+                const blob = await response.blob();
+                formData.append('image', blob, 'crucial_auth.jpg');
+            } catch (error) {
+                console.error('Error converting image to blob:', error);
+                throw new Error('Failed to process image for upload');
+            }
+        } else {
+            formData.append('image', {
+                uri: faceImage,
+                type: 'image/jpeg',
+                name: 'crucial_auth.jpg',
+            } as any);
+        }
 
         return simplePostFormData('/auth/crucial-verify', formData);
     },
@@ -44,13 +68,26 @@ export const authApi = {
         formData.append('password', password);
         formData.append('phone', phone);
 
-        faceImages.forEach((image, index) => {
-            formData.append('face_reference', {
-                uri: image,
-                type: 'image/jpeg',
-                name: `face_${index + 1}.jpg`,
-            } as any);
-        });
+        if (Platform.OS === 'web') {
+            for (let i = 0; i < faceImages.length; i++) {
+                try {
+                    const response = await fetch(faceImages[i]);
+                    const blob = await response.blob();
+                    formData.append('face_reference', blob, `face_${i + 1}.jpg`);
+                } catch (error) {
+                    console.error(`Error converting image ${i + 1} to blob:`, error);
+                    throw new Error(`Failed to process image ${i + 1} for upload`);
+                }
+            }
+        } else {
+            faceImages.forEach((image, index) => {
+                formData.append('face_reference', {
+                    uri: image,
+                    type: 'image/jpeg',
+                    name: `face_${index + 1}.jpg`,
+                } as any);
+            });
+        }
 
         return simplePostFormData('/user/register', formData, 'POST', false);
     },
@@ -63,5 +100,9 @@ export const authApi = {
         return httpClient.postNoAuth('/auth/refresh', { refreshToken }, {
             headers: { "Authorization": `Bearer ${refreshToken}` }
         });
+    },
+    
+    requestPasswordReset: async (email: string) => {
+        return httpClient.postNoAuth('/user/reset-password/request', { email });
     }
 };
