@@ -153,12 +153,13 @@ class UserService {
             if (searchQuery) {
                 return await this.searchUsers({ name: searchQuery });
             } else {
-                const [admins, teachers, students] = await Promise.all([
+                const [admins, teachers, students, guests] = await Promise.all([
                     this.getUsersByRole(1),
                     this.getUsersByRole(2),
-                    this.getUsersByRole(3)
+                    this.getUsersByRole(3),
+                    this.getUsersByRole(4)
                 ]);
-                return [...admins, ...teachers, ...students];
+                return [...admins, ...teachers, ...students, ...guests];
             }
         } catch (error) {
             throw error;

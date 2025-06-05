@@ -2,6 +2,7 @@ import CustomAlert from "@/components/CustomAlert";
 import ErrorModal from "@/components/ErrorModal";
 import LoadingModal from "@/components/LoadingModal";
 import SuccessModal from "@/components/SuccessModal";
+import { NavigationProvider } from "@/contexts/NavigationContext";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { ModalEmitter } from "@/services/modalEmitter";
@@ -47,18 +48,19 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
-    const router = useRouter();
     const colorScheme = useColorScheme();
+    const router = useRouter();
     const [loaded] = useFonts({
         "Poppins-Regular": require("../../assets/fonts/Poppins-Regular.ttf"),
         "Poppins-SemiBold": require("../../assets/fonts/Poppins-SemiBold.ttf"),
         "Poppins-Bold": require("../../assets/fonts/Poppins-Bold.ttf"),
     });
+
+    // Modal states
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [loadingMessage, setLoadingMessage] = useState<string | undefined>(undefined);
-
     const [alertOptions, setAlertOptions] = useState<{
         visible: boolean;
         title: string;
@@ -74,46 +76,34 @@ export default function RootLayout() {
         message: '',
     });
 
+    // Modal event handlers
     useEffect(() => {
-        const handleError = (message: string) => {
-            setErrorMessage(message);
-        };
-
-        const handleSuccess = (message: string) => {
-            setSuccessMessage(message);
-        };
-
+        const handleError = (message: string) => setErrorMessage(message);
+        const handleSuccess = (message: string) => setSuccessMessage(message);
         const handleShowLoading = (message?: string) => {
             setLoadingMessage(message);
             setIsLoading(true);
         };
-
         const handleHideLoading = () => {
             setIsLoading(false);
             setLoadingMessage(undefined);
         };
-
         const handleUnauthorized = () => {
             setErrorMessage("Session expired. Please log in again.");
             router.replace('/(auth)/login');
         };
-
         const handleAnotherDeviceLogin = (message: string) => {
             setErrorMessage(message);
             router.replace('/(auth)/login');
         };
-
         const handleShowAlert = (options: any) => {
-            setAlertOptions({
-                visible: true,
-                ...options,
-            });
+            setAlertOptions({ visible: true, ...options });
         };
-
         const handleHideAlert = () => {
             setAlertOptions(prev => ({ ...prev, visible: false }));
         };
 
+        // Register event listeners
         ModalEmitter.on("SHOW_ERROR", handleError);
         ModalEmitter.on("SHOW_SUCCESS", handleSuccess);
         ModalEmitter.on("SHOW_LOADING", handleShowLoading);
@@ -124,6 +114,7 @@ export default function RootLayout() {
         ModalEmitter.on("HIDE_ALERT", handleHideAlert);
 
         return () => {
+            // Cleanup event listeners
             ModalEmitter.off("SHOW_ERROR", handleError);
             ModalEmitter.off("SHOW_SUCCESS", handleSuccess);
             ModalEmitter.off("SHOW_LOADING", handleShowLoading);
@@ -140,68 +131,71 @@ export default function RootLayout() {
     }
 
     return (
-        <AuthProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-                <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-                    <BottomSheetModalProvider>
-                        <NavigationHandler>
-                            <Slot />
-                        </NavigationHandler>
-                        <StatusBar style="auto" />
+        <NavigationProvider>
+            <AuthProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+                        <BottomSheetModalProvider>
+                            <NavigationHandler>
+                                <Slot />
+                            </NavigationHandler>
+                            <StatusBar style="auto" />
 
-                        {(isLoading || !!errorMessage || !!successMessage || alertOptions.visible) && (
-                            <View style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                zIndex: 9999,
-                                pointerEvents: 'auto'
-                            }}>
-                                {!!errorMessage && (
-                                    <ErrorModal
-                                        visible={true}
-                                        errorMessage={errorMessage}
-                                        onClose={() => setErrorMessage(null)}
-                                    />
-                                )}
-                                {!!successMessage && (
-                                    <SuccessModal
-                                        visible={true}
-                                        successMessage={successMessage}
-                                        onClose={() => setSuccessMessage(null)}
-                                    />
-                                )}
-                                {isLoading && (
-                                    <LoadingModal
-                                        visible={true}
-                                        message={loadingMessage}
-                                    />
-                                )}
-                                {alertOptions.visible && (
-                                    <CustomAlert
-                                        visible={true}
-                                        title={alertOptions.title}
-                                        message={alertOptions.message}
-                                        confirmText={alertOptions.confirmText}
-                                        cancelText={alertOptions.cancelText}
-                                        type={alertOptions.type}
-                                        onConfirm={() => {
-                                            alertOptions.onConfirm?.();
-                                            setAlertOptions(prev => ({ ...prev, visible: false }));
-                                        }}
-                                        onCancel={() => {
-                                            alertOptions.onCancel?.();
-                                            setAlertOptions(prev => ({ ...prev, visible: false }));
-                                        }}
-                                    />
-                                )}
-                            </View>
-                        )}
-                    </BottomSheetModalProvider>
-                </ThemeProvider>
-            </GestureHandlerRootView>
-        </AuthProvider>
+                            {/* Global Modals */}
+                            {(isLoading || !!errorMessage || !!successMessage || alertOptions.visible) && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    zIndex: 9999,
+                                    pointerEvents: 'auto'
+                                }}>
+                                    {!!errorMessage && (
+                                        <ErrorModal
+                                            visible={true}
+                                            errorMessage={errorMessage}
+                                            onClose={() => setErrorMessage(null)}
+                                        />
+                                    )}
+                                    {!!successMessage && (
+                                        <SuccessModal
+                                            visible={true}
+                                            successMessage={successMessage}
+                                            onClose={() => setSuccessMessage(null)}
+                                        />
+                                    )}
+                                    {isLoading && (
+                                        <LoadingModal
+                                            visible={true}
+                                            message={loadingMessage}
+                                        />
+                                    )}
+                                    {alertOptions.visible && (
+                                        <CustomAlert
+                                            visible={true}
+                                            title={alertOptions.title}
+                                            message={alertOptions.message}
+                                            confirmText={alertOptions.confirmText}
+                                            cancelText={alertOptions.cancelText}
+                                            type={alertOptions.type}
+                                            onConfirm={() => {
+                                                alertOptions.onConfirm?.();
+                                                setAlertOptions(prev => ({ ...prev, visible: false }));
+                                            }}
+                                            onCancel={() => {
+                                                alertOptions.onCancel?.();
+                                                setAlertOptions(prev => ({ ...prev, visible: false }));
+                                            }}
+                                        />
+                                    )}
+                                </View>
+                            )}
+                        </BottomSheetModalProvider>
+                    </ThemeProvider>
+                </GestureHandlerRootView>
+            </AuthProvider>
+        </NavigationProvider>
     );
 }

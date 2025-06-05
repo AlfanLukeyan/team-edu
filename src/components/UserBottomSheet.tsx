@@ -35,18 +35,20 @@ interface UserBottomSheetProps {
     onDeleteCrucialToken?: (userIndex: number) => void;
     onVerifyEmailUser?: (userId: string) => void;
     onClose?: () => void;
+    changingRoleUserId?: string | null;
 }
 
 const UserBottomSheet = forwardRef<
     UserBottomSheetRef,
     UserBottomSheetProps
->(({ roles, onRoleChange, onDeleteUser, onInjectCrucialToken, onDeleteCrucialToken, onVerifyEmailUser, onClose }, ref) => {
+>(({ roles, onRoleChange, onDeleteUser, onInjectCrucialToken, onDeleteCrucialToken, onVerifyEmailUser, onClose, changingRoleUserId }, ref) => {
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const { dismiss } = useBottomSheetModal();
     const theme = useColorScheme() || "light";
     const snapPoints = useMemo(() => ["25%", "50%"], []);
 
     const [selectedUser, setSelectedUser] = useState<UserByRole | null>(null);
+    const isChangingRole = changingRoleUserId === selectedUser?.uuid;
 
     const handleClose = useCallback(() => {
         setSelectedUser(null);
@@ -151,6 +153,8 @@ const UserBottomSheet = forwardRef<
                             onSelect={handleRoleSelect}
                             placeholder="Select role"
                             searchable={false}
+                            disabled={isChangingRole}
+                            loading={isChangingRole}
                         />
                     </View>
 

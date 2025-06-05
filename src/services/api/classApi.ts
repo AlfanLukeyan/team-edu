@@ -1,6 +1,5 @@
 import { AddMemberRequest, AddMemberResponse, AssessmentResponse, ClassInfoResponse, ClassMemberResponse, CreateClassRequest, CreateClassResponse, DeleteClassResponse, DeleteMemberResponse, StudentAssessmentResponse, UpdateClassRequest, UpdateClassResponse, WeeklySectionResponse } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
-import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
 
 export const classApi = {
@@ -77,7 +76,7 @@ export const classApi = {
             formData.append('file', data.file as any);
         }
 
-        return simplePostFormData('/teacher/kelas/weekly-section', formData);
+        return httpClient.postFormData('/teacher/kelas/weekly-section', formData);
     },
 
     updateWeeklySection: async (weekId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> => {
@@ -95,7 +94,7 @@ export const classApi = {
             formData.append('file', data.file as any);
         }
 
-        return simplePostFormData('/teacher/kelas/weekly-section', formData, 'PUT');
+        return httpClient.putFormData('/teacher/kelas/weekly-section', formData);
     },
 
     deleteWeeklySection: async (weekId: string): Promise<{ status: string; message: string; data: string }> => {

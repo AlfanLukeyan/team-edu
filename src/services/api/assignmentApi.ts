@@ -7,7 +7,6 @@ import {
     SubmitAssignmentResponse,
     UpdateAssignmentResponse,
 } from '@/types/api';
-import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
 
 export const assignmentApi = {
@@ -16,7 +15,7 @@ export const assignmentApi = {
         formData.append('assignment_id', assignmentId);
         formData.append('file', file);
 
-        return simplePostFormData('/student/kelas/assignment-submission', formData);
+        return httpClient.postFormData('/student/kelas/assignment-submission', formData);
     },
 
     getAssignmentDetails: async (assignmentId: string): Promise<AssignmentDetailsResponse> => {
@@ -47,11 +46,11 @@ export const assignmentApi = {
     },
 
     createAssignment: async (formData: FormData): Promise<CreateAssignmentResponse> => {
-        return simplePostFormData('/teacher/kelas/assignment', formData);
+        return httpClient.postFormData('/teacher/kelas/assignment', formData);
     },
 
     updateAssignment: async (formData: FormData): Promise<UpdateAssignmentResponse> => {
-        return simplePostFormData('/teacher/kelas/assignment', formData, "PUT");
+        return httpClient.putFormData('/teacher/kelas/assignment', formData);
     },
 
     deleteAssignment: async (assignmentId: string): Promise<DeleteAssignmentResponse> => {

@@ -1,6 +1,5 @@
 import { DeleteCrucialTokenResponse, GetUsersByRoleResponse, InjectCrucialTokenResponse, RoleListResponse, VerifyEmailUserResponse } from '@/types/api';
 import { UserProfile } from '@/types/user';
-import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
 
 interface UpdateProfileRequest {
@@ -43,11 +42,11 @@ export const userApi = {
     },
 
     updateProfilePicture: async (formData: FormData): Promise<any> => {
-        return simplePostFormData('/user/update/profile-picture', formData);
+        return httpClient.postFormData('/user/update/profile-picture', formData);
     },
 
     updateFaceReference: async (formData: FormData): Promise<any> => {
-        return simplePostFormData('/user/update/face-reference', formData, 'POST', true);
+        return httpClient.postFormData('/user/update/face-reference', formData);
     },
 
     getUsersByRole: async (roleId: number): Promise<GetUsersByRoleResponse> => {

@@ -107,54 +107,35 @@ export default function EditProfileScreen() {
             return;
         }
 
-        const saveData: SaveData = {
+        const saveData = {
             name: formData.name.trim(),
             phone: formData.phone.trim(),
         };
 
         setSaving(true);
-        ModalEmitter.showLoading("Updating profile...");
 
         try {
-            await performProfileSave(saveData);
+            await userService.updateProfile(saveData);
+            ModalEmitter.showSuccess("Profile updated successfully!");
+            setTimeout(() => router.back(), 1500);
         } catch (error: any) {
-            if (error.isCrucialRequired) {
-                handleCrucialVerificationRequired(saveData);
-            } else {
-                ModalEmitter.hideLoading();
-                ModalEmitter.showError(error.message || "Failed to update profile");
-                setSaving(false);
-            }
+            ModalEmitter.showError(error.message || "Failed to update profile");
+        } finally {
+            setSaving(false);
         }
-    }, [formData, userProfile]);
+    }, [formData, userProfile, router]);
 
     const performProfileSave = useCallback(async (saveData: SaveData) => {
         try {
             await userService.updateProfile(saveData);
-            ModalEmitter.hideLoading();
             ModalEmitter.showSuccess("Profile updated successfully!");
             setTimeout(() => router.back(), 1500);
         } catch (error: any) {
-            ModalEmitter.hideLoading();
             ModalEmitter.showError(error.message || "Failed to update profile");
             throw error;
         } finally {
             setSaving(false);
         }
-    }, [router]);
-
-    const handleCrucialVerificationRequired = useCallback((saveData: SaveData) => {
-        setPendingSaveData(saveData);
-        ModalEmitter.hideLoading();
-        router.push({
-            pathname: '/(verification)/crucial_auth',
-            params: {
-                callbackData: JSON.stringify({
-                    returnPath: '/(main)/profile/edit_profile',
-                    params: {}
-                })
-            }
-        });
     }, [router]);
 
     // Email change handlers
@@ -187,54 +168,35 @@ export default function EditProfileScreen() {
     }, [formData.email, userProfile]);
 
     const initiateEmailChange = useCallback(async () => {
-        const emailData: EmailChangeData = {
+        const emailData = {
             email: formData.email.trim()
         };
 
         setChangingEmail(true);
-        ModalEmitter.showLoading("Updating email...");
 
         try {
-            await performEmailChange(emailData);
+            await userService.updateEmail(emailData.email);
+            ModalEmitter.showSuccess("Email updated successfully!");
+            await fetchProfile();
         } catch (error: any) {
-            if (error.isCrucialRequired) {
-                handleCrucialVerificationRequiredForEmail(emailData);
-            } else {
-                ModalEmitter.hideLoading();
-                ModalEmitter.showError(error.message || "Failed to update email");
-                setChangingEmail(false);
-            }
+            ModalEmitter.showError(error.message || "Failed to update email");
+        } finally {
+            setChangingEmail(false);
         }
-    }, [formData.email]);
+    }, [formData.email, fetchProfile]);
 
     const performEmailChange = useCallback(async (emailData: EmailChangeData) => {
         try {
             await userService.updateEmail(emailData.email);
-            ModalEmitter.hideLoading();
             ModalEmitter.showSuccess("Email updated successfully!");
             await fetchProfile();
         } catch (error: any) {
-            ModalEmitter.hideLoading();
             ModalEmitter.showError(error.message || "Failed to update email");
             throw error;
         } finally {
             setChangingEmail(false);
         }
     }, [fetchProfile]);
-
-    const handleCrucialVerificationRequiredForEmail = useCallback((emailData: EmailChangeData) => {
-        setPendingEmailData(emailData);
-        ModalEmitter.hideLoading();
-        router.push({
-            pathname: '/(verification)/crucial_auth',
-            params: {
-                callbackData: JSON.stringify({
-                    returnPath: '/(main)/profile/edit_profile',
-                    params: {}
-                })
-            }
-        });
-    }, [router]);
 
     // Image handlers
     const handleImagePicker = useCallback(() => {
@@ -268,7 +230,6 @@ export default function EditProfileScreen() {
 
     const uploadProfileImage = useCallback(async (imageUri: string) => {
         setChangingImage(true);
-        ModalEmitter.showLoading("Updating profile picture...");
 
         try {
             const formData = new FormData();
@@ -279,7 +240,6 @@ export default function EditProfileScreen() {
             } as any);
 
             await userService.updateProfilePicture(formData);
-            ModalEmitter.hideLoading();
             ModalEmitter.showSuccess("Profile picture updated successfully!");
 
             setFormData(prev => ({ ...prev, profileImage: imageUri }));
@@ -288,7 +248,6 @@ export default function EditProfileScreen() {
             const message = error.isCrucialRequired
                 ? "Crucial verification required for profile picture changes. Please contact support."
                 : error.message || "Failed to update profile picture";
-            ModalEmitter.hideLoading();
             ModalEmitter.showError(message);
         } finally {
             setChangingImage(false);

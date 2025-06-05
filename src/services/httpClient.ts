@@ -1,3 +1,4 @@
+import { crucialAuthManager } from "@/services/crucialAuthManager";
 import { ModalEmitter } from "@/services/modalEmitter";
 import { tokenService } from "@/services/tokenService";
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
@@ -11,7 +12,7 @@ interface RequestConfig {
 
 class HttpClient {
     private static instance: HttpClient;
-    private axiosInstance: AxiosInstance;
+    public axiosInstance: AxiosInstance; // Made public for crucial auth retry
     private defaultTimeout = 10000;
 
     constructor() {
@@ -34,43 +35,30 @@ class HttpClient {
         // Request interceptor
         this.axiosInstance.interceptors.request.use(
             async (config) => {
-                // ✅ Log the API request being made
-                console.log('🔵 API Request:', {
+                const token = await tokenService.getValidToken();
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+
+                console.log('🟡 API Request:', {
                     method: config.method?.toUpperCase(),
-                    url: `${config.baseURL}${config.url}`,
-                    fullUrl: config.url,
-                    params: config.params,
+                    url: config.url,
+                    fullUrl: `${config.baseURL}${config.url}`,
+                    hasAuth: !!token,
                     timestamp: new Date().toISOString()
                 });
-
-                // Add auth token if needed (unless explicitly disabled)
-                if (config.headers && !config.headers['skipAuth']) {
-                    const token = await tokenService.getValidToken();
-                    if (token) {
-                        config.headers.Authorization = `Bearer ${token}`;
-                        console.log('🔑 Token added to request for:', config.url);
-                    } else {
-                        console.log('⚠️ No token available for request:', config.url);
-                    }
-                }
-
-                // Remove skipAuth flag
-                if (config.headers) {
-                    delete config.headers['skipAuth'];
-                }
 
                 return config;
             },
             (error) => {
-                console.log('🔴 Request interceptor error:', error);
+                console.error('🔴 Request Error:', error);
                 return Promise.reject(error);
             }
         );
 
-        // Response interceptor
+        // Response interceptor with global crucial auth handling
         this.axiosInstance.interceptors.response.use(
             (response: AxiosResponse) => {
-                // ✅ Log successful responses
                 console.log('🟢 API Response Success:', {
                     method: response.config.method?.toUpperCase(),
                     url: response.config.url,
@@ -83,7 +71,6 @@ class HttpClient {
             async (error) => {
                 const { response, config } = error;
 
-                // ✅ Log detailed error information
                 console.log('🔴 API Response Error:', {
                     method: config?.method?.toUpperCase(),
                     url: config?.url,
@@ -105,15 +92,24 @@ class HttpClient {
                     console.log('🚫 403 Forbidden - Details:', {
                         url: config?.url,
                         errorData,
-                        isCrucialRequired: errorData.error === "Crucial verification required"
+                        isCrucialRequired: errorData.error === "CRUCIAL_FEATURE_AUTH_REQUIRED"
                     });
 
-                    if (errorData.error === "Crucial verification required") {
+                    if (errorData.error === "CRUCIAL_FEATURE_AUTH_REQUIRED") {
                         console.log('🔐 Crucial verification required for:', config?.url);
-                        const customError = new Error("Crucial verification required");
-                        (customError as any).isCrucialRequired = true;
-                        (customError as any).response = { status: response.status, data: errorData };
-                        throw customError;
+
+                        // Check if this is already a retry after crucial auth
+                        if (config?.headers?.['X-Crucial-Verified']) {
+                            console.log('🚨 Crucial verification failed even after auth');
+                            throw new Error("Crucial verification failed");
+                        }
+
+                        // Use the global crucial auth manager
+                        try {
+                            return await crucialAuthManager.requireCrucialAuth(config);
+                        } catch (crucialError) {
+                            throw new Error("Crucial verification required but cancelled");
+                        }
                     } else {
                         console.log('🔄 Another device login detected for:', config?.url);
                         await tokenService.clearTokens();
@@ -151,117 +147,83 @@ class HttpClient {
         );
     }
 
+    // HTTP method implementations remain the same
     async get<T = any>(url: string, config?: RequestConfig): Promise<T> {
-        try {
-            const response = await this.axiosInstance.get<T>(url, {
-                headers: config?.headers,
-                timeout: config?.timeout,
-            });
-            return response.data;
-        } catch (error) {
-            const errorMessage = (error instanceof Error) ? error.message : String(error);
-            console.log('❌ GET request failed:', { url, error: errorMessage });
-            throw error;
-        }
+        const response = await this.axiosInstance.get<T>(url, config);
+        return response.data;
     }
 
     async post<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
-        try {
-            const headers: Record<string, string> = { ...config?.headers };
-
-            const response = await this.axiosInstance.post<T>(url, data, {
-                headers,
-                timeout: config?.timeout,
-            });
-            return response.data;
-        } catch (error) {
-            const errorMessage = (error instanceof Error) ? error.message : String(error);
-            console.log('❌ POST request failed:', { url, error: errorMessage });
-            throw error;
-        }
+        const response = await this.axiosInstance.post<T>(url, data, config);
+        return response.data;
     }
 
     async postFormData<T = any>(url: string, formData: FormData, config?: RequestConfig): Promise<T> {
-        try {
-            const headers: Record<string, string> = {
+        const response = await this.axiosInstance.post<T>(url, formData, {
+            ...config,
+            headers: {
+                'Content-Type': 'multipart/form-data',
                 ...config?.headers,
-            };
+            },
+        });
+        return response.data;
+    }
 
-            const response = await this.axiosInstance.post<T>(url, formData, {
-                headers,
-                timeout: config?.timeout || 30000,
-            });
-            return response.data;
-        } catch (error) {
-            const errorMessage = (error instanceof Error) ? error.message : String(error);
-            console.log('❌ POST FormData request failed:', { url, error: errorMessage });
-            throw error;
-        }
+    async putFormData<T = any>(url: string, formData: FormData, config?: RequestConfig): Promise<T> {
+        const response = await this.axiosInstance.put<T>(url, formData, {
+            ...config,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                ...config?.headers,
+            },
+        });
+        return response.data;
     }
 
     async put<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
-        try {
-            const headers: Record<string, string> = { ...config?.headers };
-
-            const response = await this.axiosInstance.put<T>(url, data, {
-                headers,
-                timeout: config?.timeout,
-            });
-            return response.data;
-        } catch (error) {
-            const errorMessage = (error instanceof Error) ? error.message : String(error);
-            console.log('❌ PUT request failed:', { url, error: errorMessage });
-            throw error;
-        }
+        const response = await this.axiosInstance.put<T>(url, data, config);
+        return response.data;
     }
 
     async delete<T = any>(url: string, config?: RequestConfig): Promise<T> {
-        try {
-            const response = await this.axiosInstance.delete<T>(url, {
-                headers: config?.headers,
-                timeout: config?.timeout,
-            });
-            return response.data;
-        } catch (error) {
-            const errorMessage = (error instanceof Error) ? error.message : String(error);
-            console.log('❌ DELETE request failed:', { url, error: errorMessage });
-            throw error;
-        }
+        const response = await this.axiosInstance.delete<T>(url, config);
+        return response.data;
     }
 
     async deleteWithData<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
-        try {
-            const response = await this.axiosInstance.delete<T>(url, {
-                data,
-                headers: config?.headers,
-                timeout: config?.timeout,
-            });
-            return response.data;
-        } catch (error) {
-            const errorMessage = (error instanceof Error) ? error.message : String(error);
-            console.log('❌ DELETE with data request failed:', { url, error: errorMessage });
-            throw error;
-        }
+        const response = await this.axiosInstance.delete<T>(url, {
+            ...config,
+            data,
+        });
+        return response.data;
     }
 
     // No auth requests
     async postNoAuth<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
-        try {
-            const headers: Record<string, string> = {
+        const configWithoutAuth = {
+            ...config,
+            headers: {
                 ...config?.headers,
-                skipAuth: 'true'
-            };
+            },
+        };
+        delete configWithoutAuth.headers?.Authorization;
 
-            const response = await this.axiosInstance.post<T>(url, data, {
-                headers,
-                timeout: config?.timeout,
-            });
-            return response.data;
-        } catch (error) {
-            const errorMessage = (error instanceof Error) ? error.message : String(error);
-            console.log('❌ POST NoAuth request failed:', { url, error: errorMessage });
-            throw error;
-        }
+        const response = await this.axiosInstance.post<T>(url, data, configWithoutAuth);
+        return response.data;
+    }
+
+        async postFormDataNoAuth<T = any>(url: string, formData: FormData, config?: RequestConfig): Promise<T> {
+        const configWithoutAuth = {
+            ...config,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                ...config?.headers,
+            },
+        };
+        delete (configWithoutAuth.headers as any)?.Authorization;
+
+        const response = await this.axiosInstance.post<T>(url, formData, configWithoutAuth);
+        return response.data;
     }
 }
 

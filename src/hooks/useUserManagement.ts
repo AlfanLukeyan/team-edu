@@ -1,9 +1,13 @@
 import { ModalEmitter } from "@/services/modalEmitter";
 import { userService } from "@/services/userService";
 import { Role, UserByRole } from "@/types/api";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 
 export const useUserManagement = () => {
+    const router = useRouter();
+    const params = useLocalSearchParams();
+
     const [users, setUsers] = useState<UserByRole[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
@@ -16,6 +20,7 @@ export const useUserManagement = () => {
     const [showSearch, setShowSearch] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [selectedUserForActions, setSelectedUserForActions] = useState<UserByRole | null>(null);
+    const [changingRoleUserId, setChangingRoleUserId] = useState<string | null>(null);
 
     const fetchRoles = useCallback(async () => {
         try {
@@ -136,6 +141,8 @@ export const useUserManagement = () => {
 
     const handleRoleChange = useCallback(async (userId: string, newRoleId: string) => {
         try {
+            setChangingRoleUserId(userId);
+
             await userService.modifyUserRole(userId, newRoleId);
 
             // Update local state
@@ -146,9 +153,11 @@ export const useUserManagement = () => {
             ));
 
             ModalEmitter.showSuccess('User role updated successfully');
-        } catch (err: any) {
-            console.error('Failed to update user role:', err);
-            ModalEmitter.showError(err.message || 'Failed to update user role');
+        } catch (error: any) {
+            console.error('Failed to update user role:', error);
+            ModalEmitter.showError(error.message || 'Failed to update user role');
+        } finally {
+            setChangingRoleUserId(null);
         }
     }, []);
 
@@ -166,11 +175,10 @@ export const useUserManagement = () => {
             await userService.deleteUser(userId);
 
             setUsers(prev => prev.filter(user => user.uuid !== userId));
-
             ModalEmitter.showSuccess('User deleted successfully');
-        } catch (err: any) {
-            console.error('Failed to delete user:', err);
-            ModalEmitter.showError(err.message || 'Failed to delete user');
+        } catch (error: any) {
+            console.error('Failed to delete user:', error);
+            ModalEmitter.showError(error.message || 'Failed to delete user');
         }
     }, []);
 
@@ -226,6 +234,7 @@ export const useUserManagement = () => {
         showSearch,
         isSearching,
         selectedUserForActions,
+        changingRoleUserId,
         refetchUsers,
         handleInputChange,
         handleSearch,

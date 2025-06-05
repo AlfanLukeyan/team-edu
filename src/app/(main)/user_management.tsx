@@ -31,6 +31,7 @@ const UserManagementScreen = () => {
         showSearch,
         isSearching,
         selectedUserForActions,
+        changingRoleUserId,
         refetchUsers,
         handleInputChange,
         handleSearch,
@@ -259,6 +260,7 @@ const UserManagementScreen = () => {
                 onDeleteCrucialToken={handleDeleteCrucialToken}
                 onVerifyEmailUser={handleVerifyEmailUser}
                 onClose={() => setSelectedUserForActions(null)}
+                changingRoleUserId={changingRoleUserId}
             />
         </>
     );

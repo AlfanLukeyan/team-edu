@@ -5,6 +5,8 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { authService } from "@/services/authService";
+import { crucialAuthManager } from "@/services/crucialAuthManager";
+import { httpClient } from "@/services/httpClient";
 import { ModalEmitter } from "@/services/modalEmitter";
 import { restoreBrightness, setMaxBrightness } from "@/utils/utils";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -62,18 +64,27 @@ export default function CrucialAuthScreen() {
             console.log("Photo taken for crucial auth:", photo);
 
             const response = await authService.crucialVerify(photo.uri);
+            console.log("Crucial verification response:", response);
 
             ModalEmitter.hideLoading();
             ModalEmitter.showSuccess(response.message || "Crucial access granted!");
-
-            setTimeout(() => navigateBack(true), 1500);
+            if (crucialAuthManager.hasPendingRequest()) {
+                await crucialAuthManager.handleVerificationSuccess(httpClient);
+                navigateBack(true);
+            } else {
+                setTimeout(() => navigateBack(true), 1500);
+            }
         } catch (error: any) {
             ModalEmitter.hideLoading();
             ModalEmitter.showError(error.message || "Crucial verification failed. Please try again.");
+            console.error("Crucial verification error:", error);
+            
+            crucialAuthManager.handleVerificationFailure();
         }
     }, []);
 
     const handleCancel = useCallback(() => {
+        crucialAuthManager.handleVerificationFailure();
         navigateBack(false);
     }, []);
 

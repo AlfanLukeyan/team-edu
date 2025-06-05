@@ -103,7 +103,7 @@ export default function CompletedAssignmentsScreen() {
                 }
             >
                 <View style={styles.submissionsList}>
-                    {submittedSubmissions.length === 0 ? (
+                    {submittedSubmissions === null ? (
                         <ThemedView style={styles.emptyState}>
                             <ThemedText style={{ textAlign: 'center', opacity: 0.7 }}>
                                 No completed submissions
