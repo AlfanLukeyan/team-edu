@@ -102,7 +102,6 @@ export const useClassControl = () => {
         setShowSearch(newShowSearch);
         
         if (!newShowSearch && (searchQuery || searchInput)) {
-            // When closing search, clear everything and reload
             setSearchQuery('');
             setSearchInput('');
             fetchClasses(1, false, '');

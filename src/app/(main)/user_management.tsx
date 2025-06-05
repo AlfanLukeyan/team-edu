@@ -7,12 +7,13 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { UserByRole } from '@/types/api';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import React, { useLayoutEffect } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 const UserManagementScreen = () => {
+    const navigation = useNavigation();
     const colorScheme = useColorScheme();
-    const [showSearch, setShowSearch] = useState(false);
 
     const {
         users,
@@ -21,8 +22,14 @@ const UserManagementScreen = () => {
         selectedUsers,
         filterRole,
         searchQuery,
+        searchInput,
+        showSearch,
+        isSearching,
         refetchUsers,
+        handleInputChange,
         handleSearch,
+        toggleSearch,
+        clearSearch,
         handleFilterRole,
         handleUserSelect,
         handleSelectAll,
@@ -30,16 +37,22 @@ const UserManagementScreen = () => {
         handleUserPress,
     } = useUserManagement();
 
-    const toggleSearch = () => {
-        setShowSearch(!showSearch);
-        if (showSearch && searchQuery) {
-            handleSearch('');
-        }
-    };
-
-    const clearSearch = () => {
-        handleSearch('');
-    };
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                <TouchableOpacity
+                    onPress={toggleSearch}
+                    style={styles.headerSearchButton}
+                >
+                    <Ionicons
+                        name={showSearch ? "close" : "search"}
+                        size={20}
+                        color={Colors[colorScheme ?? 'light'].text}
+                    />
+                </TouchableOpacity>
+            ),
+        });
+    }, [navigation, showSearch, toggleSearch, colorScheme]);
 
     const renderUserItem = ({ item }: { item: UserByRole }) => (
         <UserCard
@@ -69,16 +82,6 @@ const UserManagementScreen = () => {
 
     const renderListHeader = () => (
         <View>
-            {/* Search Bar */}
-            <SearchBar
-                visible={showSearch}
-                value={searchQuery}
-                onChangeText={handleSearch}
-                onClear={clearSearch}
-                placeholder="Search users..."
-                loading={false}
-            />
-
             {/* Filter Section */}
             <View style={styles.filterContainer}>
                 <ThemedText type="defaultSemiBold" style={styles.filterTitle}>
@@ -183,19 +186,6 @@ const UserManagementScreen = () => {
         </View>
     );
 
-    const renderFloatingSearch = () => (
-        <TouchableOpacity
-            style={[styles.floatingSearchButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}
-            onPress={toggleSearch}
-        >
-            <Ionicons
-                name={showSearch ? "close" : "search"}
-                size={24}
-                color="white"
-            />
-        </TouchableOpacity>
-    );
-
     if (loading && users.length === 0) {
         return (
             <ThemedView style={styles.centered}>
@@ -208,6 +198,16 @@ const UserManagementScreen = () => {
     return (
         <ThemedView style={styles.container}>
             <View style={styles.content}>
+                <SearchBar
+                    visible={showSearch}
+                    value={searchInput}
+                    onChangeText={handleInputChange}
+                    onSubmit={handleSearch}
+                    onClear={clearSearch}
+                    placeholder="Search users..."
+                    loading={isSearching}
+                    autoFocus={false}
+                />
                 <FlatList
                     data={users}
                     renderItem={renderUserItem}
@@ -225,9 +225,9 @@ const UserManagementScreen = () => {
                             onRefresh={refetchUsers}
                         />
                     }
+                    keyboardShouldPersistTaps="handled"
                 />
             </View>
-            {renderFloatingSearch()}
         </ThemedView>
     );
 };
@@ -326,19 +326,12 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         fontSize: 16,
     },
-    floatingSearchButton: {
-        position: 'absolute',
-        bottom: 24,
-        right: 24,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
+    headerSearchButton: {
+        padding: 8,
+        paddingRight: 24,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 4,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
     },
 });
 

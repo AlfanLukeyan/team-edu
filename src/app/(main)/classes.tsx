@@ -103,7 +103,7 @@ export default function ClassesScreen() {
         </ThemedView>
     );
 
-    const renderListHeader = () => (
+    const renderListHeader = useCallback(() => (
         <View>
             {isAdmin() && (
                 <Button
@@ -113,18 +113,8 @@ export default function ClassesScreen() {
                     Create Class
                 </Button>
             )}
-            <SearchBar
-                visible={isAdmin() && showSearch}
-                value={searchInput}
-                onChangeText={handleInputChange}
-                onSubmit={handleSearch}
-                onClear={clearSearch}
-                placeholder="Search classes..."
-                loading={isSearching}
-                autoFocus={false}
-            />
         </View>
-    );
+    ), [isAdmin, handleOpenCreateSheet]);
 
     if (loading && classes.length === 0) {
         return (
@@ -138,6 +128,16 @@ export default function ClassesScreen() {
         <>
             <ThemedView style={{ flex: 1 }}>
                 <View style={{ margin: 16, borderRadius: 15, flex: 1, overflow: 'hidden' }}>
+                    <SearchBar
+                        visible={isAdmin() && showSearch}
+                        value={searchInput}
+                        onChangeText={handleInputChange}
+                        onSubmit={handleSearch}
+                        onClear={clearSearch}
+                        placeholder="Search classes..."
+                        loading={isSearching}
+                        autoFocus={false}
+                    />
                     <FlatList
                         data={classes}
                         renderItem={renderClassItem}

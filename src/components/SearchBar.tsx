@@ -14,7 +14,7 @@ interface SearchBarProps {
     autoFocus?: boolean;
 }
 
-export function SearchBar({
+export const SearchBar = React.memo(function SearchBar({
     visible,
     value,
     onChangeText,
@@ -86,7 +86,7 @@ export function SearchBar({
             </View>
         </View>
     );
-}
+});
 
 const styles = StyleSheet.create({
     searchContainer: {
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     searchInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 12,
+        borderRadius: 15,
         borderWidth: 1,
         paddingHorizontal: 12,
         paddingVertical: 8,

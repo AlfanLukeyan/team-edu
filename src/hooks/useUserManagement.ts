@@ -11,8 +11,11 @@ export const useUserManagement = () => {
     const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
     const [filterRole, setFilterRole] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchInput, setSearchInput] = useState('');
+    const [showSearch, setShowSearch] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
 
-    const fetchUsers = useCallback(async (isRefresh: boolean = false) => {
+    const fetchUsers = useCallback(async (isRefresh: boolean = false, search?: string, roleFilter?: number | null) => {
         try {
             setError(null);
             if (isRefresh) {
@@ -23,22 +26,19 @@ export const useUserManagement = () => {
 
             let allUsers: UserByRole[] = [];
 
-            if (filterRole) {
-                allUsers = await userService.getUsersByRole(filterRole);
+            if (search) {
+                // Use backend search
+                const searchParams: { name?: string; role_id?: number } = { name: search };
+                if (roleFilter) {
+                    searchParams.role_id = roleFilter;
+                }
+                allUsers = await userService.searchUsers(searchParams);
+            } else if (roleFilter) {
+                // Filter by role only
+                allUsers = await userService.getUsersByRole(roleFilter);
             } else {
-                const [admins, teachers, students] = await Promise.all([
-                    userService.getAdmins(),
-                    userService.getTeachers(),
-                    userService.getStudents()
-                ]);
-                allUsers = [...admins, ...teachers, ...students];
-            }
-
-            if (searchQuery) {
-                allUsers = allUsers.filter(user =>
-                    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    user.email.toLowerCase().includes(searchQuery.toLowerCase())
-                );
+                // Get all users
+                allUsers = await userService.getAllUsers();
             }
 
             setUsers(allUsers);
@@ -49,21 +49,50 @@ export const useUserManagement = () => {
         } finally {
             setLoading(false);
             setRefreshing(false);
+            setIsSearching(false);
         }
-    }, [filterRole, searchQuery]);
+    }, []);
 
     const refetchUsers = useCallback(() => {
-        fetchUsers(true);
-    }, [fetchUsers]);
+        fetchUsers(true, searchQuery, filterRole);
+    }, [fetchUsers, searchQuery, filterRole]);
 
-    const handleSearch = useCallback((query: string) => {
-        setSearchQuery(query);
+    // Simple input handler - only updates local state
+    const handleInputChange = useCallback((text: string) => {
+        setSearchInput(text);
     }, []);
+
+    // Execute search only when user submits
+    const handleSearch = useCallback(async (query: string) => {
+        console.log('Executing search for:', query);
+        setSearchQuery(query);
+        setIsSearching(true);
+        await fetchUsers(false, query, filterRole);
+    }, [fetchUsers, filterRole]);
+
+    const toggleSearch = useCallback(() => {
+        const newShowSearch = !showSearch;
+        setShowSearch(newShowSearch);
+        
+        if (!newShowSearch && (searchQuery || searchInput)) {
+            setSearchQuery('');
+            setSearchInput('');
+            fetchUsers(false, '', filterRole);
+        }
+    }, [showSearch, searchQuery, searchInput, filterRole, fetchUsers]);
+
+    const clearSearch = useCallback(() => {
+        setSearchInput('');
+        setSearchQuery('');
+        fetchUsers(false, '', filterRole);
+    }, [filterRole, fetchUsers]);
 
     const handleFilterRole = useCallback((roleId: number | null) => {
         setFilterRole(roleId);
         setSelectedUsers(new Set());
-    }, []);
+        // Re-fetch with current search query and new role filter
+        fetchUsers(false, searchQuery, roleId);
+    }, [searchQuery, fetchUsers]);
 
     const handleUserSelect = useCallback((userId: string) => {
         setSelectedUsers(prev => {
@@ -93,24 +122,26 @@ export const useUserManagement = () => {
         console.log('User pressed:', userId);
     }, []);
 
-    const getFilteredUsers = useCallback(() => {
-        return users;
-    }, [users]);
-
     useEffect(() => {
         fetchUsers();
     }, [fetchUsers]);
 
     return {
-        users: getFilteredUsers(),
+        users,
         loading,
         refreshing,
         error,
         selectedUsers,
         filterRole,
         searchQuery,
+        searchInput,
+        showSearch,
+        isSearching,
         refetchUsers,
+        handleInputChange,
         handleSearch,
+        toggleSearch,
+        clearSearch,
         handleFilterRole,
         handleUserSelect,
         handleSelectAll,

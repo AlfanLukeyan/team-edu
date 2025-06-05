@@ -99,18 +99,23 @@ class UserService {
         }
     }
 
-    async getAllUsers(): Promise<UserByRole[]> {
+    async getAllUsers(searchQuery?: string): Promise<UserByRole[]> {
         try {
-            const [admins, teachers, students] = await Promise.all([
-                this.getUsersByRole(1),
-                this.getUsersByRole(2),
-                this.getUsersByRole(3)
-            ]);
-            return [...admins, ...teachers, ...students];
+            if (searchQuery) {
+                return await this.searchUsers({ name: searchQuery });
+            } else {
+                const [admins, teachers, students] = await Promise.all([
+                    this.getUsersByRole(1),
+                    this.getUsersByRole(2),
+                    this.getUsersByRole(3)
+                ]);
+                return [...admins, ...teachers, ...students];
+            }
         } catch (error) {
             throw error;
         }
     }
+
 
     getRoleText(roleId?: number): string {
         switch (roleId) {
