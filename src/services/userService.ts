@@ -90,6 +90,28 @@ class UserService {
         }
     }
 
+    async searchUsers(params?: { name?: string; role_id?: number }): Promise<UserByRole[]> {
+        try {
+            const response = await userApi.searchUsers(params);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getAllUsers(): Promise<UserByRole[]> {
+        try {
+            const [admins, teachers, students] = await Promise.all([
+                this.getUsersByRole(1),
+                this.getUsersByRole(2),
+                this.getUsersByRole(3)
+            ]);
+            return [...admins, ...teachers, ...students];
+        } catch (error) {
+            throw error;
+        }
+    }
+
     getRoleText(roleId?: number): string {
         switch (roleId) {
             case 1: return 'Admin';

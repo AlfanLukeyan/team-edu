@@ -7,7 +7,7 @@ interface SearchBarProps {
     visible: boolean;
     value: string;
     onChangeText: (text: string) => void;
-    onEndEditing?: (text: string) => void; // Add this prop
+    onSubmit: (text: string) => void;
     onClear: () => void;
     placeholder?: string;
     loading?: boolean;
@@ -18,11 +18,11 @@ export function SearchBar({
     visible,
     value,
     onChangeText,
-    onEndEditing,
+    onSubmit,
     onClear,
     placeholder = "Search...",
     loading = false,
-    autoFocus = true
+    autoFocus = false
 }: SearchBarProps) {
     const colorScheme = useColorScheme();
     const inputRef = useRef<TextInput>(null);
@@ -31,15 +31,10 @@ export function SearchBar({
 
     const handleClear = () => {
         onClear();
-        // Trigger search with empty string when clearing
-        onEndEditing?.('');
-        setTimeout(() => {
-            inputRef.current?.focus();
-        }, 100);
     };
 
-    const handleEndEditing = () => {
-        onEndEditing?.(value);
+    const handleSubmitEditing = () => {
+        onSubmit(value);
     };
 
     return (
@@ -66,8 +61,8 @@ export function SearchBar({
                     placeholder={placeholder}
                     placeholderTextColor={Colors[colorScheme ?? 'light'].icon}
                     value={value}
-                    onChangeText={onChangeText} // Only update the text, no API calls
-                    onEndEditing={handleEndEditing} // Trigger search when done editing
+                    onChangeText={onChangeText}
+                    onSubmitEditing={handleSubmitEditing}
                     autoFocus={autoFocus}
                     returnKeyType="search"
                     blurOnSubmit={false}

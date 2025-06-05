@@ -25,12 +25,14 @@ export default function ClassesScreen() {
         refreshing,
         loadingMore,
         showSearch,
+        searchInput,
         searchQuery,
         isSearching,
         classBottomSheetRef,
         refetchClasses,
         loadMoreClasses,
         handleSearch,
+        handleInputChange,
         toggleSearch,
         clearSearch,
         handleClassSubmit,
@@ -113,11 +115,13 @@ export default function ClassesScreen() {
             )}
             <SearchBar
                 visible={isAdmin() && showSearch}
-                value={searchQuery}
-                onChangeText={handleSearch}
+                value={searchInput}
+                onChangeText={handleInputChange}
+                onSubmit={handleSearch}
                 onClear={clearSearch}
                 placeholder="Search classes..."
                 loading={isSearching}
+                autoFocus={false}
             />
         </View>
     );
@@ -155,6 +159,7 @@ export default function ClassesScreen() {
                         ListEmptyComponent={renderEmptyState}
                         ListFooterComponent={renderFooter}
                         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+                        keyboardShouldPersistTaps="handled"
                     />
                 </View>
             </ThemedView>

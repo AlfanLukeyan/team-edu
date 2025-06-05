@@ -20,7 +20,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 function NavigationHandler({ children }: { children: React.ReactNode }) {
-    const {isAuthenticated, isLoading } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const segments = useSegments();
     const router = useRouter();
 
@@ -95,16 +95,12 @@ export default function RootLayout() {
 
         const handleUnauthorized = () => {
             setErrorMessage("Session expired. Please log in again.");
-            setTimeout(() => {
-                router.replace('/(auth)/login');
-            }, 1000);
+            router.replace('/(auth)/login');
         };
 
         const handleAnotherDeviceLogin = (message: string) => {
             setErrorMessage(message);
-            setTimeout(() => {
-                router.replace('/(auth)/login');
-            }, 1000);
+            router.replace('/(auth)/login');
         };
 
         const handleShowAlert = (options: any) => {

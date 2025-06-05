@@ -19,6 +19,7 @@ export const useClassControl = () => {
     const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
     const [showSearch, setShowSearch] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchInput, setSearchInput] = useState('');
     const [isSearching, setIsSearching] = useState(false);
 
     const classBottomSheetRef = useRef<any>(null);
@@ -26,7 +27,9 @@ export const useClassControl = () => {
     const fetchClasses = useCallback(async (page: number = 1, append: boolean = false, search?: string) => {
         try {
             setError(null);
-            if (!append) setLoading(true);
+            if (!append) {
+                setLoading(true);
+            }
 
             if (isAdmin()) {
                 const { classes: classesData, pagination: paginationData } = await classService.getAdminClasses({
@@ -78,9 +81,16 @@ export const useClassControl = () => {
         await fetchClasses(nextPage, true, searchQuery);
     }, [isAdmin, pagination, loadingMore, currentPage, searchQuery, fetchClasses]);
 
+    // Simple input handler - only updates local state
+    const handleInputChange = useCallback((text: string) => {
+        setSearchInput(text);
+    }, []);
+
+    // Execute search only when user submits
     const handleSearch = useCallback(async (query: string) => {
         if (!isAdmin()) return;
 
+        console.log('Executing search for:', query);
         setSearchQuery(query);
         setIsSearching(true);
         setCurrentPage(1);
@@ -88,17 +98,22 @@ export const useClassControl = () => {
     }, [isAdmin, fetchClasses]);
 
     const toggleSearch = useCallback(() => {
-        setShowSearch(!showSearch);
-        if (showSearch && searchQuery) {
+        const newShowSearch = !showSearch;
+        setShowSearch(newShowSearch);
+        
+        if (!newShowSearch && (searchQuery || searchInput)) {
+            // When closing search, clear everything and reload
             setSearchQuery('');
-            handleSearch('');
+            setSearchInput('');
+            fetchClasses(1, false, '');
         }
-    }, [showSearch, searchQuery, handleSearch]);
+    }, [showSearch, searchQuery, searchInput, fetchClasses]);
 
     const clearSearch = useCallback(() => {
+        setSearchInput('');
         setSearchQuery('');
-        handleSearch('');
-    }, [handleSearch]);
+        fetchClasses(1, false, '');
+    }, [fetchClasses]);
 
     const handleClassSubmit = useCallback(async (
         data: CreateClassRequest | UpdateClassRequest,
@@ -196,11 +211,13 @@ export const useClassControl = () => {
         error,
         pagination,
         showSearch,
+        searchInput,
         searchQuery,
         isSearching,
         classBottomSheetRef,
         refetchClasses,
         loadMoreClasses,
+        handleInputChange,
         handleSearch,
         toggleSearch,
         clearSearch,

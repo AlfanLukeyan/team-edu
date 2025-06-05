@@ -36,4 +36,13 @@ export const userApi = {
     getUsersByRole: async (roleId: number): Promise<GetUsersByRoleResponse> => {
         return httpClient.get(`/admin/get-user?role_id=${roleId}`);
     },
+
+    searchUsers: async (params?: { name?: string; role_id?: number }): Promise<GetUsersByRoleResponse> => {
+        const queryParams = new URLSearchParams();
+        if (params?.name) queryParams.append('name', params.name);
+        if (params?.role_id) queryParams.append('role_id', params.role_id.toString());
+
+        const queryString = queryParams.toString();
+        return httpClient.get(`/admin/search-user${queryString ? `?${queryString}` : ''}`);
+    },
 };
