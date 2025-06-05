@@ -531,3 +531,18 @@ export interface VerifyEmailUserRequest {
 export type InjectCrucialTokenResponse = ApiResponse<InjectCrucialTokenData>;
 export type DeleteCrucialTokenResponse = ApiResponse<DeleteCrucialTokenData>;
 export type VerifyEmailUserResponse = ApiResponse<null>;
+
+export interface AddMemberRequest {
+    kelas_kelas_id: string;
+    students: {
+        username: string;
+        user_user_id: string;
+    }[];
+}
+
+export interface AddMemberResponseData {
+    [key: string]: any;
+}
+
+export type AddMemberResponse = ApiResponse<AddMemberResponseData>;
+export type DeleteMemberResponse = ApiResponse<string>;

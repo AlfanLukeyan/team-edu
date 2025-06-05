@@ -106,17 +106,17 @@ class UserService {
         }
     }
 
-    async injectCrucialToken(userId: string): Promise<any> {
+    async injectCrucialToken(userIndex: number): Promise<any> {
         try {
-            return await userApi.injectCrucialToken({ user_id: userId });
+            return await userApi.injectCrucialToken({ user_id: userIndex.toString() });
         } catch (error) {
             throw error;
         }
     }
 
-    async deleteCrucialToken(userId: string): Promise<any> {
+    async deleteCrucialToken(userIndex: number): Promise<any> {
         try {
-            return await userApi.deleteCrucialToken({ user_id: userId });
+            return await userApi.deleteCrucialToken({ user_id: userIndex.toString() });
         } catch (error) {
             throw error;
         }

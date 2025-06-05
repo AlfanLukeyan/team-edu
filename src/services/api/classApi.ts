@@ -1,4 +1,4 @@
-import { AssessmentResponse, ClassInfoResponse, ClassMemberResponse, CreateClassRequest, CreateClassResponse, DeleteClassResponse, StudentAssessmentResponse, UpdateClassRequest, UpdateClassResponse, WeeklySectionResponse } from '@/types/api';
+import { AddMemberRequest, AddMemberResponse, AssessmentResponse, ClassInfoResponse, ClassMemberResponse, CreateClassRequest, CreateClassResponse, DeleteClassResponse, DeleteMemberResponse, StudentAssessmentResponse, UpdateClassRequest, UpdateClassResponse, WeeklySectionResponse } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
 import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
@@ -100,5 +100,13 @@ export const classApi = {
 
     deleteWeeklySection: async (weekId: string): Promise<{ status: string; message: string; data: string }> => {
         return httpClient.delete(`/teacher/kelas/weekly-section?id=${weekId}`);
-    }
+    },
+
+    addClassMembers: async (data: AddMemberRequest): Promise<AddMemberResponse> => {
+        return httpClient.post('/member/admin', data);
+    },
+
+    deleteClassMember: async (userId: string, classId: string): Promise<DeleteMemberResponse> => {
+        return httpClient.delete(`/member/admin?user_id=${userId}&class_id=${classId}`);
+    },
 };

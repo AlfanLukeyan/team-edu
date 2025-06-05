@@ -52,7 +52,7 @@ export const UserCard: React.FC<UserCardProps> = ({
 
     const expandedHeight = animation.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, 180], // Increased height for the button
+        outputRange: [0, 200],
     });
 
     const rotateChevron = animation.interpolate({

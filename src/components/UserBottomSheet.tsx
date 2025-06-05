@@ -31,8 +31,8 @@ interface UserBottomSheetProps {
     roles: Role[];
     onRoleChange: (userId: string, roleId: string) => void;
     onDeleteUser?: (userId: string) => void;
-    onInjectCrucialToken?: (userId: string) => void;
-    onDeleteCrucialToken?: (userId: string) => void;
+    onInjectCrucialToken?: (userIndex: number) => void;
+    onDeleteCrucialToken?: (userIndex: number) => void;
     onVerifyEmailUser?: (userId: string) => void;
     onClose?: () => void;
 }
@@ -55,6 +55,7 @@ const UserBottomSheet = forwardRef<
     }, [onClose, dismiss]);
 
     const handleOpen = useCallback((user: UserByRole) => {
+        console.log("Opening user bottom sheet for:", user);
         setSelectedUser(user);
         bottomSheetModalRef.current?.present();
     }, []);
@@ -62,19 +63,18 @@ const UserBottomSheet = forwardRef<
     const handleRoleSelect = useCallback((item: any) => {
         if (selectedUser && item.value !== selectedUser.role_id.toString()) {
             onRoleChange(selectedUser.uuid, item.value);
-            // Keep the bottom sheet open to see the change
         }
     }, [selectedUser, onRoleChange]);
 
     const handleInjectCrucialToken = useCallback(() => {
         if (selectedUser && onInjectCrucialToken) {
-            onInjectCrucialToken(selectedUser.uuid);
+            onInjectCrucialToken(selectedUser.id);
         }
     }, [selectedUser, onInjectCrucialToken]);
 
     const handleDeleteCrucialToken = useCallback(() => {
         if (selectedUser && onDeleteCrucialToken) {
-            onDeleteCrucialToken(selectedUser.uuid);
+            onDeleteCrucialToken(selectedUser.id);
         }
     }, [selectedUser, onDeleteCrucialToken]);
 

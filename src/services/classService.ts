@@ -1,4 +1,4 @@
-import { AdminClass, AssessmentData, Class, ClassInfo, ClassMember, CreateClassRequest, CreateClassResponseData, DeleteClassResponse, PaginationInfo, UpdateClassRequest, UpdateClassResponseData, WeeklySection } from '@/types/api';
+import { AddMemberRequest, AddMemberResponseData, AdminClass, AssessmentData, Class, ClassInfo, ClassMember, CreateClassRequest, CreateClassResponseData, DeleteClassResponse, DeleteMemberResponse, PaginationInfo, UpdateClassRequest, UpdateClassResponseData, WeeklySection } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
 import { classApi } from "./api/classApi";
 import { tokenService } from "./tokenService";
@@ -121,7 +121,6 @@ class ClassService {
         }
     }
 
-    // ✅ Teacher-only operations (keep existing)
     async createWeeklySection(classId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> {
         try {
             const existingSections = await this.getWeeklySections(classId);
@@ -147,6 +146,24 @@ class ClassService {
     async deleteWeeklySection(weekId: string): Promise<{ status: string; message: string; data: string }> {
         try {
             const response = await classApi.deleteWeeklySection(weekId);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async addClassMembers(data: AddMemberRequest): Promise<AddMemberResponseData> {
+        try {
+            const response = await classApi.addClassMembers(data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async deleteClassMember(userId: string, classId: string): Promise<DeleteMemberResponse> {
+        try {
+            const response = await classApi.deleteClassMember(userId, classId);
             return response;
         } catch (error) {
             throw error;

@@ -174,9 +174,9 @@ export const useUserManagement = () => {
         }
     }, []);
 
-    const handleInjectCrucialToken = useCallback(async (userId: string) => {
+    const handleInjectCrucialToken = useCallback(async (userIndex: number) => {
         try {
-            const response = await userService.injectCrucialToken(userId);
+            const response = await userService.injectCrucialToken(userIndex);
             ModalEmitter.showSuccess(response.message || 'Crucial token injected successfully');
         } catch (err: any) {
             console.error('Failed to inject crucial token:', err);
@@ -184,9 +184,9 @@ export const useUserManagement = () => {
         }
     }, []);
 
-    const handleDeleteCrucialToken = useCallback(async (userId: string) => {
+    const handleDeleteCrucialToken = useCallback(async (userIndex: number) => {
         try {
-            const response = await userService.deleteCrucialToken(userId);
+            const response = await userService.deleteCrucialToken(userIndex);
             ModalEmitter.showSuccess(response.message || 'Crucial token deleted successfully');
         } catch (err: any) {
             console.error('Failed to delete crucial token:', err);
