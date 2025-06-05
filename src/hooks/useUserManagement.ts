@@ -1,10 +1,11 @@
 import { ModalEmitter } from "@/services/modalEmitter";
 import { userService } from "@/services/userService";
-import { UserByRole } from "@/types/api";
+import { Role, UserByRole } from "@/types/api";
 import { useCallback, useEffect, useState } from "react";
 
 export const useUserManagement = () => {
     const [users, setUsers] = useState<UserByRole[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -14,6 +15,17 @@ export const useUserManagement = () => {
     const [searchInput, setSearchInput] = useState('');
     const [showSearch, setShowSearch] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [selectedUserForActions, setSelectedUserForActions] = useState<UserByRole | null>(null);
+
+    const fetchRoles = useCallback(async () => {
+        try {
+            const rolesData = await userService.getAllRoles();
+            setRoles(rolesData);
+        } catch (err: any) {
+            console.error('Failed to fetch roles:', err);
+            ModalEmitter.showError('Failed to fetch roles');
+        }
+    }, []);
 
     const fetchUsers = useCallback(async (isRefresh: boolean = false, search?: string, roleFilter?: number | null) => {
         try {
@@ -73,7 +85,7 @@ export const useUserManagement = () => {
     const toggleSearch = useCallback(() => {
         const newShowSearch = !showSearch;
         setShowSearch(newShowSearch);
-        
+
         if (!newShowSearch && (searchQuery || searchInput)) {
             setSearchQuery('');
             setSearchInput('');
@@ -122,12 +134,88 @@ export const useUserManagement = () => {
         console.log('User pressed:', userId);
     }, []);
 
+    const handleRoleChange = useCallback(async (userId: string, newRoleId: string) => {
+        try {
+            await userService.modifyUserRole(userId, newRoleId);
+
+            // Update local state
+            setUsers(prev => prev.map(user =>
+                user.uuid === userId
+                    ? { ...user, role_id: parseInt(newRoleId) }
+                    : user
+            ));
+
+            ModalEmitter.showSuccess('User role updated successfully');
+        } catch (err: any) {
+            console.error('Failed to update user role:', err);
+            ModalEmitter.showError(err.message || 'Failed to update user role');
+        }
+    }, []);
+
     useEffect(() => {
         fetchUsers();
-    }, [fetchUsers]);
+        fetchRoles();
+    }, [fetchUsers, fetchRoles]);
+
+    const handleMoreActions = useCallback((user: UserByRole) => {
+        setSelectedUserForActions(user);
+    }, []);
+
+    const handleDeleteUser = useCallback(async (userId: string) => {
+        try {
+            await userService.deleteUser(userId);
+
+            setUsers(prev => prev.filter(user => user.uuid !== userId));
+
+            ModalEmitter.showSuccess('User deleted successfully');
+        } catch (err: any) {
+            console.error('Failed to delete user:', err);
+            ModalEmitter.showError(err.message || 'Failed to delete user');
+        }
+    }, []);
+
+    const handleInjectCrucialToken = useCallback(async (userId: string) => {
+        try {
+            const response = await userService.injectCrucialToken(userId);
+            ModalEmitter.showSuccess(response.message || 'Crucial token injected successfully');
+        } catch (err: any) {
+            console.error('Failed to inject crucial token:', err);
+            ModalEmitter.showError(err.message || 'Failed to inject crucial token');
+        }
+    }, []);
+
+    const handleDeleteCrucialToken = useCallback(async (userId: string) => {
+        try {
+            const response = await userService.deleteCrucialToken(userId);
+            ModalEmitter.showSuccess(response.message || 'Crucial token deleted successfully');
+        } catch (err: any) {
+            console.error('Failed to delete crucial token:', err);
+            ModalEmitter.showError(err.message || 'Failed to delete crucial token');
+        }
+    }, []);
+
+    const handleVerifyEmailUser = useCallback(async (uuid: string) => {
+        try {
+            const response = await userService.verifyEmailUser(uuid);
+
+            // Update local state to reflect email verification
+            setUsers(prev => prev.map(user =>
+                user.uuid === uuid
+                    ? { ...user, is_verified: true }
+                    : user
+            ));
+
+            ModalEmitter.showSuccess(response.message || 'User email verified successfully');
+        } catch (err: any) {
+            console.error('Failed to verify user email:', err);
+            ModalEmitter.showError(err.message || 'Failed to verify user email');
+        }
+    }, []);
+
 
     return {
         users,
+        roles,
         loading,
         refreshing,
         error,
@@ -137,6 +225,7 @@ export const useUserManagement = () => {
         searchInput,
         showSearch,
         isSearching,
+        selectedUserForActions,
         refetchUsers,
         handleInputChange,
         handleSearch,
@@ -147,5 +236,12 @@ export const useUserManagement = () => {
         handleSelectAll,
         handleClearSelection,
         handleUserPress,
+        handleRoleChange,
+        handleMoreActions,
+        handleDeleteUser,
+        setSelectedUserForActions,
+        handleInjectCrucialToken,
+        handleDeleteCrucialToken,
+        handleVerifyEmailUser,
     };
 };

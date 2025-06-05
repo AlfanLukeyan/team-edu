@@ -1,4 +1,4 @@
-import { GetUsersByRoleResponse } from '@/types/api';
+import { DeleteCrucialTokenResponse, GetUsersByRoleResponse, InjectCrucialTokenResponse, RoleListResponse, VerifyEmailUserResponse } from '@/types/api';
 import { UserProfile } from '@/types/user';
 import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
@@ -10,6 +10,23 @@ interface UpdateProfileRequest {
 
 interface UpdateEmailRequest {
     email: string;
+}
+
+interface ModifyUserRoleRequest {
+    uuid: string;
+    role_id: string;
+}
+
+interface VerifyEmailUserRequest {
+    uuid: string;
+}
+
+interface InjectCrucialTokenRequest {
+    user_id: string;
+}
+
+interface DeleteCrucialTokenRequest {
+    user_id: string;
 }
 
 export const userApi = {
@@ -44,5 +61,29 @@ export const userApi = {
 
         const queryString = queryParams.toString();
         return httpClient.get(`/admin/search-user${queryString ? `?${queryString}` : ''}`);
+    },
+
+    getAllRoles: async (): Promise<RoleListResponse> => {
+        return httpClient.get('/role/list');
+    },
+
+    modifyUserRole: async (data: ModifyUserRoleRequest): Promise<any> => {
+        return httpClient.post('/admin/modify-role', data);
+    },
+
+    deleteUser: async (uuid: string): Promise<any> => {
+        return httpClient.delete(`/admin/delete-user/${uuid}`);
+    },
+
+    injectCrucialToken: async (data: InjectCrucialTokenRequest): Promise<InjectCrucialTokenResponse> => {
+        return httpClient.post('/admin/inject-crucial-token', data);
+    },
+
+    deleteCrucialToken: async (data: DeleteCrucialTokenRequest): Promise<DeleteCrucialTokenResponse> => {
+        return httpClient.deleteWithData('/admin/delete-crucial-token', data);
+    },
+
+    verifyEmailUser: async (data: VerifyEmailUserRequest): Promise<VerifyEmailUserResponse> => {
+        return httpClient.post('/admin/verify-email-user', data);
     },
 };

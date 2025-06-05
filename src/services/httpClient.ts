@@ -229,6 +229,21 @@ class HttpClient {
         }
     }
 
+    async deleteWithData<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
+        try {
+            const response = await this.axiosInstance.delete<T>(url, {
+                data,
+                headers: config?.headers,
+                timeout: config?.timeout,
+            });
+            return response.data;
+        } catch (error) {
+            const errorMessage = (error instanceof Error) ? error.message : String(error);
+            console.log('❌ DELETE with data request failed:', { url, error: errorMessage });
+            throw error;
+        }
+    }
+
     // No auth requests
     async postNoAuth<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
         try {

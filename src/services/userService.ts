@@ -1,4 +1,4 @@
-import { UserByRole } from "@/types/api";
+import { Role, UserByRole } from "@/types/api";
 import { UserProfile } from "@/types/user";
 import { Platform } from "react-native";
 import { userApi } from "./api/userApi";
@@ -76,6 +76,55 @@ class UserService {
             }
 
             return await userApi.updateFaceReference(formData);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getAllRoles(): Promise<Role[]> {
+        try {
+            const response = await userApi.getAllRoles();
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async modifyUserRole(uuid: string, roleId: string): Promise<any> {
+        try {
+            return await userApi.modifyUserRole({ uuid, role_id: roleId });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async deleteUser(uuid: string): Promise<any> {
+        try {
+            return await userApi.deleteUser(uuid);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async injectCrucialToken(userId: string): Promise<any> {
+        try {
+            return await userApi.injectCrucialToken({ user_id: userId });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async deleteCrucialToken(userId: string): Promise<any> {
+        try {
+            return await userApi.deleteCrucialToken({ user_id: userId });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async verifyEmailUser(uuid: string): Promise<any> {
+        try {
+            return await userApi.verifyEmailUser({ uuid });
         } catch (error) {
             throw error;
         }

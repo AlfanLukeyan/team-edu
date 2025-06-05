@@ -492,3 +492,42 @@ export interface UpdateClassResponseData {
 }
 
 export type UpdateClassResponse = ApiResponse<UpdateClassResponseData>;
+
+
+export interface Role {
+    id: number;
+    name: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export type RoleListResponse = ApiResponse<Role[]>;
+
+
+export interface InjectCrucialTokenRequest {
+    user_id: string;
+}
+
+export interface InjectCrucialTokenData {
+    expires_in_seconds: string;
+    key: string;
+    user_id: string;
+    value: string;
+}
+
+export interface DeleteCrucialTokenRequest {
+    user_id: string;
+}
+
+export interface DeleteCrucialTokenData {
+    key: string;
+    user_id: string;
+}
+
+export interface VerifyEmailUserRequest {
+    uuid: string;
+}
+
+export type InjectCrucialTokenResponse = ApiResponse<InjectCrucialTokenData>;
+export type DeleteCrucialTokenResponse = ApiResponse<DeleteCrucialTokenData>;
+export type VerifyEmailUserResponse = ApiResponse<null>;

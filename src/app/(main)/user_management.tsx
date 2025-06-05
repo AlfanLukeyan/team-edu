@@ -11,12 +11,17 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useLayoutEffect } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import UserBottomSheet, { UserBottomSheetRef } from '@/components/UserBottomSheet';
+import { useRef } from 'react';
+
 const UserManagementScreen = () => {
     const navigation = useNavigation();
     const colorScheme = useColorScheme();
+    const userBottomSheetRef = useRef<UserBottomSheetRef>(null);
 
     const {
         users,
+        roles,
         loading,
         refreshing,
         selectedUsers,
@@ -25,6 +30,7 @@ const UserManagementScreen = () => {
         searchInput,
         showSearch,
         isSearching,
+        selectedUserForActions,
         refetchUsers,
         handleInputChange,
         handleSearch,
@@ -35,6 +41,13 @@ const UserManagementScreen = () => {
         handleSelectAll,
         handleClearSelection,
         handleUserPress,
+        handleRoleChange,
+        handleMoreActions,
+        handleDeleteUser,
+        setSelectedUserForActions,
+        handleInjectCrucialToken,
+        handleDeleteCrucialToken,
+        handleVerifyEmailUser,
     } = useUserManagement();
 
     useLayoutEffect(() => {
@@ -54,12 +67,19 @@ const UserManagementScreen = () => {
         });
     }, [navigation, showSearch, toggleSearch, colorScheme]);
 
+    const handleOpenUserActions = (user: UserByRole) => {
+        handleMoreActions(user);
+        userBottomSheetRef.current?.open(user);
+    };
+
     const renderUserItem = ({ item }: { item: UserByRole }) => (
         <UserCard
             user={item}
+            roles={roles}
             isSelected={selectedUsers.has(item.uuid)}
             onLongPress={handleUserSelect}
             onPress={handleUserPress}
+            onMoreActions={handleOpenUserActions}
         />
     );
 
@@ -196,39 +216,51 @@ const UserManagementScreen = () => {
     }
 
     return (
-        <ThemedView style={styles.container}>
-            <View style={styles.content}>
-                <SearchBar
-                    visible={showSearch}
-                    value={searchInput}
-                    onChangeText={handleInputChange}
-                    onSubmit={handleSearch}
-                    onClear={clearSearch}
-                    placeholder="Search users..."
-                    loading={isSearching}
-                    autoFocus={false}
-                />
-                <FlatList
-                    data={users}
-                    renderItem={renderUserItem}
-                    keyExtractor={(item) => item.uuid}
-                    ListHeaderComponent={renderListHeader}
-                    ListEmptyComponent={renderEmptyState}
-                    contentContainerStyle={[
-                        styles.listContainer,
-                        users.length === 0 && { flex: 1 }
-                    ]}
-                    showsVerticalScrollIndicator={false}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={refetchUsers}
-                        />
-                    }
-                    keyboardShouldPersistTaps="handled"
-                />
-            </View>
-        </ThemedView>
+        <>
+            <ThemedView style={styles.container}>
+                <View style={styles.content}>
+                    <SearchBar
+                        visible={showSearch}
+                        value={searchInput}
+                        onChangeText={handleInputChange}
+                        onSubmit={handleSearch}
+                        onClear={clearSearch}
+                        placeholder="Search users..."
+                        loading={isSearching}
+                        autoFocus={false}
+                    />
+                    <FlatList
+                        data={users}
+                        renderItem={renderUserItem}
+                        keyExtractor={(item) => item.uuid}
+                        ListHeaderComponent={renderListHeader}
+                        ListEmptyComponent={renderEmptyState}
+                        contentContainerStyle={[
+                            styles.listContainer,
+                            users.length === 0 && { flex: 1 }
+                        ]}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={refetchUsers}
+                            />
+                        }
+                        keyboardShouldPersistTaps="handled"
+                    />
+                </View>
+            </ThemedView>
+            <UserBottomSheet
+                ref={userBottomSheetRef}
+                roles={roles}
+                onRoleChange={handleRoleChange}
+                onDeleteUser={handleDeleteUser}
+                onInjectCrucialToken={handleInjectCrucialToken}
+                onDeleteCrucialToken={handleDeleteCrucialToken}
+                onVerifyEmailUser={handleVerifyEmailUser}
+                onClose={() => setSelectedUserForActions(null)}
+            />
+        </>
     );
 };
 

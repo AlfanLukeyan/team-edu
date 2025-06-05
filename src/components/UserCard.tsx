@@ -1,26 +1,31 @@
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { userService } from "@/services/userService";
-import { UserByRole } from "@/types/api";
+import { Role, UserByRole } from "@/types/api";
 import { formatDate, readableHash } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Animated, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Button } from "./Button";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
 interface UserCardProps {
     user: UserByRole;
+    roles: Role[];
     isSelected?: boolean;
     onLongPress?: (userId: string) => void;
     onPress?: (userId: string) => void;
+    onMoreActions?: (user: UserByRole) => void;
 }
 
 export const UserCard: React.FC<UserCardProps> = ({
     user,
+    roles,
     isSelected = false,
     onLongPress,
-    onPress
+    onPress,
+    onMoreActions
 }) => {
     const theme = useColorScheme() || "light";
     const [isExpanded, setIsExpanded] = useState(false);
@@ -47,7 +52,7 @@ export const UserCard: React.FC<UserCardProps> = ({
 
     const expandedHeight = animation.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, 120],
+        outputRange: [0, 180], // Increased height for the button
     });
 
     const rotateChevron = animation.interpolate({
@@ -75,6 +80,12 @@ export const UserCard: React.FC<UserCardProps> = ({
 
     const getVerificationColor = (isVerified: boolean): string => {
         return isVerified ? "#4CAF50" : "#FF9800";
+    };
+
+    const handleMoreActions = () => {
+        if (onMoreActions) {
+            onMoreActions(user);
+        }
     };
 
     return (
@@ -123,7 +134,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                                 {user.name}
                             </ThemedText>
                             <ThemedText style={styles.userIdText}>
-                                {readableHash(user.uuid, "USR")}
+                                {readableHash(user.uuid, "STU")}
                             </ThemedText>
                         </View>
                     </View>
@@ -192,6 +203,17 @@ export const UserCard: React.FC<UserCardProps> = ({
                             <ThemedText style={styles.detailValue}>
                                 {formatDate(user.created_at)}
                             </ThemedText>
+                        </View>
+
+                        {/* More Actions Button */}
+                        <View style={styles.actionButtonContainer}>
+                            <Button
+                                type="secondary"
+                                onPress={handleMoreActions}
+                                style={styles.moreActionsButton}
+                            >
+                                More Actions
+                            </Button>
                         </View>
                     </View>
                 </Animated.View>
@@ -280,13 +302,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 4,
     },
     detailLabel: {
-        fontSize: 12,
         opacity: 0.7,
-        fontWeight: '500',
+        minWidth: 60,
     },
     detailValue: {
-        fontSize: 12,
-        fontWeight: '400',
         flex: 1,
         textAlign: 'right',
         marginLeft: 8,
@@ -302,7 +321,12 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     verificationText: {
-        fontSize: 12,
-        fontWeight: '500',
+    },
+    actionButtonContainer: {
+        marginTop: 12,
+        paddingHorizontal: 4,
+    },
+    moreActionsButton: {
+        width: '100%',
     },
 });
