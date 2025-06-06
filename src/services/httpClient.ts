@@ -13,7 +13,7 @@ interface RequestConfig {
 class HttpClient {
     private static instance: HttpClient;
     public axiosInstance: AxiosInstance; // Made public for crucial auth retry
-    private defaultTimeout = 10000;
+    private defaultTimeout = 15000;
 
     constructor() {
         this.axiosInstance = axios.create({

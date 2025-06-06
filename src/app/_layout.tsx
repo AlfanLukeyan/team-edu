@@ -1,3 +1,4 @@
+import CrucialFeatureAuthModal from "@/components/CrucialFeatureAuthModal";
 import CustomAlert from "@/components/CustomAlert";
 import ErrorModal from "@/components/ErrorModal";
 import LoadingModal from "@/components/LoadingModal";
@@ -30,8 +31,7 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
 
         const inAuthGroup = segments[0] === '(auth)';
         const inProtectedGroup = segments[0] === '(main)'
-            || segments[0] === '(class)'
-            || segments[0] === '(verification)';
+            || segments[0] === '(class)';
 
         const onWarningScreen = segments.some(segment => segment === 'warning_screen') ||
             segments[segments.length - 1] === 'warning_screen';
@@ -80,6 +80,16 @@ export default function RootLayout() {
         title: '',
         message: '',
     });
+    const [crucialAuthOptions, setCrucialAuthOptions] = useState<{
+        visible: boolean;
+        title?: string;
+        description?: string;
+        onSuccess?: () => void;
+        onCancel?: () => void;
+    }>({
+        visible: false,
+    });
+
 
     // Modal event handlers
     useEffect(() => {
@@ -108,6 +118,13 @@ export default function RootLayout() {
             setAlertOptions(prev => ({ ...prev, visible: false }));
         };
 
+        const handleShowCrucialAuth = (options: any) => {
+            setCrucialAuthOptions({ visible: true, ...options });
+        };
+        const handleHideCrucialAuth = () => {
+            setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
+        };
+
         // Register event listeners
         ModalEmitter.on("SHOW_ERROR", handleError);
         ModalEmitter.on("SHOW_SUCCESS", handleSuccess);
@@ -117,6 +134,8 @@ export default function RootLayout() {
         ModalEmitter.on("ANOTHER_DEVICE_LOGIN", handleAnotherDeviceLogin);
         ModalEmitter.on("SHOW_ALERT", handleShowAlert);
         ModalEmitter.on("HIDE_ALERT", handleHideAlert);
+        ModalEmitter.on("SHOW_CRUCIAL_AUTH", handleShowCrucialAuth);
+        ModalEmitter.on("HIDE_CRUCIAL_AUTH", handleHideCrucialAuth);
 
         return () => {
             // Cleanup event listeners
@@ -128,6 +147,8 @@ export default function RootLayout() {
             ModalEmitter.off("ANOTHER_DEVICE_LOGIN", handleAnotherDeviceLogin);
             ModalEmitter.off("SHOW_ALERT", handleShowAlert);
             ModalEmitter.off("HIDE_ALERT", handleHideAlert);
+            ModalEmitter.off("SHOW_CRUCIAL_AUTH", handleShowCrucialAuth);
+            ModalEmitter.off("HIDE_CRUCIAL_AUTH", handleHideCrucialAuth);
         };
     }, [router]);
 
@@ -146,7 +167,7 @@ export default function RootLayout() {
                             </NavigationHandler>
                             <StatusBar style="auto" />
 
-                            {/* Global Modals */}
+                            {/* ✅ Regular Global Modals */}
                             {(isLoading || !!errorMessage || !!successMessage || alertOptions.visible) && (
                                 <View style={{
                                     position: 'absolute',
@@ -195,6 +216,33 @@ export default function RootLayout() {
                                             }}
                                         />
                                     )}
+                                </View>
+                            )}
+
+                            {/* ✅ Crucial Auth Modal - Separate and Higher Z-Index */}
+                            {crucialAuthOptions.visible && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    zIndex: 10000, // Higher than other modals
+                                    pointerEvents: 'auto'
+                                }}>
+                                    <CrucialFeatureAuthModal
+                                        visible={true}
+                                        title={crucialAuthOptions.title}
+                                        description={crucialAuthOptions.description}
+                                        onSuccess={() => {
+                                            crucialAuthOptions.onSuccess?.();
+                                            setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
+                                        }}
+                                        onCancel={() => {
+                                            crucialAuthOptions.onCancel?.();
+                                            setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
+                                        }}
+                                    />
                                 </View>
                             )}
                         </BottomSheetModalProvider>

@@ -12,7 +12,6 @@ const TAB_BAR_PADDING = 20;
 const TAB_BAR_WIDTH = Math.min(width - 40, 400);
 const SLIDER_SIZE = 45;
 
-// Dynamic tab configuration based on user role
 const getTabConfig = (isAdmin: boolean) => {
     const baseTabs = [
         'index',
@@ -21,7 +20,7 @@ const getTabConfig = (isAdmin: boolean) => {
     ];
 
     if (isAdmin) {
-        baseTabs.splice(2, 0, 'user_management'); // Insert before profile
+        baseTabs.splice(2, 0, 'user_management');
     }
 
     return {
@@ -52,24 +51,22 @@ export default function MainLayout() {
     const pathname = usePathname();
     const [activeIndex, setActiveIndex] = useState(0);
 
-    // Get dynamic tab configuration
     const tabConfig = getTabConfig(isAdmin());
     const TAB_WIDTH = tabConfig.width;
 
     const translateX = useRef(new Animated.Value(0)).current;
+    const maxTabs = 4;
     const scaleValues = useRef(
-        Array(tabConfig.count).fill(0).map((_, i) =>
+        Array(maxTabs).fill(0).map((_, i) =>
             new Animated.Value(i === 0 ? TAB_CONFIG.activeScale : TAB_CONFIG.inactiveScale)
         )
     ).current;
 
-    // Calculate slider position based on tab index and center it within each tab
     const getSliderPosition = useCallback((index: number) => {
         const tabCenter = (index * TAB_WIDTH) + (TAB_WIDTH / 2);
         return tabCenter - (SLIDER_SIZE / 2);
     }, [TAB_WIDTH]);
 
-    // Extract common animation logic
     const animateToIndex = useCallback((index: number) => {
         Animated.spring(translateX, {
             toValue: getSliderPosition(index),
@@ -79,19 +76,23 @@ export default function MainLayout() {
         }).start();
 
         scaleValues.forEach((scale, i) => {
-            Animated.spring(scale, {
-                toValue: i === index ? TAB_CONFIG.activeScale : TAB_CONFIG.inactiveScale,
-                useNativeDriver: true,
-                speed: TAB_CONFIG.animationSpeed,
-                bounciness: TAB_CONFIG.bounciness,
-            }).start();
+            if (scale && i < tabConfig.count) {
+                Animated.spring(scale, {
+                    toValue: i === index ? TAB_CONFIG.activeScale : TAB_CONFIG.inactiveScale,
+                    useNativeDriver: true,
+                    speed: TAB_CONFIG.animationSpeed,
+                    bounciness: TAB_CONFIG.bounciness,
+                }).start();
+            }
         });
-    }, [translateX, scaleValues, getSliderPosition]);
+    }, [translateX, scaleValues, getSliderPosition, tabConfig.count]);
 
     const initializeAnimations = useCallback(() => {
         translateX.setValue(getSliderPosition(0));
         scaleValues.forEach((scale, index) => {
-            scale.setValue(index === 0 ? TAB_CONFIG.activeScale : TAB_CONFIG.inactiveScale);
+            if (scale) {
+                scale.setValue(index === 0 ? TAB_CONFIG.activeScale : TAB_CONFIG.inactiveScale);
+            }
         });
     }, [translateX, scaleValues, getSliderPosition]);
 
@@ -99,13 +100,12 @@ export default function MainLayout() {
         initializeAnimations();
     }, [initializeAnimations]);
 
-    // Sync tab state with pathname changes
     useEffect(() => {
         let newIndex = 0;
         if (pathname.includes('/classes')) {
             newIndex = 1;
         } else if (pathname.includes('/user_management')) {
-            newIndex = isAdmin() ? 2 : 0; // Only for admin
+            newIndex = isAdmin() ? 2 : 0;
         } else if (pathname.includes('/profile')) {
             newIndex = isAdmin() ? 3 : 2;
         } else if (pathname === '/(main)' || pathname === '/') {
@@ -151,7 +151,6 @@ export default function MainLayout() {
 
         if (shouldHideTabBar) return null;
 
-        // Filter routes based on user role
         const visibleRoutes = state.routes.filter((route: any) => {
             if (route.name === 'user_management') {
                 return isAdmin();
@@ -189,19 +188,26 @@ export default function MainLayout() {
                     ]}
                 />
 
-                {visibleRoutes.map((route: any, index: number) => (
-                    <TabButton
-                        key={route.key}
-                        route={route}
-                        index={index}
-                        isFocused={state.routes[state.index]?.name === route.name}
-                        scaleValue={scaleValues[index]}
-                        onPress={() => handleTabPress(navigation, route, index, state.routes[state.index]?.name === route.name)}
-                        getIconName={getIconName}
-                        colorScheme={colorScheme}
-                        tabWidth={TAB_WIDTH}
-                    />
-                ))}
+                {visibleRoutes.map((route: any, index: number) => {
+                    const scaleValue = scaleValues[index];
+                    if (!scaleValue) {
+                        return null;
+                    }
+
+                    return (
+                        <TabButton
+                            key={route.key}
+                            route={route}
+                            index={index}
+                            isFocused={state.routes[state.index]?.name === route.name}
+                            scaleValue={scaleValue}
+                            onPress={() => handleTabPress(navigation, route, index, state.routes[state.index]?.name === route.name)}
+                            getIconName={getIconName}
+                            colorScheme={colorScheme}
+                            tabWidth={TAB_WIDTH}
+                        />
+                    );
+                })}
             </View>
         );
     }, [colorScheme, handleTabPress, getIconName, translateX, scaleValues, pathname, activeIndex, animateToIndex, isAdmin, TAB_WIDTH]);
@@ -228,22 +234,19 @@ export default function MainLayout() {
                     title: isAdmin() ? "Class Management" : "Assigned Classes"
                 }}
             />
-            {isAdmin() && (
-                <Tabs.Screen
-                    name="user_management"
-                    options={{
-                        title: "User Management"
-                    }}
-                />
-            )}
+            <Tabs.Screen
+                name="user_management"
+                options={{
+                    title: "User Management",
+                    href: isAdmin() ? undefined : null,
+                }}
+            />
             <Tabs.Screen name="profile" options={{ headerShown: false }} />
         </Tabs>
     );
 }
 
-const TabButton = React.memo(({
-    route, index, isFocused, scaleValue, onPress, getIconName, colorScheme, tabWidth
-}: {
+interface TabButtonProps {
     route: any;
     index: number;
     isFocused: boolean;
@@ -252,22 +255,37 @@ const TabButton = React.memo(({
     getIconName: (routeName: keyof typeof ICON_MAP, isFocused: boolean) => string;
     colorScheme: 'light' | 'dark';
     tabWidth: number;
-}) => (
-    <Pressable style={[styles.tabButton, { width: tabWidth }]} onPress={onPress}>
-        <Animated.View
-            style={[
-                styles.iconContainer,
-                { transform: [{ scale: scaleValue }] },
-            ]}
-        >
-            <Ionicons
-                name={getIconName(route.name as keyof typeof ICON_MAP, isFocused) as any}
-                size={TAB_CONFIG.iconSize}
-                color={isFocused ? Colors[colorScheme].background : Colors[colorScheme].text}
-            />
-        </Animated.View>
-    </Pressable>
-));
+}
+
+const TabButton = React.memo((props: TabButtonProps) => {
+    const {
+        route,
+        index,
+        isFocused,
+        scaleValue,
+        onPress,
+        getIconName,
+        colorScheme,
+        tabWidth
+    } = props;
+
+    return (
+        <Pressable style={[styles.tabButton, { width: tabWidth }]} onPress={onPress}>
+            <Animated.View
+                style={[
+                    styles.iconContainer,
+                    { transform: [{ scale: scaleValue }] },
+                ]}
+            >
+                <Ionicons
+                    name={getIconName(route.name as keyof typeof ICON_MAP, isFocused) as any}
+                    size={TAB_CONFIG.iconSize}
+                    color={isFocused ? Colors[colorScheme].background : Colors[colorScheme].text}
+                />
+            </Animated.View>
+        </Pressable>
+    );
+});
 
 const styles = StyleSheet.create({
     tabBarContainer: {
