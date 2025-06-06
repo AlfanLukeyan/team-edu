@@ -1,7 +1,7 @@
 import { DecodedJWT } from "@/types/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
-import { authApi } from "./api/authApi";
+import { refreshTokenRequest } from "./tokenRefresh";
 
 class TokenService {
     private static instance: TokenService;
@@ -108,7 +108,7 @@ class TokenService {
         try {
             if (!this.refreshToken) return false;
 
-            const response = await authApi.refreshToken(this.refreshToken);
+            const response = await refreshTokenRequest(this.refreshToken);
 
             if (response.access_token) {
                 const oldUuid = this.decoded?.uuid;

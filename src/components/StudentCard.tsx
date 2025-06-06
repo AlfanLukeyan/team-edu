@@ -11,13 +11,17 @@ interface StudentCardProps {
     user_name: string;
     user_profile_url?: string;
     onPress?: () => void;
+    onLongPress?: () => void;
+    isSelected?: boolean;
 }
 
 export function StudentCard({
     user_id,
     user_name,
     user_profile_url,
-    onPress
+    onPress,
+    onLongPress,
+    isSelected = false
 }: StudentCardProps) {
     const [imageError, setImageError] = useState(false);
     const theme = useColorScheme() || 'light';
@@ -29,8 +33,22 @@ export function StudentCard({
     const shouldShowImage = user_profile_url && !imageError;
 
     return (
-        <TouchableOpacity style={styles.container} onPress={onPress}>
-            <ThemedView style={styles.card} isCard={true}>
+        <TouchableOpacity 
+            style={styles.container} 
+            onPress={onPress}
+            onLongPress={onLongPress}
+            delayLongPress={500}
+        >
+            <ThemedView style={[
+                styles.card,
+                isSelected && {
+                    borderColor: Colors[theme].tint,
+                    borderWidth: 2,
+                    backgroundColor: theme === "dark"
+                        ? 'rgba(190, 27, 182, 0.1)'
+                        : 'rgba(30, 206, 206, 0.1)',
+                }
+            ]} isCard={true}>
                 <View style={styles.avatarContainer}>
                     {shouldShowImage ? (
                         <Image
@@ -61,6 +79,17 @@ export function StudentCard({
                         {readableHash(user_id, 'STU')}
                     </ThemedText>
                 </View>
+
+                {/* Selection indicator */}
+                {isSelected && (
+                    <View style={styles.selectionContainer}>
+                        <Ionicons
+                            name="checkmark-circle"
+                            size={24}
+                            color={Colors[theme].tint}
+                        />
+                    </View>
+                )}
             </ThemedView>
         </TouchableOpacity>
     );
@@ -87,15 +116,9 @@ const styles = StyleSheet.create({
     avatarPlaceholder: {
         width: 48,
         height: 48,
-
         borderRadius: 15,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    avatarText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
     },
     content: {
         flex: 1,
@@ -109,5 +132,8 @@ const styles = StyleSheet.create({
         fontSize: 12,
         opacity: 0.7,
         fontFamily: 'monospace',
+    },
+    selectionContainer: {
+        marginLeft: 12,
     },
 });
