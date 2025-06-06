@@ -49,6 +49,10 @@ export const userApi = {
         return httpClient.postFormData('/user/update/face-reference', formData);
     },
 
+    getAllUsers: async (): Promise<GetUsersByRoleResponse> => {
+        return httpClient.get('/admin/get-user');
+    },
+
     getUsersByRole: async (roleId: number): Promise<GetUsersByRoleResponse> => {
         return httpClient.get(`/admin/get-user?role_id=${roleId}`);
     },

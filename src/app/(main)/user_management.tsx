@@ -1,3 +1,4 @@
+import { Button } from '@/components/Button';
 import { SearchBar } from '@/components/SearchBar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -103,80 +104,33 @@ const UserManagementScreen = () => {
 
     const renderListHeader = () => (
         <View>
-            {/* Filter Section */}
             <View style={styles.filterContainer}>
                 <ThemedText type="defaultSemiBold" style={styles.filterTitle}>
                     Filter by Role
                 </ThemedText>
 
                 <View style={styles.filterButtons}>
-                    <TouchableOpacity
-                        style={[
-                            styles.filterButton,
-                            { borderColor: Colors[colorScheme ?? 'light'].border },
-                            !filterRole && { backgroundColor: Colors[colorScheme ?? 'light'].tint + '20' }
-                        ]}
+                    <Button
+                        type="filter"
+                        active={!filterRole}
                         onPress={() => handleFilterRole(null)}
                     >
-                        <ThemedText style={[
-                            styles.filterButtonText,
-                            !filterRole && { color: Colors[colorScheme ?? 'light'].tint }
-                        ]}>
-                            All
-                        </ThemedText>
-                    </TouchableOpacity>
+                        All
+                    </Button>
 
-                    <TouchableOpacity
-                        style={[
-                            styles.filterButton,
-                            { borderColor: Colors[colorScheme ?? 'light'].border },
-                            filterRole === 1 && { backgroundColor: Colors[colorScheme ?? 'light'].tint + '20' }
-                        ]}
-                        onPress={() => handleFilterRole(1)}
-                    >
-                        <ThemedText style={[
-                            styles.filterButtonText,
-                            filterRole === 1 && { color: Colors[colorScheme ?? 'light'].tint }
-                        ]}>
-                            Admin
-                        </ThemedText>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[
-                            styles.filterButton,
-                            { borderColor: Colors[colorScheme ?? 'light'].border },
-                            filterRole === 2 && { backgroundColor: Colors[colorScheme ?? 'light'].tint + '20' }
-                        ]}
-                        onPress={() => handleFilterRole(2)}
-                    >
-                        <ThemedText style={[
-                            styles.filterButtonText,
-                            filterRole === 2 && { color: Colors[colorScheme ?? 'light'].tint }
-                        ]}>
-                            Teacher
-                        </ThemedText>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[
-                            styles.filterButton,
-                            { borderColor: Colors[colorScheme ?? 'light'].border },
-                            filterRole === 3 && { backgroundColor: Colors[colorScheme ?? 'light'].tint + '20' }
-                        ]}
-                        onPress={() => handleFilterRole(3)}
-                    >
-                        <ThemedText style={[
-                            styles.filterButtonText,
-                            filterRole === 3 && { color: Colors[colorScheme ?? 'light'].tint }
-                        ]}>
-                            Student
-                        </ThemedText>
-                    </TouchableOpacity>
+                    {roles.map((role) => (
+                        <Button
+                            key={role.id}
+                            type="filter"
+                            active={filterRole === role.id}
+                            onPress={() => handleFilterRole(role.id)}
+                        >
+                            {role.name}
+                        </Button>
+                    ))}
                 </View>
             </View>
 
-            {/* Selection Actions */}
             {selectedUsers.size > 0 && (
                 <View style={styles.selectionActions}>
                     <ThemedText style={styles.selectionText}>
@@ -320,16 +274,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
-    },
-    filterButton: {
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 20,
-        borderWidth: 1,
-    },
-    filterButtonText: {
-        fontSize: 12,
-        fontWeight: '500',
     },
     selectionActions: {
         flexDirection: 'row',

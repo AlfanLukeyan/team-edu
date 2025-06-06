@@ -9,6 +9,7 @@ export const useUserManagement = () => {
     const params = useLocalSearchParams();
 
     const [users, setUsers] = useState<UserByRole[]>([]);
+    const [allUsers, setAllUsers] = useState<UserByRole[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -32,6 +33,35 @@ export const useUserManagement = () => {
         }
     }, []);
 
+    const fetchAllUsers = useCallback(async () => {
+        try {
+            const response = await userService.getAllUsers();
+            setAllUsers(response);
+            return response;
+        } catch (err: any) {
+            console.error('Failed to fetch all users:', err);
+            throw err;
+        }
+    }, []);
+
+    const filterUsers = useCallback((users: UserByRole[], search?: string, roleFilter?: number | null) => {
+        let filteredUsers = [...users];
+
+        if (search) {
+            const searchLower = search.toLowerCase();
+            filteredUsers = filteredUsers.filter(user =>
+                user.name.toLowerCase().includes(searchLower) ||
+                user.email.toLowerCase().includes(searchLower)
+            );
+        }
+
+        if (roleFilter) {
+            filteredUsers = filteredUsers.filter(user => user.role_id === roleFilter);
+        }
+
+        return filteredUsers;
+    }, []);
+
     const fetchUsers = useCallback(async (isRefresh: boolean = false, search?: string, roleFilter?: number | null) => {
         try {
             setError(null);
@@ -41,24 +71,23 @@ export const useUserManagement = () => {
                 setLoading(true);
             }
 
-            let allUsers: UserByRole[] = [];
+            let usersToFilter: UserByRole[];
 
-            if (search) {
-                // Use backend search
+            if (search && search.trim()) {
                 const searchParams: { name?: string; role_id?: number } = { name: search };
                 if (roleFilter) {
                     searchParams.role_id = roleFilter;
                 }
-                allUsers = await userService.searchUsers(searchParams);
-            } else if (roleFilter) {
-                // Filter by role only
-                allUsers = await userService.getUsersByRole(roleFilter);
+                usersToFilter = await userService.searchUsers(searchParams);
+            } else if (allUsers.length > 0 && !isRefresh) {
+                usersToFilter = allUsers;
             } else {
-                // Get all users
-                allUsers = await userService.getAllUsers();
+                usersToFilter = await fetchAllUsers();
             }
 
-            setUsers(allUsers);
+            const filteredUsers = filterUsers(usersToFilter, search, roleFilter);
+            setUsers(filteredUsers);
+
         } catch (err: any) {
             console.error('Failed to fetch users:', err);
             setError(err.message || 'Failed to fetch users');
@@ -68,18 +97,16 @@ export const useUserManagement = () => {
             setRefreshing(false);
             setIsSearching(false);
         }
-    }, []);
+    }, [allUsers, fetchAllUsers, filterUsers]);
 
     const refetchUsers = useCallback(() => {
         fetchUsers(true, searchQuery, filterRole);
     }, [fetchUsers, searchQuery, filterRole]);
 
-    // Simple input handler - only updates local state
     const handleInputChange = useCallback((text: string) => {
         setSearchInput(text);
     }, []);
 
-    // Execute search only when user submits
     const handleSearch = useCallback(async (query: string) => {
         console.log('Executing search for:', query);
         setSearchQuery(query);
@@ -107,9 +134,14 @@ export const useUserManagement = () => {
     const handleFilterRole = useCallback((roleId: number | null) => {
         setFilterRole(roleId);
         setSelectedUsers(new Set());
-        // Re-fetch with current search query and new role filter
-        fetchUsers(false, searchQuery, roleId);
-    }, [searchQuery, fetchUsers]);
+
+        if (searchQuery) {
+            fetchUsers(false, searchQuery, roleId);
+        } else {
+            const filteredUsers = filterUsers(allUsers, undefined, roleId);
+            setUsers(filteredUsers);
+        }
+    }, [searchQuery, allUsers, filterUsers, fetchUsers]);
 
     const handleUserSelect = useCallback((userId: string) => {
         setSelectedUsers(prev => {
@@ -145,10 +177,17 @@ export const useUserManagement = () => {
 
             await userService.modifyUserRole(userId, newRoleId);
 
-            // Update local state
+            const updatedRoleId = parseInt(newRoleId);
+
             setUsers(prev => prev.map(user =>
                 user.uuid === userId
-                    ? { ...user, role_id: parseInt(newRoleId) }
+                    ? { ...user, role_id: updatedRoleId }
+                    : user
+            ));
+
+            setAllUsers(prev => prev.map(user =>
+                user.uuid === userId
+                    ? { ...user, role_id: updatedRoleId }
                     : user
             ));
 
@@ -164,7 +203,7 @@ export const useUserManagement = () => {
     useEffect(() => {
         fetchUsers();
         fetchRoles();
-    }, [fetchUsers, fetchRoles]);
+    }, [fetchRoles]);
 
     const handleMoreActions = useCallback((user: UserByRole) => {
         setSelectedUserForActions(user);
@@ -175,6 +214,8 @@ export const useUserManagement = () => {
             await userService.deleteUser(userId);
 
             setUsers(prev => prev.filter(user => user.uuid !== userId));
+            setAllUsers(prev => prev.filter(user => user.uuid !== userId));
+
             ModalEmitter.showSuccess('User deleted successfully');
         } catch (error: any) {
             console.error('Failed to delete user:', error);
@@ -206,8 +247,13 @@ export const useUserManagement = () => {
         try {
             const response = await userService.verifyEmailUser(uuid);
 
-            // Update local state to reflect email verification
             setUsers(prev => prev.map(user =>
+                user.uuid === uuid
+                    ? { ...user, is_verified: true }
+                    : user
+            ));
+
+            setAllUsers(prev => prev.map(user =>
                 user.uuid === uuid
                     ? { ...user, is_verified: true }
                     : user
@@ -219,7 +265,6 @@ export const useUserManagement = () => {
             ModalEmitter.showError(err.message || 'Failed to verify user email');
         }
     }, []);
-
 
     return {
         users,
