@@ -193,6 +193,7 @@ const UserBottomSheet = forwardRef<
                                 </ThemedText>
                                 {!selectedUser.is_verified && onVerifyEmailUser && (
                                     <Button
+                                        type="secondary"
                                         onPress={handleVerifyEmailUser}
                                     >
                                         Verify Email
@@ -205,6 +206,7 @@ const UserBottomSheet = forwardRef<
                             <ThemedText style={styles.infoLabel}>Crutial Feature Token:</ThemedText>
                             <View style={styles.tokenButtonsContainer}>
                                 <Button
+                                    type="secondary"
                                     onPress={handleInjectCrucialToken}
                                     style={styles.tokenButton}
                                 >
@@ -298,8 +300,6 @@ const styles = StyleSheet.create({
     },
     tokenButton: {
         paddingHorizontal: 12,
-        paddingVertical: 6,
-        minWidth: 60,
     },
     tokenButtonText: {
         fontSize: 12,

@@ -136,15 +136,12 @@ const WeeklyScreen = () => {
                     type: "danger",
                     onConfirm: async () => {
                         try {
-                            ModalEmitter.showLoading('Deleting assignment...');
                             await assignmentService.deleteAssignment(assignmentId);
                             ModalEmitter.showSuccess('Assignment deleted successfully!');
                             await handleRefresh();
                         } catch (error) {
                             console.error('Failed to delete assignment:', error);
                             ModalEmitter.showError('Failed to delete assignment. Please try again.');
-                        } finally {
-                            ModalEmitter.hideLoading();
                         }
                     },
                 });
@@ -160,21 +157,16 @@ const WeeklyScreen = () => {
         try {
             if (assignmentId) {
                 // Edit mode
-                ModalEmitter.showLoading('Updating assignment...');
                 await assignmentService.updateAssignment(assignmentId, weekId, data);
-                ModalEmitter.hideLoading();
                 ModalEmitter.showSuccess('Assignment updated successfully!');
             } else {
                 // Create mode
-                ModalEmitter.showLoading('Creating assignment...');
                 await assignmentService.createAssignment(weekId, data);
-                ModalEmitter.hideLoading();
                 ModalEmitter.showSuccess('Assignment created successfully!');
             }
 
             await handleRefresh();
         } catch (error) {
-            ModalEmitter.hideLoading();
             console.error('Failed to save assignment:', error);
             ModalEmitter.showError('Failed to save assignment. Please try again.');
         }

@@ -36,6 +36,7 @@ class HttpClient {
         this.axiosInstance.interceptors.request.use(
             async (config) => {
                 const token = await tokenService.getValidToken();
+                console.log('Stored token check:', token ? 'Token exists' : 'No token found');
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`;
                 }

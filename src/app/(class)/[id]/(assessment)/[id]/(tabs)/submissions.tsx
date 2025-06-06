@@ -130,56 +130,51 @@ export default function SubmissionsScreen() {
         setSelectedSubmissionIds(selectableSubmissionIds);
         setShowActionsMenu(false);
     };
+    
+    const handleDeleteSubmissions = async () => {
+        const selectedSubmissions = submissions.filter(s =>
+            selectedSubmissionIds.includes(s.user_user_id)
+        );
 
-const handleDeleteSubmissions = async () => {
-    const selectedSubmissions = submissions.filter(s => 
-        selectedSubmissionIds.includes(s.user_user_id)
-    );
+        ModalEmitter.showAlert({
+            title: "Delete Submissions",
+            message: `Are you sure you want to delete ${selectedSubmissionIds.length} submission(s)?`,
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    const submissionIdsToDelete = selectedSubmissions
+                        .filter(s => s.id !== null)
+                        .map(s => s.id as string);
 
-    ModalEmitter.showAlert({
-        title: "Delete Submissions",
-        message: `Are you sure you want to delete ${selectedSubmissionIds.length} submission(s)?`,
-        confirmText: "Delete",
-        cancelText: "Cancel",
-        type: "danger",
-        onConfirm: async () => {
-            try {
-                ModalEmitter.showLoading("Deleting submissions...");
+                    if (submissionIdsToDelete.length === 0) {
+                        ModalEmitter.showError("No valid submissions to delete");
+                        return;
+                    }
 
-                const submissionIdsToDelete = selectedSubmissions
-                    .filter(s => s.id !== null)
-                    .map(s => s.id as string);
+                    await assessmentService.deleteMultipleSubmissions(submissionIdsToDelete);
 
-                if (submissionIdsToDelete.length === 0) {
-                    ModalEmitter.hideLoading();
-                    ModalEmitter.showError("No valid submissions to delete");
-                    return;
+                    setSubmissions(submissions.filter(submission =>
+                        !selectedSubmissionIds.includes(submission.user_user_id)
+                    ));
+                    setSelectedSubmissionIds([]);
+                    setShowActionsMenu(false);
+
+                    ModalEmitter.showSuccess(`Successfully deleted ${submissionIdsToDelete.length} submission(s)`);
+
+                    await fetchSubmissions();
+                } catch (error) {
+                    ModalEmitter.showError("Failed to delete submissions. Please try again.");
+                    setSelectedSubmissionIds([]);
+                    setShowActionsMenu(false);
                 }
-
-                await assessmentService.deleteMultipleSubmissions(submissionIdsToDelete);
-
-                setSubmissions(submissions.filter(submission => 
-                    !selectedSubmissionIds.includes(submission.user_user_id)
-                ));
-                setSelectedSubmissionIds([]);
-                setShowActionsMenu(false);
-
-                ModalEmitter.hideLoading();
-                ModalEmitter.showSuccess(`Successfully deleted ${submissionIdsToDelete.length} submission(s)`);
-
-                await fetchSubmissions();
-            } catch (error) {
-                ModalEmitter.hideLoading();
-                ModalEmitter.showError("Failed to delete submissions. Please try again.");
-                setSelectedSubmissionIds([]);
+            },
+            onCancel: () => {
                 setShowActionsMenu(false);
             }
-        },
-        onCancel: () => {
-            setShowActionsMenu(false);
-        }
-    });
-};
+        });
+    };
 
     const handleSubmissionLongPress = (user_id: string) => {
         const submission = submissions.find(s => s.user_user_id === user_id);

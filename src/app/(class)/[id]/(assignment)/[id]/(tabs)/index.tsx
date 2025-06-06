@@ -56,7 +56,6 @@ export default function AboutAssignmentScreen() {
         }
 
         setSubmitting(true);
-        ModalEmitter.showLoading("Submitting assignment...");
 
         try {
             let fileToUpload;
@@ -74,18 +73,17 @@ export default function AboutAssignmentScreen() {
                     name: selectedFile.name,
                 };
             }
+
             await assignmentService.submitAssignment(
                 assignmentInfo.assignment_id.toString(),
                 fileToUpload
             );
 
-            ModalEmitter.hideLoading();
             ModalEmitter.showSuccess("Assignment submitted successfully!");
 
             setSelectedFile(null);
             await refetchAssignmentInfo();
         } catch (error: any) {
-            ModalEmitter.hideLoading();
             ModalEmitter.showError(error.message || "Failed to submit assignment");
         } finally {
             setSubmitting(false);

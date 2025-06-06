@@ -251,18 +251,15 @@ export default function AssessmentSessionScreen() {
 
                 try {
                     setSubmitting(true);
-                    ModalEmitter.showLoading('Submitting assessment...');
 
                     await assessmentService.submitAssessment(sessionData.submission_id);
 
-                    ModalEmitter.hideLoading();
                     ModalEmitter.showSuccess('Your assessment has been submitted successfully.');
 
                     setTimeout(() => {
                         router.back();
                     }, 1500);
                 } catch (error) {
-                    ModalEmitter.hideLoading();
                     ModalEmitter.showError('Failed to submit assessment. Please try again.');
                 } finally {
                     setSubmitting(false);
@@ -276,21 +273,6 @@ export default function AssessmentSessionScreen() {
 
     const getSavedCount = () => {
         return Object.keys(selectedAnswers).length;
-    };
-
-    // ✅ Format time remaining for display
-    const formatTimeRemaining = (seconds: number): string => {
-        if (seconds <= 0) return "00:00";
-
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const remainingSeconds = seconds % 60;
-
-        if (hours > 0) {
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-        } else {
-            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-        }
     };
 
     if (loading) {

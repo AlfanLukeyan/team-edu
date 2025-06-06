@@ -212,8 +212,6 @@ const AssessmentsScreen = () => {
             type: "danger",
             onConfirm: async () => {
                 try {
-                    ModalEmitter.showLoading("Deleting assessments...");
-
                     await assessmentService.deleteMultipleAssessments(selectedAssessmentIds);
 
                     setAssessments(assessments.filter(assessment =>
@@ -222,11 +220,10 @@ const AssessmentsScreen = () => {
                     setSelectedAssessmentIds([]);
                     setShowActionsMenu(false);
 
-                    ModalEmitter.hideLoading();
                     ModalEmitter.showSuccess(`Successfully deleted ${selectedAssessmentIds.length} assessment(s)`);
                 } catch (error) {
-                    ModalEmitter.hideLoading();
                     console.error('Failed to delete assessments:', error);
+                    ModalEmitter.showError('Failed to delete assessments. Please try again.');
                     await handleRefresh();
                 }
             },

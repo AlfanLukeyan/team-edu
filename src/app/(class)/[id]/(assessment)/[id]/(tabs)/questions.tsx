@@ -21,14 +21,13 @@ interface QuestionsFormData {
 }
 
 export default function QuestionsScreen() {
-    const { isStudent } = useUserRole(); // ✅ Add role check
-    const router = useRouter(); // ✅ Add router
+    const { isStudent } = useUserRole();
+    const router = useRouter();
 
-    // ✅ Early return for students - prevent any API calls
     useEffect(() => {
         if (isStudent()) {
             console.log('🚫 Student accessing questions tab - redirecting');
-            router.replace('../'); // Redirect to about tab
+            router.replace('../');
         }
     }, [isStudent, router]);
 
@@ -79,12 +78,6 @@ export default function QuestionsScreen() {
         try {
             if (questionIds && questionIds.length > 0) {
                 // Edit mode - update questions
-                ModalEmitter.showLoading(
-                    questionIds.length === 1
-                        ? 'Updating question...'
-                        : `Updating ${questionIds.length} questions...`
-                );
-
                 if (questionIds.length === 1) {
                     // Single question update
                     await assessmentService.updateQuestion(questionIds[0], {
@@ -103,7 +96,6 @@ export default function QuestionsScreen() {
                 );
             } else {
                 // Create mode - create multiple questions
-                ModalEmitter.showLoading('Creating questions...');
                 await assessmentService.createQuestions(assessmentId, data);
                 ModalEmitter.showSuccess('Questions created successfully');
             }
@@ -112,8 +104,6 @@ export default function QuestionsScreen() {
         } catch (error) {
             console.error('Failed to save questions:', error);
             ModalEmitter.showError('Failed to save questions. Please try again.');
-        } finally {
-            ModalEmitter.hideLoading();
         }
     }, [assessmentId, handleRefresh]);
 
@@ -157,7 +147,6 @@ export default function QuestionsScreen() {
         fetchQuestions();
     }, [fetchQuestions]);
 
-    // Clean up on screen focus/blur
     useFocusEffect(
         useCallback(() => {
             return () => {
@@ -188,8 +177,6 @@ export default function QuestionsScreen() {
             type: "danger",
             onConfirm: async () => {
                 try {
-                    ModalEmitter.showLoading('Deleting questions...');
-
                     if (selectedQuestionIds.length === 1) {
                         await assessmentService.deleteQuestion(selectedQuestionIds[0]);
                     } else {
@@ -203,8 +190,6 @@ export default function QuestionsScreen() {
                 } catch (error) {
                     console.error('Failed to delete questions:', error);
                     ModalEmitter.showError('Failed to delete questions. Please try again.');
-                } finally {
-                    ModalEmitter.hideLoading();
                 }
             },
         });

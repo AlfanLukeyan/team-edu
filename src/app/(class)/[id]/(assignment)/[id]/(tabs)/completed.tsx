@@ -28,14 +28,11 @@ export default function CompletedAssignmentsScreen() {
             type: "danger",
             onConfirm: async () => {
                 try {
-                    ModalEmitter.showLoading("Deleting submission...");
                     await deleteSubmission(submissionId);
-                    ModalEmitter.hideLoading();
                     ModalEmitter.showSuccess("Submission deleted successfully");
                     // Refresh the completed submissions after deletion
                     await refetchSubmissionsByStatus('submitted');
                 } catch (error) {
-                    ModalEmitter.hideLoading();
                     ModalEmitter.showError("Failed to delete submission");
                 }
             },
@@ -47,14 +44,11 @@ export default function CompletedAssignmentsScreen() {
 
     const handleUpdateScore = useCallback(async (submissionId: string, score: number) => {
         try {
-            ModalEmitter.showLoading("Updating score...");
             await updateSubmissionScore(submissionId, score);
-            ModalEmitter.hideLoading();
             ModalEmitter.showSuccess("Score updated successfully");
             // Refresh the completed submissions after score update
             await refetchSubmissionsByStatus('submitted');
         } catch (error) {
-            ModalEmitter.hideLoading();
             ModalEmitter.showError("Failed to update score");
         }
     }, [updateSubmissionScore, refetchSubmissionsByStatus]);

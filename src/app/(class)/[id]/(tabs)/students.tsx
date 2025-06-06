@@ -147,8 +147,6 @@ const StudentsScreen = () => {
                 if (!classId) return;
 
                 try {
-                    ModalEmitter.showLoading("Removing students...");
-
                     // Delete members one by one (if your API doesn't support bulk delete)
                     for (const userId of selectedMemberIds) {
                         await classService.deleteClassMember(userId, classId);
@@ -161,10 +159,8 @@ const StudentsScreen = () => {
                     setSelectedMemberIds([]);
                     setShowActionsMenu(false);
 
-                    ModalEmitter.hideLoading();
                     ModalEmitter.showSuccess(`Successfully removed ${selectedMemberIds.length} student(s) from the class`);
                 } catch (error) {
-                    ModalEmitter.hideLoading();
                     ModalEmitter.showError("Failed to remove students. Please try again.");
                     console.error('Failed to delete members:', error);
                     // Refresh the list in case of partial success
@@ -176,7 +172,7 @@ const StudentsScreen = () => {
             }
         });
     }, [selectedMemberIds, members, classId]);
-
+    
     // Clean up selection when leaving screen
     useFocusEffect(
         useCallback(() => {
