@@ -1,4 +1,5 @@
 import { Button } from "@/components/Button";
+import { Checkbox } from "@/components/Checkbox";
 import { SearchBar } from "@/components/SearchBar";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
@@ -12,7 +13,7 @@ import {
     BottomSheetBackdrop,
     BottomSheetBackdropProps,
     BottomSheetModal,
-    BottomSheetScrollView, // ✅ Use BottomSheetScrollView instead of BottomSheetView
+    BottomSheetScrollView,
     useBottomSheetModal,
 } from "@gorhom/bottom-sheet";
 import {
@@ -63,8 +64,6 @@ const AddMemberBottomSheet = forwardRef<
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCount, setSelectedCount] = useState(0);
     const [searchLoading, setSearchLoading] = useState(false);
-
-    // ... all your existing callback functions remain the same ...
 
     const handleClose = useCallback(() => {
         setStudents([]);
@@ -209,13 +208,12 @@ const AddMemberBottomSheet = forwardRef<
             style={styles.studentItem}
             onPress={() => handleStudentSelect(item.uuid)}
         >
-            <View style={[
-                styles.checkbox,
-                item.isSelected && { backgroundColor: '#007AFF' }
-            ]}>
-                {item.isSelected && (
-                    <Ionicons name="checkmark" size={16} color="white" />
-                )}
+            <View style={styles.checkboxContainer}>
+                <Checkbox
+                    checked={item.isSelected}
+                    onPress={() => handleStudentSelect(item.uuid)}
+                    size={24}
+                />
             </View>
 
             <View style={styles.avatarContainer}>
@@ -238,7 +236,9 @@ const AddMemberBottomSheet = forwardRef<
                 <ThemedText style={styles.studentName}>{item.name}</ThemedText>
                 <ThemedText style={styles.studentEmail}>{item.email}</ThemedText>
                 {!item.is_verified && (
-                    <ThemedText style={styles.unverifiedText}>Unverified</ThemedText>
+                    <ThemedText style={[styles.unverifiedText, { color: Colors[theme].error }]}>
+                        Unverified
+                    </ThemedText>
                 )}
             </View>
         </TouchableOpacity>
@@ -264,7 +264,6 @@ const AddMemberBottomSheet = forwardRef<
                 backgroundColor: Colors[theme].background,
             }}
         >
-            {/* ✅ Use BottomSheetScrollView instead of BottomSheetView */}
             <BottomSheetScrollView style={styles.contentContainer}>
                 <View style={styles.innerContainer}>
                     <View style={styles.header}>
@@ -281,7 +280,7 @@ const AddMemberBottomSheet = forwardRef<
                             disabled={selectedCount === 0 || adding}
                             style={styles.saveButton}
                         >
-                            {adding ? 'Adding...' : 'Save'}
+                            {adding ? 'Adding...' : 'Invite'}
                         </Button>
                     </View>
 
@@ -297,12 +296,16 @@ const AddMemberBottomSheet = forwardRef<
 
                     {loading ? (
                         <View style={styles.centered}>
-                            <ActivityIndicator size="large" />
+                            <ActivityIndicator size="large" color={Colors[theme].tint} />
                             <ThemedText style={styles.loadingText}>Loading students...</ThemedText>
                         </View>
                     ) : filteredStudents.length === 0 ? (
                         <View style={styles.centered}>
-                            <Ionicons name="people-outline" size={48} color="#666" />
+                            <Ionicons
+                                name="people-outline"
+                                size={48}
+                                color={Colors[theme].icon}
+                            />
                             <ThemedText style={styles.emptyText}>
                                 {searchQuery ? 'No students found matching your search' : 'No available students to add'}
                             </ThemedText>
@@ -327,12 +330,12 @@ AddMemberBottomSheet.displayName = 'AddMemberBottomSheet';
 const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
-        padding: 0, // ✅ Match QuestionBottomSheet pattern
+        padding: 0,
     },
     innerContainer: {
         flex: 1,
         paddingHorizontal: 20,
-        paddingBottom: 30, // ✅ Add bottom padding like QuestionBottomSheet
+        paddingBottom: 30,
     },
     header: {
         flexDirection: 'row',
@@ -358,7 +361,7 @@ const styles = StyleSheet.create({
     },
     studentsList: {
         marginTop: 8,
-        gap: 0, // ✅ Remove gap for cleaner list
+        gap: 0,
     },
     studentItem: {
         flexDirection: 'row',
@@ -366,14 +369,7 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         paddingHorizontal: 4,
     },
-    checkbox: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#007AFF',
-        alignItems: 'center',
-        justifyContent: 'center',
+    checkboxContainer: {
         marginRight: 12,
     },
     avatarContainer: {
@@ -406,14 +402,13 @@ const styles = StyleSheet.create({
     },
     unverifiedText: {
         fontSize: 12,
-        color: '#FF9800',
         fontStyle: 'italic',
     },
     centered: {
         justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 40,
-        minHeight: 200, // ✅ Add minimum height for centered content
+        minHeight: 200,
     },
     loadingText: {
         marginTop: 12,

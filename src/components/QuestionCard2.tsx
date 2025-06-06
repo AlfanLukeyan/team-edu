@@ -93,7 +93,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             <View style={styles.choicesContainer}>
                 {question.choices.map((choice, choiceIndex) => (
                     <ChoiceRow
-                        key={`${question.id}-choice-${choice.id}-${choiceIndex}`} // More specific key
+                        key={`${question.id}-choice-${choice.id}-${choiceIndex}`}
                         choice={choice}
                         choiceIndex={choiceIndex}
                         questionId={question.id}

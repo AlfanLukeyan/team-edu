@@ -209,6 +209,7 @@ const WeeklyScreen = () => {
                             onRefresh={handleRefresh}
                         />
                     }
+                    showsVerticalScrollIndicator={false}
                 >
                     <TeacherOnly>
                         <Button onPress={handleOpenWeeklySheet} icon={{name: 'playlist-add'}}>
