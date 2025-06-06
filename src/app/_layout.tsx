@@ -21,7 +21,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 function NavigationHandler({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated, isLoading } = useAuth();
+    const { isAuthenticated, isLoading, isGuest } = useAuth();
     const segments = useSegments();
     const router = useRouter();
 
@@ -33,8 +33,13 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
             || segments[0] === '(class)'
             || segments[0] === '(verification)';
 
+        const onWarningScreen = segments.some(segment => segment === 'warning_screen') ||
+            segments[segments.length - 1] === 'warning_screen';
+
         if (isAuthenticated) {
-            if (inAuthGroup) {
+            if (isGuest() && !onWarningScreen) {
+                router.replace('/(auth)/warning_screen');
+            } else if (!isGuest() && inAuthGroup && !onWarningScreen) {
                 router.replace('/(main)');
             }
         } else {
@@ -42,7 +47,7 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
                 router.replace('/(auth)/login');
             }
         }
-    }, [isAuthenticated, segments, isLoading]);
+    }, [isAuthenticated, segments, isLoading, isGuest]);
 
     return <>{children}</>;
 }

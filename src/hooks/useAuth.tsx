@@ -13,6 +13,7 @@ interface AuthContextType {
     registerUser: (name: string, email: string, password: string, phone: string, faceImages: string[]) => Promise<any>;
     logout: () => Promise<any>;
     getUserId: () => string | null;
+    isGuest: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -135,6 +136,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return tokenService.getUserId();
     };
 
+    const isGuest = (): boolean => {
+        return tokenService.isGuest();
+    };
+
     const isAuthenticated = !!user && !tokenService.isTokenExpired();
 
     return (
@@ -148,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 registerUser,
                 logout,
                 getUserId,
+                isGuest,
             }}
         >
             {children}

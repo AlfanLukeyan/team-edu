@@ -24,7 +24,7 @@ export default function LoginScreen() {
     const theme = useColorScheme() ?? "light";
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const { loginUser } = useAuth();
+    const { loginUser, isGuest } = useAuth();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -42,9 +42,11 @@ export default function LoginScreen() {
             console.log("User Data:", userData);
             if (userData) {
                 ModalEmitter.emit("SHOW_SUCCESS", "Login successful!");
-                setTimeout(() => {
+                if (isGuest()) {
+                    router.replace("/(auth)/warning_screen");
+                } else {
                     router.replace("/(main)");
-                }, 1000);
+                }
             }
         } catch (error: any) {
 
