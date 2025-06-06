@@ -217,7 +217,7 @@ const UserBottomSheet = forwardRef<
                                     onPress={handleDeleteCrucialToken}
                                     style={styles.tokenButton}
                                 >
-                                    Delete
+                                    Remove
                                 </Button>
                             </View>
                         </View>

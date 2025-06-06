@@ -290,7 +290,7 @@ const AssessmentsScreen = () => {
                     }
                 >
                     <TeacherOnly>
-                        <Button onPress={handleOpenAssessmentSheet}>
+                        <Button onPress={handleOpenAssessmentSheet} icon={{ name: 'assignment-add'}}>
                             Create Assessment
                         </Button>
                     </TeacherOnly>

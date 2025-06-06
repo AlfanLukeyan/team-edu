@@ -227,7 +227,7 @@ const StudentsScreen = () => {
                 <View style={styles.header}>
                     <Button
                         onPress={handleAddMembers}
-                        icon={{ name: "person.badge.plus.fill", size: 16 }}
+                        icon={{ name: "group-add" }}
                     >
                         Add Members
                     </Button>
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingTop: 16,
     },
     scrollView: {
         flex: 1,

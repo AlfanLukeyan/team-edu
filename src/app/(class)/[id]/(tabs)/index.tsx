@@ -211,7 +211,7 @@ const WeeklyScreen = () => {
                     }
                 >
                     <TeacherOnly>
-                        <Button onPress={handleOpenWeeklySheet}>
+                        <Button onPress={handleOpenWeeklySheet} icon={{name: 'playlist-add'}}>
                             Create Weekly Section
                         </Button>
                     </TeacherOnly>

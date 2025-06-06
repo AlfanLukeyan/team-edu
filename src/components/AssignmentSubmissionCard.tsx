@@ -313,8 +313,7 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                                         onPress={handleDeleteSubmission}
                                         style={styles.deleteButton}
                                         icon={{
-                                            name: "trash",
-                                            size: 16
+                                            name: "delete"
                                         }}
                                     >
                                         Delete Submission

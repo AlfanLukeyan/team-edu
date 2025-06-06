@@ -198,7 +198,7 @@ const QuestionBottomSheet = forwardRef<
                         <Button
                             type="secondary"
                             onPress={handleAddQuestion}
-                            icon={{ name: "plus.circle.fill" }}
+                            icon={{ name: "format-list-bulleted-add" }}
                         >
                             New Question
                         </Button>

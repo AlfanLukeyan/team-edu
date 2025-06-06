@@ -282,7 +282,7 @@ export default function QuestionsScreen() {
                     }
                 >
                     {/* Create Questions Button */}
-                    <Button onPress={handleOpenQuestionSheet}>
+                    <Button onPress={handleOpenQuestionSheet} icon={{ name: 'format-list-bulleted-add'}}>
                         Create Questions
                     </Button>
 

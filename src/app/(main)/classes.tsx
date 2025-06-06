@@ -109,6 +109,7 @@ export default function ClassesScreen() {
                 <Button
                     onPress={handleOpenCreateSheet}
                     style={{ marginBottom: 16 }}
+                    icon={{ name: "bookmark-add", size: 16}}
                 >
                     Create Class
                 </Button>

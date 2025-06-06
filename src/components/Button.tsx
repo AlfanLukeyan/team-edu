@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import {
     StyleSheet,
@@ -15,7 +15,7 @@ export type ButtonProps = TouchableOpacityProps & {
     disabled?: boolean;
     active?: boolean;
     icon?: {
-        name: React.ComponentProps<typeof IconSymbol>["name"];
+        name: React.ComponentProps<typeof MaterialIcons>["name"];
         size?: number;
     };
 };
@@ -104,9 +104,9 @@ export function Button({
             </ThemedText>
 
             {icon && (
-                <IconSymbol
+                <MaterialIcons
                     name={icon.name}
-                    size={icon.size || 24}
+                    size={icon.size || 18}
                     color={getTextColor()}
                 />
             )}
