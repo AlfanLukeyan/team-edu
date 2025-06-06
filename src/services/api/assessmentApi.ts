@@ -50,7 +50,7 @@ export const assessmentApi = {
     },
 
     getUpcomingAssessments: async (): Promise<UpcomingAssessmentsResponse> => {
-        return httpClient.get('/public/assessment/upcoming');
+        return httpClient.get('/public/assessment/upcoming/');
     },
 
     getAssessmentDetails: async (assessmentId: string): Promise<AssessmentDetailsResponse> => {

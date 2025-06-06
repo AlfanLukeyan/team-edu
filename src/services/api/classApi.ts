@@ -33,7 +33,7 @@ export const classApi = {
     },
 
     getAllClasses: async () => {
-        return httpClient.get('/public/user/class');
+        return httpClient.get('/public/user/class/');
     },
 
     getClassInfo: async (classId: string): Promise<ClassInfoResponse> => {
