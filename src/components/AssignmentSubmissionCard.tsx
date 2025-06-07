@@ -1,10 +1,10 @@
 import { Button } from "@/components/Button";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { downloadService } from "@/services/DownloadService";
 import { ModalEmitter } from "@/services/modalEmitter";
 import { formatDate, readableHash } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
-import * as Linking from "expo-linking";
 import React, { useState } from "react";
 import { Animated, Image, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from "./ThemedText";
@@ -49,6 +49,7 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
     const [imageError, setImageError] = useState(false);
     const [isEditingScore, setIsEditingScore] = useState(false);
     const [editingScore, setEditingScore] = useState(score.toString());
+    const [downloading, setDownloading] = useState(false);
 
     const handleImageError = () => {
         setImageError(true);
@@ -57,17 +58,15 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
     const shouldShowImage = user_profile_url && !imageError;
 
     const handleDownloadSubmission = async () => {
-        if (file_url) {
-            try {
-                const canOpen = await Linking.canOpenURL(file_url);
-                if (canOpen) {
-                    await Linking.openURL(file_url);
-                } else {
-                    ModalEmitter.showError("Cannot open the submission file");
-                }
-            } catch (error) {
-                ModalEmitter.showError("Failed to open submission");
-            }
+        if (!file_url) return;
+
+        try {
+            setDownloading(true);
+            await downloadService.downloadFile(file_url);
+        } catch (error) {
+            // Error handling is done in the download service
+        } finally {
+            setDownloading(false);
         }
     };
 
@@ -280,13 +279,17 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                                 </View>
                             )}
 
-                            {file_name && (
+                            {file_name && file_url && (
                                 <TouchableOpacity
                                     onPress={handleDownloadSubmission}
-                                    style={styles.downloadButton}
+                                    style={[
+                                        styles.downloadButton,
+                                        downloading && { opacity: 0.7 }
+                                    ]}
+                                    disabled={downloading}
                                 >
                                     <Ionicons
-                                        name="document-text"
+                                        name={downloading ? "download" : "document-text"}
                                         size={16}
                                         color={Colors[theme].tint}
                                     />
@@ -294,7 +297,7 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                                         style={[styles.fileName, { color: Colors[theme].tint }]}
                                         numberOfLines={1}
                                     >
-                                        {file_name}
+                                        {downloading ? "Downloading..." : file_name}
                                     </ThemedText>
                                     <Ionicons
                                         name="download"
