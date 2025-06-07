@@ -28,7 +28,6 @@ export const useUserManagement = () => {
             const rolesData = await userService.getAllRoles();
             setRoles(rolesData);
         } catch (err: any) {
-            console.error('Failed to fetch roles:', err);
             ModalEmitter.showError('Failed to fetch roles');
         }
     }, []);
@@ -39,7 +38,6 @@ export const useUserManagement = () => {
             setAllUsers(response);
             return response;
         } catch (err: any) {
-            console.error('Failed to fetch all users:', err);
             throw err;
         }
     }, []);
@@ -89,7 +87,6 @@ export const useUserManagement = () => {
             setUsers(filteredUsers);
 
         } catch (err: any) {
-            console.error('Failed to fetch users:', err);
             setError(err.message || 'Failed to fetch users');
             ModalEmitter.showError(err.message || 'Failed to fetch users');
         } finally {
@@ -108,7 +105,6 @@ export const useUserManagement = () => {
     }, []);
 
     const handleSearch = useCallback(async (query: string) => {
-        console.log('Executing search for:', query);
         setSearchQuery(query);
         setIsSearching(true);
         await fetchUsers(false, query, filterRole);
@@ -168,7 +164,6 @@ export const useUserManagement = () => {
     }, []);
 
     const handleUserPress = useCallback((userId: string) => {
-        console.log('User pressed:', userId);
     }, []);
 
     const handleRoleChange = useCallback(async (userId: string, newRoleId: string) => {
@@ -193,7 +188,6 @@ export const useUserManagement = () => {
 
             ModalEmitter.showSuccess('User role updated successfully');
         } catch (error: any) {
-            console.error('Failed to update user role:', error);
             ModalEmitter.showError(error.message || 'Failed to update user role');
         } finally {
             setChangingRoleUserId(null);
@@ -218,7 +212,6 @@ export const useUserManagement = () => {
 
             ModalEmitter.showSuccess('User deleted successfully');
         } catch (error: any) {
-            console.error('Failed to delete user:', error);
             ModalEmitter.showError(error.message || 'Failed to delete user');
         }
     }, []);
@@ -228,7 +221,6 @@ export const useUserManagement = () => {
             const response = await userService.injectCrucialToken(userIndex);
             ModalEmitter.showSuccess(response.message || 'Crucial token injected successfully');
         } catch (err: any) {
-            console.error('Failed to inject crucial token:', err);
             ModalEmitter.showError(err.message || 'Failed to inject crucial token');
         }
     }, []);
@@ -238,7 +230,6 @@ export const useUserManagement = () => {
             const response = await userService.deleteCrucialToken(userIndex);
             ModalEmitter.showSuccess(response.message || 'Crucial token deleted successfully');
         } catch (err: any) {
-            console.error('Failed to delete crucial token:', err);
             ModalEmitter.showError(err.message || 'Failed to delete crucial token');
         }
     }, []);
@@ -261,7 +252,6 @@ export const useUserManagement = () => {
 
             ModalEmitter.showSuccess(response.message || 'User email verified successfully');
         } catch (err: any) {
-            console.error('Failed to verify user email:', err);
             ModalEmitter.showError(err.message || 'Failed to verify user email');
         }
     }, []);

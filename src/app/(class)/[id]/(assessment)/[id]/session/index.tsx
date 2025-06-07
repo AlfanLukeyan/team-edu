@@ -91,9 +91,6 @@ export default function AssessmentSessionScreen() {
                     const remaining = calculateTimeRemaining(submissionSession.ended_time);
                     setTimeRemaining(remaining);
 
-                    console.log('✅ Loaded existing answers:', { answersMap, answerIdsMap });
-                    console.log('✅ Time remaining calculated from end_time:', remaining, 'seconds');
-
                 } else {
                     const sessionResponse = await assessmentService.startAssessmentSession(id);
                     setSessionData(sessionResponse);
@@ -106,9 +103,6 @@ export default function AssessmentSessionScreen() {
 
                     const remaining = calculateTimeRemaining(sessionResponse.ended_time);
                     setTimeRemaining(remaining);
-
-                    console.log('✅ New session started with end time:', sessionResponse.ended_time);
-                    console.log('✅ Time remaining calculated:', remaining, 'seconds');
                 }
 
                 setHasStarted(true);
@@ -130,13 +124,11 @@ export default function AssessmentSessionScreen() {
             const timer = setTimeout(() => {
                 setTimeRemaining(prev => {
                     const newTime = (prev || 0) - 1;
-                    console.log('⏱️ Time remaining:', newTime, 'seconds');
                     return newTime;
                 });
             }, 1000);
             return () => clearTimeout(timer);
         } else if (hasStarted && timeRemaining === 0) {
-            console.log('⏰ Time is up! Auto-submitting assessment...');
             handleAutoSubmit();
         }
     }, [timeRemaining, hasStarted]);
@@ -146,7 +138,6 @@ export default function AssessmentSessionScreen() {
         const existingAnswerId = answerIds[currentQuestion.question_id];
 
         try {
-            // ✅ Optimistically update UI first
             setSelectedAnswers(prev => ({
                 ...prev,
                 [currentQuestion.question_id]: choiceId
@@ -154,51 +145,26 @@ export default function AssessmentSessionScreen() {
 
             if (sessionData?.submission_id) {
                 if (existingAnswerId) {
-                    // ✅ Update existing answer
-                    console.log('🔄 Updating existing answer:', {
-                        answerId: existingAnswerId,
-                        questionId: currentQuestion.question_id,
-                        choiceId
-                    });
-
                     await assessmentService.updateAnswer(
                         existingAnswerId,
                         sessionData.submission_id,
                         currentQuestion.question_id,
                         choiceId
                     );
-
-                    console.log('✅ Answer updated successfully');
                 } else {
-                    // ✅ Create new answer and store the answer_id
-                    console.log('➕ Creating new answer:', {
-                        submissionId: sessionData.submission_id,
-                        questionId: currentQuestion.question_id,
-                        choiceId
-                    });
-
                     const newAnswer = await assessmentService.submitAnswer(
                         sessionData.submission_id,
                         currentQuestion.question_id,
                         choiceId
                     );
 
-                    // ✅ Store the answer_id for future updates
                     setAnswerIds(prev => ({
                         ...prev,
                         [currentQuestion.question_id]: newAnswer.answer_id
                     }));
-
-                    console.log('✅ New answer created:', {
-                        answerId: newAnswer.answer_id,
-                        questionId: currentQuestion.question_id
-                    });
                 }
             }
         } catch (error) {
-            console.error('❌ Failed to save answer:', error);
-
-            // ✅ Revert optimistic update on error
             setSelectedAnswers(prev => {
                 const updated = { ...prev };
                 delete updated[currentQuestion.question_id];
@@ -225,11 +191,9 @@ export default function AssessmentSessionScreen() {
         if (!sessionData?.submission_id) return;
 
         try {
-            console.log('🚀 Auto-submitting assessment due to time up...');
             await assessmentService.submitAssessment(sessionData.submission_id);
             setShowTimeUpModal(true);
         } catch (error) {
-            console.error('❌ Failed to auto-submit assessment:', error);
             setShowTimeUpModal(true);
         }
     };
@@ -266,7 +230,6 @@ export default function AssessmentSessionScreen() {
                 }
             },
             onCancel: () => {
-                // User cancelled submission
             }
         });
     };

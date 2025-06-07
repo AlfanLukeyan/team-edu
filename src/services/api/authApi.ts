@@ -40,7 +40,6 @@ export const authApi = {
                 const blob = await response.blob();
                 formData.append('image', blob, 'crucial_auth.jpg');
             } catch (error) {
-                console.error('Error converting image to blob:', error);
                 throw new Error('Failed to process image for upload');
             }
         } else {
@@ -74,7 +73,6 @@ export const authApi = {
                     const blob = await response.blob();
                     formData.append('face_reference', blob, `face_${i + 1}.jpg`);
                 } catch (error) {
-                    console.error(`Error converting image ${i + 1} to blob:`, error);
                     throw new Error(`Failed to process image ${i + 1} for upload`);
                 }
             }

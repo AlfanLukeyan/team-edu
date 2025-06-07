@@ -1,21 +1,32 @@
 import * as Brightness from 'expo-brightness';
 
+/**
+ * Sets the device brightness to maximum level
+ */
 export const setMaxBrightness = async (): Promise<void> => {
     try {
         await Brightness.setBrightnessAsync(1.0);
     } catch (error) {
-        console.error('Failed to set brightness:', error);
+        // Silent failure
     }
 };
 
+/**
+ * Restores the device brightness to system default
+ */
 export const restoreBrightness = async (): Promise<void> => {
     try {
         await Brightness.restoreSystemBrightnessAsync();
     } catch (error) {
-        console.error('Failed to restore brightness:', error);
+        // Silent failure
     }
 };
 
+/**
+ * Calculates the number of days remaining until the given end time
+ * @param endTime - The end date as a string
+ * @returns The number of days remaining (minimum 0)
+ */
 export const getDaysRemaining = (endTime: string): number => {
     const now = new Date();
     const endDate = new Date(endTime);
@@ -24,6 +35,11 @@ export const getDaysRemaining = (endTime: string): number => {
     return Math.max(0, diffDays);
 };
 
+/**
+ * Formats a date string into a readable format with date and time
+ * @param dateString - The date string to format
+ * @returns Formatted date string
+ */
 export const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -35,6 +51,11 @@ export const formatDate = (dateString: string): string => {
     });
 };
 
+/**
+ * Formats a date string into separate date and time components
+ * @param dateString - The date string to format
+ * @returns Object containing formatted date and time strings
+ */
 export const formatDateTime = (dateString: string): { date: string; time: string } => {
     const date = new Date(dateString);
     const dateOptions: Intl.DateTimeFormatOptions = {
@@ -54,12 +75,20 @@ export const formatDateTime = (dateString: string): { date: string; time: string
     };
 };
 
+/**
+ * Checks if the given end time has passed
+ * @param endTime - The end date as a string
+ * @returns True if the date has passed, false otherwise
+ */
 export const isOverdue = (endTime: string): boolean => {
     return new Date(endTime) < new Date();
 };
+
 /**
- * Creates a human-readable short hash
- * Example: "550e8400-e29b-41d4-a716-446655440001" → "ID-550E84"
+ * Creates a human-readable short hash from a UUID
+ * @param uuid - The UUID string to convert
+ * @param prefix - The prefix to add (default: 'ID')
+ * @returns Formatted hash string (e.g., "ID-550E84")
  */
 export const readableHash = (uuid: string, prefix: string = 'ID'): string => {
     if (!uuid || typeof uuid !== 'string') {
@@ -71,15 +100,14 @@ export const readableHash = (uuid: string, prefix: string = 'ID'): string => {
         const short = cleaned.substring(0, 6);
         return `${prefix}-${short}`;
     } catch (error) {
-        console.error('Error creating hash:', error);
         return 'ID-ERROR';
     }
 };
 
 /**
  * Decodes URL-encoded filename and cleans it up
- * Example: "Open%20Recruitment%20Ciputra%20Hospital%20Surabaya%20-%20Apple%20Developer%20Academy%20UC.pdf"
- * Returns: "Open Recruitment Ciputra Hospital Surabaya - Apple Developer Academy UC.pdf"
+ * @param fileName - The URL-encoded filename string
+ * @returns Decoded and cleaned filename
  */
 export const cleanFileName = (fileName: string): string => {
     if (!fileName || typeof fileName !== 'string') {
@@ -87,12 +115,9 @@ export const cleanFileName = (fileName: string): string => {
     }
 
     try {
-        // Decode URL-encoded characters
         const decoded = decodeURIComponent(fileName);
         return decoded;
     } catch (error) {
-        console.error('Error decoding filename:', error);
-        // Fallback: manually replace common URL encodings
         return fileName
             .replace(/%20/g, ' ')
             .replace(/%21/g, '!')
@@ -120,6 +145,11 @@ export const cleanFileName = (fileName: string): string => {
     }
 };
 
+/**
+ * Extracts YouTube video ID from various YouTube URL formats
+ * @param url - The YouTube URL
+ * @returns The video ID string or null if not found
+ */
 export const getYoutubeVideoId = (url: string): string | null => {
     if (!url) return null;
     
@@ -140,12 +170,21 @@ export const getYoutubeVideoId = (url: string): string | null => {
     return null;
 };
 
-// Keep your existing getYoutubeEmbedUrl function as fallback
+/**
+ * Converts YouTube URL to embed URL format
+ * @param url - The YouTube URL
+ * @returns The embed URL or original URL if conversion fails
+ */
 export const getYoutubeEmbedUrl = (url: string): string => {
     const videoId = getYoutubeVideoId(url);
     return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
 };
 
+/**
+ * Calculates the number of days remaining until end date with precise time handling
+ * @param endDate - The end date as a string
+ * @returns Number of days remaining (can be negative for past dates)
+ */
 export const calculateDaysRemaining = (endDate: string): number => {
     const end = new Date(endDate);
     const now = new Date();
@@ -159,6 +198,11 @@ export const calculateDaysRemaining = (endDate: string): number => {
     return diffDays;
 };
 
+/**
+ * Generates human-readable text for days remaining until end date
+ * @param endDate - The end date as a string
+ * @returns Descriptive text about the remaining time
+ */
 export const getDaysRemainingText = (endDate: string): string => {
     const daysRemaining = calculateDaysRemaining(endDate);
 
@@ -183,6 +227,9 @@ export const getDaysRemainingText = (endDate: string): string => {
     }
 };
 
+/**
+ * Interface for duration format breakdown
+ */
 export interface DurationFormat {
     hours: number;
     minutes: number;
@@ -190,6 +237,11 @@ export interface DurationFormat {
     totalMinutes: number;
 }
 
+/**
+ * Converts total seconds into hours, minutes, and seconds breakdown
+ * @param totalSeconds - Total seconds to convert
+ * @returns Object with time breakdown
+ */
 export const convertSecondsToTime = (totalSeconds: number): DurationFormat => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -204,6 +256,12 @@ export const convertSecondsToTime = (totalSeconds: number): DurationFormat => {
     };
 };
 
+/**
+ * Formats duration in seconds to human-readable string
+ * @param totalSeconds - Total seconds to format
+ * @param showSeconds - Whether to include seconds in output (default: false)
+ * @returns Formatted duration string
+ */
 export const formatDuration = (totalSeconds: number, showSeconds: boolean = false): string => {
     const { hours, minutes, seconds } = convertSecondsToTime(totalSeconds);
 

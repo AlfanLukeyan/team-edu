@@ -24,7 +24,6 @@ class TokenService {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.decoded = jwtDecode(accessToken);
-        console.log("Decoded JWT:", this.decoded);
 
         const storeOperations = [
             AsyncStorage.setItem("access_token", accessToken),

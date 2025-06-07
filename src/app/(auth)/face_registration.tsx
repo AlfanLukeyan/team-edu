@@ -106,8 +106,6 @@ export default function FaceRegistrationScreen() {
                 quality: 0.8,
             });
 
-            console.log(`Photo taken for step ${currentStep}:`, photo);
-
             const newPhotos = [...capturedPhotos, photo.uri];
             setCapturedPhotos(newPhotos);
 
@@ -123,7 +121,6 @@ export default function FaceRegistrationScreen() {
             }
 
         } catch (error) {
-            console.error("Error taking picture:", error);
             ModalEmitter.hideLoading();
             ModalEmitter.showError("Failed to capture image. Please try again.");
         }

@@ -100,7 +100,6 @@ const AddMemberBottomSheet = forwardRef<
             setStudents(availableStudents);
             setFilteredStudents(availableStudents);
         } catch (error: any) {
-            console.error('Failed to fetch available students:', error);
             ModalEmitter.showError('Failed to load available students');
         } finally {
             setLoading(false);
@@ -126,7 +125,6 @@ const AddMemberBottomSheet = forwardRef<
     }, [students]);
 
     const handleSearchSubmit = useCallback((query: string) => {
-        console.log('Search submitted:', query);
     }, []);
 
     const handleSearchClear = useCallback(() => {
@@ -184,7 +182,6 @@ const AddMemberBottomSheet = forwardRef<
 
             handleClose();
         } catch (error: any) {
-            console.error('Failed to add members:', error);
             ModalEmitter.showError(error.message || 'Failed to add members to class');
         } finally {
             setAdding(false);

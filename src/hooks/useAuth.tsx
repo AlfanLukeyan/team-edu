@@ -72,7 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             await tokenService.clearTokens();
         } catch (error) {
-            console.error("Auth initialization failed:", error);
             await tokenService.clearTokens();
         } finally {
             setIsLoading(false);
@@ -81,7 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const loginUser = async (email: string, password: string): Promise<User> => {
         const response = await authApi.login(email, password);
-        console.log("Login response:", response);
 
         if (!response.access_token || !response.refresh_token) {
             throw new Error("Login failed - missing tokens");
@@ -124,7 +122,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             return await authApi.logout();
         } catch (error) {
-            console.error("Logout API failed:", error);
             throw error;
         } finally {
             await tokenService.clearTokens();

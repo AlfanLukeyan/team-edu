@@ -131,7 +131,6 @@ const AssignmentBottomSheet = forwardRef<
                 }));
             }
         } catch (error) {
-            console.error('Error picking document:', error);
             Alert.alert('Error', 'Failed to pick document');
         }
     };

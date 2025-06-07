@@ -27,7 +27,6 @@ class DownloadService {
                 throw new Error("No valid token available");
             }
 
-            // Get the actual filename from server response
             const fileName = await this.getFilenameFromServer(url, token);
             const sanitizedFileName = this.sanitizeFileName(fileName);
             const downloadUri = FileSystem.documentDirectory + sanitizedFileName;
@@ -51,7 +50,6 @@ class DownloadService {
             }
         } catch (error) {
             ModalEmitter.hideLoading();
-            console.error("Download error:", error);
             ModalEmitter.showError("Download failed. Opening in browser...");
             setTimeout(() => Linking.openURL(url), 1000);
             throw error;
@@ -81,10 +79,8 @@ class DownloadService {
                 }
             }
 
-            // Fallback to timestamp-based filename
             return `download_${Date.now()}.pdf`;
         } catch (error) {
-            console.log('Could not get filename from server:', error);
             return `download_${Date.now()}.pdf`;
         }
     }

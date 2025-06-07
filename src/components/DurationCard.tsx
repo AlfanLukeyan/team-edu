@@ -15,9 +15,6 @@ export const DurationCard: React.FC<DurationCardProps> = ({
 }) => {
     const theme = useColorScheme() || "light";
     const { hours, minutes, seconds } = convertSecondsToTime(duration);
-    console.log(
-        `DurationCard rendered with duration: ${duration}, hours: ${hours}, minutes: ${minutes}, seconds: ${seconds}`
-    );
 
     return (
         <ThemedView isCard={true} style={styles.container}>

@@ -57,7 +57,6 @@ const UserBottomSheet = forwardRef<
     }, [onClose, dismiss]);
 
     const handleOpen = useCallback((user: UserByRole) => {
-        console.log("Opening user bottom sheet for:", user);
         setSelectedUser(user);
         bottomSheetModalRef.current?.present();
     }, []);

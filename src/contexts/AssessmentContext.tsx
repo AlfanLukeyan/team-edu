@@ -28,7 +28,6 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
             setAssessmentInfo(data);
         } catch (err) {
             setError('Failed to load assessment information');
-            console.error(err);
         } finally {
             setLoading(false);
         }

@@ -45,7 +45,6 @@ const WeeklyScreen = () => {
             setWeeklySections(sortedData);
         } catch (err) {
             setError('Failed to load weekly sections');
-            console.error('Error fetching weekly sections:', err);
         } finally {
             setLoading(false);
         }
@@ -78,7 +77,6 @@ const WeeklyScreen = () => {
 
             await handleRefresh();
         } catch (error) {
-            console.error('Failed to save weekly section:', error);
             ModalEmitter.showError('Failed to save weekly section. Please try again.');
         }
     }, [classId]);
@@ -140,7 +138,6 @@ const WeeklyScreen = () => {
                             ModalEmitter.showSuccess('Assignment deleted successfully!');
                             await handleRefresh();
                         } catch (error) {
-                            console.error('Failed to delete assignment:', error);
                             ModalEmitter.showError('Failed to delete assignment. Please try again.');
                         }
                     },
@@ -167,7 +164,6 @@ const WeeklyScreen = () => {
 
             await handleRefresh();
         } catch (error) {
-            console.error('Failed to save assignment:', error);
             ModalEmitter.showError('Failed to save assignment. Please try again.');
         }
     }, [handleRefresh]);

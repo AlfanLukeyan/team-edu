@@ -47,7 +47,6 @@ class AssessmentService {
             const response = await assessmentApi.deleteSubmission(submissionId);
             return response;
         } catch (error) {
-            console.error('Failed to delete submission:', error);
             throw error;
         }
     }
@@ -58,11 +57,9 @@ class AssessmentService {
                 submissionIds.map(id => this.deleteSubmission(id))
             );
         } catch (error) {
-            console.error('Failed to delete multiple submissions:', error);
             throw error;
         }
     }
-
 
     async startAssessmentSession(assessmentId: string): Promise<AssessmentSessionResponse> {
         try {
@@ -73,7 +70,6 @@ class AssessmentService {
             const response = await assessmentApi.createSubmission(payload);
             return response.data;
         } catch (error) {
-            console.error('Failed to start assessment session:', error);
             throw error;
         }
     }
@@ -83,7 +79,6 @@ class AssessmentService {
             const response = await assessmentApi.getSubmissionSession(submissionId);
             return response.data;
         } catch (error) {
-            console.error('Failed to get submission session:', error);
             throw error;
         }
     }
@@ -99,7 +94,6 @@ class AssessmentService {
             const response = await assessmentApi.submitAnswer(payload);
             return response.data;
         } catch (error) {
-            console.error('Failed to submit answer:', error);
             throw error;
         }
     }
@@ -115,7 +109,6 @@ class AssessmentService {
 
             await assessmentApi.updateAnswer(payload);
         } catch (error) {
-            console.error('Failed to update answer:', error);
             throw error;
         }
     }
@@ -125,7 +118,6 @@ class AssessmentService {
             const response = await assessmentApi.submitAssessment(submissionId);
             return response.data;
         } catch (error) {
-            console.error('Failed to submit assessment:', error);
             throw error;
         }
     }
@@ -135,7 +127,6 @@ class AssessmentService {
             const response = await assessmentApi.getUpcomingAssessments();
             return response.data || [];
         } catch (error) {
-            console.error('Failed to fetch upcoming assessments:', error);
             throw error;
         }
     }
@@ -168,7 +159,6 @@ class AssessmentService {
                 return response.data;
             }
         } catch (error) {
-            console.error('Failed to fetch assessment details:', error);
             throw error;
         }
     }
@@ -178,7 +168,6 @@ class AssessmentService {
             const response = await assessmentApi.getStudentAssessmentDetails(assessmentId);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch student assessment details:', error);
             throw error;
         }
     }
@@ -188,7 +177,6 @@ class AssessmentService {
             const response = await assessmentApi.getAssessmentSubmissions(assessmentId, status);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch assessment submissions:', error);
             throw error;
         }
     }
@@ -198,7 +186,6 @@ class AssessmentService {
             const response = await assessmentApi.getAssessmentQuestions(assessmentId);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch assessment questions:', error);
             throw error;
         }
     }
@@ -218,7 +205,6 @@ class AssessmentService {
             const response = await assessmentApi.createAssessment(payload);
             return response;
         } catch (error) {
-            console.error('Failed to create assessment:', error);
             throw error;
         }
     }
@@ -238,7 +224,6 @@ class AssessmentService {
             const response = await assessmentApi.updateAssessment(payload);
             return response;
         } catch (error) {
-            console.error('Failed to update assessment:', error);
             throw error;
         }
     }
@@ -253,7 +238,6 @@ class AssessmentService {
             const response = await assessmentApi.createQuestions(payload);
             return response;
         } catch (error) {
-            console.error('Failed to create questions:', error);
             throw error;
         }
     }
@@ -263,7 +247,6 @@ class AssessmentService {
             const response = await assessmentApi.deleteQuestion(questionId);
             return response;
         } catch (error) {
-            console.error('Failed to delete question:', error);
             throw error;
         }
     }
@@ -274,7 +257,6 @@ class AssessmentService {
                 questionIds.map(id => this.deleteQuestion(id))
             );
         } catch (error) {
-            console.error('Failed to delete multiple questions:', error);
             throw error;
         }
     }
@@ -290,7 +272,6 @@ class AssessmentService {
             const response = await assessmentApi.updateQuestion(payload);
             return response;
         } catch (error) {
-            console.error('Failed to update question:', error);
             throw error;
         }
     }
@@ -310,7 +291,6 @@ class AssessmentService {
 
             await Promise.all(updatePromises);
         } catch (error) {
-            console.error('Failed to update multiple questions:', error);
             throw error;
         }
     }
@@ -320,7 +300,6 @@ class AssessmentService {
             const response = await assessmentApi.deleteAssessment(assessmentId);
             return response;
         } catch (error) {
-            console.error('Failed to delete assessment:', error);
             throw error;
         }
     }
@@ -331,12 +310,10 @@ class AssessmentService {
                 assessmentIds.map(id => this.deleteAssessment(id))
             );
         } catch (error) {
-            console.error('Failed to delete multiple assessments:', error);
             throw error;
         }
     }
 
-    // ✅ Utility methods remain the same...
     getAllAssessments(classAssessments: ClassAssessment[]): (AssessmentItem & { class_name: string; class_tag: string })[] {
         return classAssessments.flatMap(classData =>
             classData.class_assessment.map(assessment => ({

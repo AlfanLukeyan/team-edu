@@ -52,7 +52,6 @@ export const AssignmentProvider: React.FC<AssignmentProviderProps> = ({ children
             const data = await assignmentService.getAssignmentDetails(assignmentId);
             setAssignmentInfo(data);
         } catch (err: any) {
-            console.error('Failed to fetch assignment details:', err);
             setError(err.message || 'Failed to load assignment details');
         } finally {
             setLoading(false);
@@ -69,7 +68,6 @@ export const AssignmentProvider: React.FC<AssignmentProviderProps> = ({ children
             setSubmittedSubmissions(assignmentService.getSubmittedAssignments(data));
             setTodoSubmissions(assignmentService.getTodoAssignments(data));
         } catch (err: any) {
-            console.error('Failed to fetch assignment submissions:', err);
             setError(err.message || 'Failed to load assignment submissions');
         }
     }, [assignmentId]);
@@ -82,12 +80,10 @@ export const AssignmentProvider: React.FC<AssignmentProviderProps> = ({ children
 
             if (status === 'submitted') {
                 setSubmittedSubmissions(data);
-                console.log('Refetched submitted submissions:', data);
             } else if (status === 'todo') {
                 setTodoSubmissions(data);
             }
         } catch (err: any) {
-            console.error(`Failed to fetch ${status} submissions:`, err);
             setError(err.message || `Failed to load ${status} submissions`);
         }
     }, [assignmentId]);
@@ -99,7 +95,6 @@ export const AssignmentProvider: React.FC<AssignmentProviderProps> = ({ children
             // Refresh submissions after successful deletion
             await refetchSubmissions();
         } catch (err: any) {
-            console.error('Failed to delete assignment submission:', err);
             setError(err.message || 'Failed to delete assignment submission');
             throw err; // Re-throw to handle in UI
         }
@@ -112,7 +107,6 @@ export const AssignmentProvider: React.FC<AssignmentProviderProps> = ({ children
             // Refresh submissions after successful score update
             await refetchSubmissions();
         } catch (err: any) {
-            console.error('Failed to update submission score:', err);
             setError(err.message || 'Failed to update submission score');
             throw err; // Re-throw to handle in UI
         }

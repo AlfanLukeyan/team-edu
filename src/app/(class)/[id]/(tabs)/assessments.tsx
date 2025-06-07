@@ -64,7 +64,6 @@ const AssessmentsScreen = () => {
             setAssessments(data);
         } catch (err) {
             setError('Failed to load assessments');
-            console.error('Assessment fetch error:', err);
         } finally {
             setLoading(false);
         }
@@ -135,7 +134,6 @@ const AssessmentsScreen = () => {
             setCurrentAssessmentId(null);
             await handleRefresh();
         } catch (error) {
-            console.error('Failed to create questions:', error);
         }
     }, [currentAssessmentId, handleRefresh]);
 
@@ -233,7 +231,6 @@ const AssessmentsScreen = () => {
 
                     ModalEmitter.showSuccess(`Successfully deleted ${selectedAssessmentIds.length} assessment(s)`);
                 } catch (error) {
-                    console.error('Failed to delete assessments:', error);
                     ModalEmitter.showError('Failed to delete assessments. Please try again.');
                     await handleRefresh();
                 }

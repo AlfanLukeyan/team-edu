@@ -80,10 +80,7 @@ const CrucialFeatureAuthModal: React.FC<CrucialFeatureAuthModalProps> = ({
                 quality: CAMERA_CONFIG.quality,
             });
 
-            console.log("Photo taken for crucial auth:", photo);
-
             const response = await authService.crucialVerify(photo.uri);
-            console.log("Crucial verification response:", response);
 
             ModalEmitter.hideLoading();
             ModalEmitter.showSuccess(response.message || "Crucial access granted!");
@@ -96,7 +93,6 @@ const CrucialFeatureAuthModal: React.FC<CrucialFeatureAuthModalProps> = ({
         } catch (error: any) {
             ModalEmitter.hideLoading();
             ModalEmitter.showError(error.message || "Crucial verification failed. Please try again.");
-            console.error("Crucial verification error:", error);
         }
     }, [onSuccess]);
 

@@ -30,7 +30,6 @@ class AuthService {
 
             return response;
         } catch (error) {
-            console.error('Login failed:', error);
             throw error;
         }
     }
@@ -49,7 +48,6 @@ class AuthService {
 
             return response;
         } catch (error) {
-            console.error('Face login failed:', error);
             throw error;
         }
     }
@@ -57,10 +55,8 @@ class AuthService {
     async crucialVerify(faceImage: string): Promise<CrucialVerifyResponse> {
         try {
             const response = await authApi.crucialVerify(faceImage);
-            console.log('Crucial verification response:', response);
             return response;
         } catch (error) {
-            console.error('Crucial verification failed:', error);
             throw error;
         }
     }
@@ -85,7 +81,6 @@ class AuthService {
 
             return response;
         } catch (error) {
-            console.error('Registration failed:', error);
             throw error;
         }
     }
@@ -95,7 +90,6 @@ class AuthService {
             const response = await authApi.logout();
             return response;
         } catch (error) {
-            console.error('Logout API failed:', error);
             throw error;
         } finally {
             await tokenService.clearTokens();

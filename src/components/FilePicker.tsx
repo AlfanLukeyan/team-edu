@@ -31,7 +31,6 @@ export function FilePicker({ onFileSelected, selectedFile, placeholder = "Select
                 onFileSelected(result.assets[0]);
             }
         } catch (error) {
-            console.error('Error picking document:', error);
         } finally {
             setPicking(false);
         }

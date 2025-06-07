@@ -21,7 +21,6 @@ export const refreshTokenRequest = async (refreshToken: string) => {
 
         return response.data;
     } catch (error: any) {
-        console.error('Token refresh failed:', error);
         throw error;
     }
 };

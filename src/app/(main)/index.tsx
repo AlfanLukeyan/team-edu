@@ -64,7 +64,6 @@ export default function HomeScreen() {
             const data = await assessmentService.getUpcomingAssessments();
             setUpcomingAssessments(data);
         } catch (error: any) {
-            console.error('Failed to fetch upcoming assessments:', error);
             setError(error.message || 'Failed to load assessments');
         } finally {
             setLoading(false);

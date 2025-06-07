@@ -28,7 +28,6 @@ export function ClassProvider({ children }: { children: ReactNode }) {
             setClassInfo(data);
         } catch (err) {
             setError('Failed to load class information');
-            console.error(err);
         } finally {
             setLoading(false);
         }

@@ -11,14 +11,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, useColorScheme, View } from "react-native";
 
 export default function TodoScreen() {
-    const { isStudent } = useUserRole(); // ✅ Add role check
-    const router = useRouter(); // ✅ Add router
+    const { isStudent } = useUserRole();
+    const router = useRouter();
 
-    // ✅ Early return for students - prevent any API calls
     useEffect(() => {
         if (isStudent()) {
-            console.log('🚫 Student accessing todo tab - redirecting');
-            router.replace('../'); // Redirect to about tab
+            router.replace('../');
         }
     }, [isStudent, router]);
     const theme = useColorScheme();
@@ -38,7 +36,6 @@ export default function TodoScreen() {
             setSubmissions(data);
         } catch (err) {
             setError('Failed to load todo submissions');
-            console.error(err);
         } finally {
             setLoading(false);
         }

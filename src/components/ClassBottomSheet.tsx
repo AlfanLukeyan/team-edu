@@ -111,7 +111,6 @@ const ClassBottomSheet = forwardRef<
             const teachersList = await userService.getTeachers();
             setTeachers(teachersList);
         } catch (error) {
-            console.error('Error fetching teachers:', error);
         } finally {
             setLoadingTeachers(false);
         }

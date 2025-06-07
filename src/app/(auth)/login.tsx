@@ -40,7 +40,6 @@ export default function LoginScreen() {
         setIsLoading(true);
         try {
             const userData = await loginUser(email, password);
-            console.log("User Data:", userData);
             if (userData) {
                 ModalEmitter.emit("SHOW_SUCCESS", "Login successful!");
                 if (isGuest()) {
