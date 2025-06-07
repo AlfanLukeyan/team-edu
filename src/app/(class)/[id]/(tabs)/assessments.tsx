@@ -1,6 +1,7 @@
 import AssessmentActionsMenu from '@/components/AssessmentActionsMenu';
 import { AssessmentCard } from '@/components/AssessmentCard';
 import { Button } from '@/components/Button';
+import { ProgressiveHint } from '@/components/ProgressiveHint';
 import { TeacherOnly } from '@/components/RoleGuard';
 import AssessmentBottomSheet, { AssessmentBottomSheetRef } from '@/components/teacher/AssessmentBottomSheet';
 import QuestionBottomSheet, { QuestionBottomSheetRef } from '@/components/teacher/QuestionBottomSheet';
@@ -9,6 +10,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useClass } from '@/contexts/ClassContext';
 import { useHeader } from '@/contexts/HeaderContext';
+import { useAssessmentHints } from '@/hooks/useCustomHints';
 import { useUserRole } from '@/hooks/useUserRole';
 import { assessmentService } from '@/services/assessmentService';
 import { classService } from '@/services/classService';
@@ -42,6 +44,13 @@ const AssessmentsScreen = () => {
     const assessmentBottomSheetRef = useRef<AssessmentBottomSheetRef>(null);
     const questionBottomSheetRef = useRef<QuestionBottomSheetRef>(null);
     const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
+
+    const [hasPerformedLongPress, setHasPerformedLongPress] = useState(false);
+    const assessmentHints = useAssessmentHints(
+        assessments.length,
+        selectedAssessmentIds.length,
+        hasPerformedLongPress
+    );
 
     const fetchAssessments = useCallback(async () => {
         if (!classId) {
@@ -168,10 +177,12 @@ const AssessmentsScreen = () => {
 
     const handleAssessmentLongPress = useCallback((id: string) => {
         if (hasTeacherPermissions()) {
+            setHasPerformedLongPress(true);
             setSelectedAssessmentIds([id]);
             setShowActionsMenu(false);
         }
     }, [hasTeacherPermissions]);
+
 
     const handleAssessmentPress = useCallback((id: string) => {
         if (selectedAssessmentIds.length > 0 && hasTeacherPermissions()) {
@@ -290,7 +301,8 @@ const AssessmentsScreen = () => {
                     }
                 >
                     <TeacherOnly>
-                        <Button onPress={handleOpenAssessmentSheet} icon={{ name: 'assignment-add'}}>
+                        <ProgressiveHint hints={assessmentHints} />
+                        <Button onPress={handleOpenAssessmentSheet} icon={{ name: 'assignment-add' }}>
                             Create Assessment
                         </Button>
                     </TeacherOnly>

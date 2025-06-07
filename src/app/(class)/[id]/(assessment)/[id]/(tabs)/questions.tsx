@@ -1,4 +1,5 @@
 import { Button } from "@/components/Button";
+import { ProgressiveHint } from "@/components/ProgressiveHint";
 import QuestionActionsMenu from "@/components/QuestionActionsMenu";
 import { QuestionCard } from "@/components/QuestionCard";
 import QuestionBottomSheet, { QuestionBottomSheetRef } from "@/components/teacher/QuestionBottomSheet";
@@ -7,6 +8,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import { useHeader } from "@/contexts/HeaderContext";
+import { useQuestionHints } from "@/hooks/useCustomHints";
 import { useUserRole } from "@/hooks/useUserRole";
 import { assessmentService } from "@/services/assessmentService";
 import { ModalEmitter } from "@/services/modalEmitter";
@@ -41,6 +43,13 @@ export default function QuestionsScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [hasPerformedLongPress, setHasPerformedLongPress] = useState(false);
+
+    const questionHints = useQuestionHints(
+        questions.length,
+        selectedQuestionIds.length,
+        hasPerformedLongPress
+    );
 
     const questionBottomSheetRef = useRef<QuestionBottomSheetRef>(null);
 
@@ -216,6 +225,7 @@ export default function QuestionsScreen() {
     }, [selectedQuestionIds, questions]);
 
     const handleQuestionLongPress = (id: string) => {
+        setHasPerformedLongPress(true);
         setSelectedQuestionIds([id]);
         setShowActionsMenu(false);
     };
@@ -281,8 +291,9 @@ export default function QuestionsScreen() {
                         />
                     }
                 >
+                    <ProgressiveHint hints={questionHints} />
                     {/* Create Questions Button */}
-                    <Button onPress={handleOpenQuestionSheet} icon={{ name: 'format-list-bulleted-add'}}>
+                    <Button onPress={handleOpenQuestionSheet} icon={{ name: 'format-list-bulleted-add' }}>
                         Create Questions
                     </Button>
 
@@ -329,10 +340,10 @@ const styles = StyleSheet.create({
         margin: 16,
     },
     contentContainer: {
-        gap: 16,
     },
     questionsList: {
         gap: 8,
+        paddingTop: 16,
     },
     emptyState: {
         padding: 24,

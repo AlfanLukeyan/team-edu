@@ -1,3 +1,4 @@
+import { ProgressiveHint } from "@/components/ProgressiveHint";
 import SubmissionActionsMenu from "@/components/SubmissionActionsMenu";
 import { SubmissionCard } from "@/components/SubmissionCard";
 import { ThemedText } from "@/components/ThemedText";
@@ -5,6 +6,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import { useHeader } from "@/contexts/HeaderContext";
+import { useSubmissionHints } from "@/hooks/useCustomHints";
 import { useUserRole } from "@/hooks/useUserRole";
 import { assessmentService } from "@/services/assessmentService";
 import { ModalEmitter } from "@/services/modalEmitter";
@@ -35,6 +37,17 @@ export default function SubmissionsScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [hasPerformedLongPress, setHasPerformedLongPress] = useState(false);
+
+    const submittedCount = submissions.filter(s => s.status === 'submitted').length;
+
+    const submissionHints = useSubmissionHints(
+        submissions.length,
+        selectedSubmissionIds.length,
+        hasPerformedLongPress,
+        submittedCount
+    );
 
     const fetchSubmissions = useCallback(async () => {
         if (!assessmentId) return;
@@ -130,7 +143,7 @@ export default function SubmissionsScreen() {
         setSelectedSubmissionIds(selectableSubmissionIds);
         setShowActionsMenu(false);
     };
-    
+
     const handleDeleteSubmissions = async () => {
         const selectedSubmissions = submissions.filter(s =>
             selectedSubmissionIds.includes(s.user_user_id)
@@ -179,6 +192,7 @@ export default function SubmissionsScreen() {
     const handleSubmissionLongPress = (user_id: string) => {
         const submission = submissions.find(s => s.user_user_id === user_id);
         if (submission && canSelectSubmission(submission)) {
+            setHasPerformedLongPress(true);
             setSelectedSubmissionIds([user_id]);
             setShowActionsMenu(false);
         }
@@ -247,6 +261,7 @@ export default function SubmissionsScreen() {
                     />
                 }
             >
+                <ProgressiveHint hints={submissionHints}/>
                 {submissions.length === 0 ? (
                     <ThemedView style={styles.emptyState}>
                         <ThemedText style={styles.emptyText}>
@@ -291,6 +306,7 @@ const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
         borderRadius: 15,
+        paddingHorizontal: 16,
     },
     submissionsList: {
         gap: 8,
