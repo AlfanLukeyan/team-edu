@@ -38,7 +38,7 @@ const CrucialFeatureAuthModal: React.FC<CrucialFeatureAuthModalProps> = ({
     onSuccess,
     onCancel,
     title = "Crucial Feature Authentication",
-    description = "Look straight at the camera for crucial verification"
+    description = "Look straight at the camera"
 }) => {
     const colorScheme = useColorScheme() ?? "light";
     const cameraRef = useRef<CameraView>(null);

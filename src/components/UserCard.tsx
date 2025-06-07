@@ -13,18 +13,12 @@ import { ThemedView } from "./ThemedView";
 interface UserCardProps {
     user: UserByRole;
     roles: Role[];
-    isSelected?: boolean;
-    onLongPress?: (userId: string) => void;
-    onPress?: (userId: string) => void;
     onMoreActions?: (user: UserByRole) => void;
 }
 
 export const UserCard: React.FC<UserCardProps> = ({
     user,
     roles,
-    isSelected = false,
-    onLongPress,
-    onPress,
     onMoreActions
 }) => {
     const theme = useColorScheme() || "light";
@@ -60,20 +54,12 @@ export const UserCard: React.FC<UserCardProps> = ({
         outputRange: ['0deg', '180deg'],
     });
 
-    const handleCardPress = () => {
-        if (onPress) {
-            onPress(user.uuid);
-        } else {
-            toggleExpanded();
-        }
-    };
-
     const getRoleColor = (roleId: number): string => {
         switch (roleId) {
-            case 1: return "#FF5722"; // Admin - Red
-            case 2: return "#2196F3"; // Teacher - Blue
-            case 3: return "#4CAF50"; // Student - Green
-            case 4: return "#9E9E9E"; // Guest - Gray
+            case 1: return "#FF5722";
+            case 2: return "#2196F3";
+            case 3: return "#4CAF50";
+            case 4: return "#9E9E9E";
             default: return "#9E9E9E";
         }
     };
@@ -89,25 +75,12 @@ export const UserCard: React.FC<UserCardProps> = ({
     };
 
     return (
-        <TouchableOpacity
-            onLongPress={() => onLongPress?.(user.uuid)}
-            onPress={handleCardPress}
-            delayLongPress={500}
-        >
+        <TouchableOpacity onPress={toggleExpanded}>
             <ThemedView
                 isCard={true}
-                style={[
-                    styles.container,
-                    isSelected && {
-                        borderColor: Colors[theme].tint,
-                        borderWidth: 2,
-                        backgroundColor: theme === "dark" ? 'rgba(190, 27, 182, 0.1)' : 'rgba(30, 206, 206, 0.1)',
-                    },
-                ]}
+                style={styles.container}
             >
-                {/* Main Content Row */}
                 <View style={styles.mainContent}>
-                    {/* User Info */}
                     <View style={styles.userInfoContainer}>
                         <View style={styles.avatarContainer}>
                             {shouldShowImage ? (
@@ -139,7 +112,6 @@ export const UserCard: React.FC<UserCardProps> = ({
                         </View>
                     </View>
 
-                    {/* Role Badge and Chevron */}
                     <View style={styles.rightSection}>
                         <View style={[styles.roleBadge, { backgroundColor: getRoleColor(user.role_id) + '20' }]}>
                             <ThemedText style={[styles.roleText, { color: getRoleColor(user.role_id) }]}>
@@ -147,25 +119,18 @@ export const UserCard: React.FC<UserCardProps> = ({
                             </ThemedText>
                         </View>
 
-                        <TouchableOpacity
-                            onPress={toggleExpanded}
-                            style={styles.chevronButton}
-                        >
-                            <Animated.View style={{ transform: [{ rotate: rotateChevron }] }}>
-                                <Ionicons
-                                    name="chevron-down"
-                                    size={20}
-                                    color={Colors[theme].text}
-                                />
-                            </Animated.View>
-                        </TouchableOpacity>
+                        <Animated.View style={{ transform: [{ rotate: rotateChevron }] }}>
+                            <Ionicons
+                                name="chevron-down"
+                                size={20}
+                                color={Colors[theme].text}
+                            />
+                        </Animated.View>
                     </View>
                 </View>
 
-                {/* Expandable User Details */}
                 <Animated.View style={[styles.expandableContainer, { height: expandedHeight }]}>
                     <View style={styles.userDetails}>
-                        {/* Email Row */}
                         <View style={styles.detailRow}>
                             <ThemedText style={styles.detailLabel}>Email:</ThemedText>
                             <ThemedText style={styles.detailValue} numberOfLines={1}>
@@ -173,7 +138,6 @@ export const UserCard: React.FC<UserCardProps> = ({
                             </ThemedText>
                         </View>
 
-                        {/* Phone Row */}
                         <View style={styles.detailRow}>
                             <ThemedText style={styles.detailLabel}>Phone:</ThemedText>
                             <ThemedText style={styles.detailValue}>
@@ -181,7 +145,6 @@ export const UserCard: React.FC<UserCardProps> = ({
                             </ThemedText>
                         </View>
 
-                        {/* Verification Status Row */}
                         <View style={styles.detailRow}>
                             <ThemedText style={styles.detailLabel}>Status:</ThemedText>
                             <View style={styles.verificationContainer}>
@@ -197,7 +160,6 @@ export const UserCard: React.FC<UserCardProps> = ({
                             </View>
                         </View>
 
-                        {/* Join Date Row */}
                         <View style={styles.detailRow}>
                             <ThemedText style={styles.detailLabel}>Joined:</ThemedText>
                             <ThemedText style={styles.detailValue}>
@@ -205,7 +167,6 @@ export const UserCard: React.FC<UserCardProps> = ({
                             </ThemedText>
                         </View>
 
-                        {/* More Actions Button */}
                         <View style={styles.actionButtonContainer}>
                             <Button
                                 type="secondary"
@@ -281,9 +242,6 @@ const styles = StyleSheet.create({
     roleText: {
         fontSize: 12,
         fontWeight: '600',
-    },
-    chevronButton: {
-        padding: 4,
     },
     expandableContainer: {
         overflow: 'hidden',

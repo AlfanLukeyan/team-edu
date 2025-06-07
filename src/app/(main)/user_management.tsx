@@ -25,7 +25,6 @@ const UserManagementScreen = () => {
         roles,
         loading,
         refreshing,
-        selectedUsers,
         filterRole,
         searchQuery,
         searchInput,
@@ -39,10 +38,6 @@ const UserManagementScreen = () => {
         toggleSearch,
         clearSearch,
         handleFilterRole,
-        handleUserSelect,
-        handleSelectAll,
-        handleClearSelection,
-        handleUserPress,
         handleRoleChange,
         handleMoreActions,
         handleDeleteUser,
@@ -78,9 +73,6 @@ const UserManagementScreen = () => {
         <UserCard
             user={item}
             roles={roles}
-            isSelected={selectedUsers.has(item.uuid)}
-            onLongPress={handleUserSelect}
-            onPress={handleUserPress}
             onMoreActions={handleOpenUserActions}
         />
     );
@@ -130,30 +122,6 @@ const UserManagementScreen = () => {
                     ))}
                 </View>
             </View>
-
-            {selectedUsers.size > 0 && (
-                <View style={styles.selectionActions}>
-                    <ThemedText style={styles.selectionText}>
-                        {selectedUsers.size} user(s) selected
-                    </ThemedText>
-                    <View style={styles.selectionButtons}>
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={handleSelectAll}
-                        >
-                            <ThemedText style={styles.actionButtonText}>
-                                {selectedUsers.size === users.length ? 'Deselect All' : 'Select All'}
-                            </ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={handleClearSelection}
-                        >
-                            <ThemedText style={styles.actionButtonText}>Clear</ThemedText>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            )}
 
             <ThemedText type="defaultSemiBold" style={styles.usersTitle}>
                 Users
@@ -274,31 +242,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
-    },
-    selectionActions: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
-        paddingVertical: 8,
-    },
-    selectionText: {
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    selectionButtons: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    actionButton: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-        backgroundColor: 'rgba(128, 128, 128, 0.2)',
-    },
-    actionButtonText: {
-        fontSize: 12,
-        fontWeight: '500',
     },
     usersTitle: {
         marginBottom: 16,
