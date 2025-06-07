@@ -10,7 +10,13 @@
         "newArchEnabled": true,
         "ios": {
             "supportsTablet": true,
-            "bundleIdentifier": "com.anonymous.teamedu"
+            "bundleIdentifier": "com.anonymous.teamedu",
+            "infoPlist": {
+                "NSDocumentsFolderUsageDescription": "This app needs access to save downloaded files",
+                "NSDownloadsUsageDescription": "This app downloads assignment files",
+                "LSSupportsOpeningDocumentsInPlace": true,
+                "UIFileSharingEnabled": true
+            }
         },
         "android": {
             "adaptiveIcon": {

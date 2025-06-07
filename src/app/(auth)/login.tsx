@@ -76,7 +76,7 @@ export default function LoginScreen() {
                     <ThemedView style={styles.header}>
                         <View style={styles.titleContainer}>
                             <Image
-                                source={require('../../../assets/images/team-edu-logo.png')}
+                                source={require('../../../assets/images/icon.png')}
                                 style={styles.logo}
                                 contentFit="contain"
                             />
