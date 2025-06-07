@@ -362,6 +362,7 @@ export interface StudentAssignment {
     file_link_assignment: string;
     file_link_submission: string | null;
     file_name: string;
+    file_name_submission: string | null;
     score: number;
     status: 'todo' | 'submitted' | 'in_progress';
     title: string;

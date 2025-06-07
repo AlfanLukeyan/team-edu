@@ -9,6 +9,7 @@ import { useAssignment } from "@/contexts/AssignmentContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useUserRole } from "@/hooks/useUserRole";
 import { assignmentService } from "@/services/assignmentService";
+import { downloadService } from "@/services/DownloadService";
 import { ModalEmitter } from "@/services/modalEmitter";
 import { Assignment, StudentAssignment } from "@/types/api";
 import { formatDateTime } from "@/utils/utils";
@@ -88,6 +89,14 @@ export default function AboutAssignmentScreen() {
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleDownloadFile = async (url: string) => {
+        await downloadService.downloadFile(url);
+    };
+
+    const handleOpenFile = async (url: string) => {
+        await downloadService.openFile(url);
     };
 
     if (loading) {
@@ -201,6 +210,9 @@ export default function AboutAssignmentScreen() {
                             <AttachmentCard
                                 name={assignmentFileInfo.name || 'Assignment File'}
                                 url={assignmentFileInfo.url}
+                                downloadable={true}
+                                onDownload={handleDownloadFile}
+                                onOpen={handleOpenFile}
                             />
                         </View>
                     )}
@@ -214,8 +226,11 @@ export default function AboutAssignmentScreen() {
                             {hasSubmittedFile ? (
                                 <View style={styles.submittedFileContainer}>
                                     <AttachmentCard
-                                        name="Submitted File"
+                                        name={studentAssignment.file_name_submission || 'Submitted File'}
                                         url={studentAssignment.file_link_submission!}
+                                        downloadable={true}
+                                        onDownload={handleDownloadFile}
+                                        onOpen={handleOpenFile}
                                     />
                                     {isSubmitted && (
                                         <View style={styles.submittedIndicator}>

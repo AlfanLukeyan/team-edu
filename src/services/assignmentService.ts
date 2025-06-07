@@ -1,10 +1,23 @@
 import { Assignment, AssignmentSubmission, AssignmentSubmissionResponse, CreateAssignmentData, StudentAssignment, UpdateAssignmentData } from '@/types/api';
 import { AssignmentFormData } from '@/types/common';
 import { assignmentApi } from './api/assignmentApi';
+import { downloadService } from './DownloadService';
 import { tokenService } from './tokenService';
 
 class AssignmentService {
     private static instance: AssignmentService;
+
+    async downloadAssignmentFile(url: string): Promise<void> {
+        return downloadService.downloadFile(url);
+    }
+
+    async downloadSubmissionFile(url: string): Promise<void> {
+        return downloadService.downloadFile(url);
+    }
+
+    async openAssignmentFile(url: string): Promise<void> {
+        return downloadService.openFile(url);
+    }
 
     async submitAssignment(assignmentId: string, file: any): Promise<AssignmentSubmissionResponse> {
         try {
