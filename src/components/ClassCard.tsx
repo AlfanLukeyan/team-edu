@@ -76,17 +76,17 @@ export function ClassCard({
 
                         {/* Ellipsis Button */}
                         {isAdmin() && showActions && onEdit && onDelete && (
-                            <View style={styles.ellipsisButton}>
-                                <TouchableOpacity
-                                    onPress={() => setShowActionsMenu(true)}
-                                >
-                                    <Ionicons
-                                        name="ellipsis-horizontal"
-                                        size={14}
-                                        color={Colors[theme].background}
-                                    />
-                                </TouchableOpacity>
-                            </View>
+                            <TouchableOpacity
+                                style={styles.ellipsisButton}
+                                onPress={() => setShowActionsMenu(true)}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                                <Ionicons
+                                    name="ellipsis-horizontal"
+                                    size={14}
+                                    color={Colors[theme].background}
+                                />
+                            </TouchableOpacity>
                         )}
 
                         <LinearGradient
@@ -137,6 +137,10 @@ const styles = StyleSheet.create({
         right: 12,
         zIndex: 3,
         padding: 5,
+        minWidth: 30,
+        minHeight: 30,
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     content: {
         padding: 16,

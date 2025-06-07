@@ -110,6 +110,31 @@ export const useAssignmentSubmissionHints = (
         }
     ];
 
+export const useStudentHints = (
+    studentsCount: number,
+    selectedCount: number,
+    hasPerformedLongPress: boolean
+): HintConfig[] => [
+        {
+            message: "Add your first students to get started",
+            icon: "person-add-outline",
+            priority: "high",
+            condition: studentsCount === 0
+        },
+        {
+            message: "Long press any student to manage them",
+            icon: "bulb-outline",
+            priority: "medium",
+            condition: !hasPerformedLongPress && studentsCount > 0
+        },
+        {
+            message: `${selectedCount} student${selectedCount > 1 ? 's' : ''} selected • Tap ⋮ for actions`,
+            icon: "checkmark-circle-outline",
+            priority: "low",
+            condition: selectedCount > 0
+        }
+    ];
+
 // Generic Custom Hints
 export const useCustomHints = (hints: Omit<HintConfig, 'condition'>[], conditions: boolean[]): HintConfig[] => {
     return hints.map((hint, index) => ({
