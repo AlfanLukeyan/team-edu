@@ -2,7 +2,7 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -81,7 +81,6 @@ export function Dropdown({
         handleClose();
     }, [onSelect, handleClose]);
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         if (isOpen) {
             const timer = setTimeout(() => {
@@ -125,18 +124,30 @@ export function Dropdown({
         const isSelected = item.value === selectedValue;
 
         return (
-            <TouchableOpacity
+            <Pressable
                 onPress={() => handleSelect(item)}
                 disabled={item.disabled}
-                style={styles.dropdownItemContainer}
+                style={({ pressed, hovered }) => [
+                    styles.dropdownItemContainer,
+                    Platform.OS === 'web' && hovered && !item.disabled && {
+                        backgroundColor: Colors[theme].tint + '10',
+                    },
+                    pressed && !item.disabled && {
+                        backgroundColor: Colors[theme].tint + '20',
+                    }
+                ]}
             >
                 {renderItem ? renderItem(item, isSelected) : defaultRenderItem(item, isSelected)}
-            </TouchableOpacity>
+            </Pressable>
         );
     };
 
     return (
-        <View style={[{ position: 'relative' }, style]}>
+        <View style={[
+            { position: 'relative' },
+            style,
+            Platform.OS === 'web' && isOpen && { zIndex: 1001 }
+        ]}>
             <TouchableOpacity
                 ref={dropdownRef}
                 onPress={handleOpen}
@@ -185,7 +196,6 @@ export function Dropdown({
                     <TouchableOpacity
                         style={styles.backdrop}
                         onPress={handleClose}
-                        activeOpacity={1}
                     />
 
                     {/* Dropdown Menu */}
@@ -197,6 +207,10 @@ export function Dropdown({
                             width: dropdownLayout.width,
                             top: dropdownLayout.height + 4,
                             maxHeight: maxHeight + (searchable ? 60 : 0),
+                        },
+                        Platform.OS === 'web' && {
+                            zIndex: 1000,
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
                         }
                     ]}>
                         {searchable && (
@@ -293,6 +307,12 @@ const styles = StyleSheet.create({
         right: -1000,
         bottom: -1000,
         zIndex: 10,
+        ...Platform.select({
+            web: {
+                cursor: 'default' as any,
+                pointerEvents: 'auto' as any,
+            },
+        }),
     },
     dropdownMenu: {
         position: 'absolute',
@@ -302,6 +322,12 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         zIndex: 1000,
         elevation: 10,
+        ...Platform.select({
+            web: {
+                pointerEvents: 'auto',
+                cursor: 'default',
+            } as any,
+        }),
     },
     searchContainer: {
         flexDirection: 'row',
@@ -326,7 +352,12 @@ const styles = StyleSheet.create({
         flexGrow: 0,
     },
     dropdownItemContainer: {
-        // No additional styling needed
+        ...Platform.select({
+            web: {
+                cursor: 'pointer',
+                pointerEvents: 'auto',
+            },
+        }),
     },
     dropdownItem: {
         flexDirection: 'row',
@@ -335,6 +366,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         minHeight: 48,
+        ...Platform.select({
+            web: {
+                cursor: 'pointer',
+                userSelect: 'none',
+            },
+        }),
     },
     disabledItem: {
         opacity: 0.5,

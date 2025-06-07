@@ -20,7 +20,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
 export interface UserBottomSheetRef {
     open: (user: UserByRole) => void;
@@ -45,7 +45,7 @@ const UserBottomSheet = forwardRef<
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const { dismiss } = useBottomSheetModal();
     const theme = useColorScheme() || "light";
-    const snapPoints = useMemo(() => ["25%", "50%"], []);
+    const snapPoints = useMemo(() => ["40%", "70%"], []);
 
     const [selectedUser, setSelectedUser] = useState<UserByRole | null>(null);
     const isChangingRole = changingRoleUserId === selectedUser?.uuid;
@@ -99,6 +99,7 @@ const UserBottomSheet = forwardRef<
                 disappearsOnIndex={-1}
                 appearsOnIndex={0}
                 opacity={0.5}
+                onPress={undefined}
             />
         ),
         []
@@ -124,7 +125,9 @@ const UserBottomSheet = forwardRef<
             index={1}
             snapPoints={snapPoints}
             backdropComponent={renderBackdrop}
-            enablePanDownToClose
+            enablePanDownToClose={false}
+            enableContentPanningGesture={true}
+            enableHandlePanningGesture={true}
             handleIndicatorStyle={{
                 backgroundColor: Colors[theme].text,
                 opacity: 0.5,
@@ -132,6 +135,8 @@ const UserBottomSheet = forwardRef<
             backgroundStyle={{
                 backgroundColor: Colors[theme].background,
             }}
+            keyboardBehavior="extend"
+            style={Platform.OS === 'web' ? { zIndex: 10000 } : undefined}
         >
             <BottomSheetView style={styles.contentContainer}>
                 <View style={styles.innerContainer}>
@@ -144,17 +149,21 @@ const UserBottomSheet = forwardRef<
                         </ThemedText>
                     </View>
 
-                    <View style={styles.section}>
+                    <View style={[styles.section, styles.dropdownSection]}>
                         <ThemedText style={styles.sectionTitle}>Change Role</ThemedText>
-                        <Dropdown
-                            items={roleDropdownItems}
-                            selectedValue={selectedUser.role_id.toString()}
-                            onSelect={handleRoleSelect}
-                            placeholder="Select role"
-                            searchable={false}
-                            disabled={isChangingRole}
-                            loading={isChangingRole}
-                        />
+                        <View style={styles.dropdownContainer}>
+                            <Dropdown
+                                items={roleDropdownItems}
+                                selectedValue={selectedUser.role_id.toString()}
+                                onSelect={handleRoleSelect}
+                                placeholder="Select role"
+                                searchable={false}
+                                disabled={isChangingRole}
+                                loading={isChangingRole}
+                                maxHeight={200}
+                                style={styles.dropdown}
+                            />
+                        </View>
                     </View>
 
                     <View style={styles.section}>
@@ -202,7 +211,7 @@ const UserBottomSheet = forwardRef<
                         </View>
 
                         <View style={styles.infoRow}>
-                            <ThemedText style={styles.infoLabel}>Crutial Feature Token:</ThemedText>
+                            <ThemedText style={styles.infoLabel}>Crucial Feature Token:</ThemedText>
                             <View style={styles.tokenButtonsContainer}>
                                 <Button
                                     type="secondary"
@@ -244,15 +253,18 @@ UserBottomSheet.displayName = 'UserBottomSheet';
 const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
-        padding: 0
+        padding: 0,
+        zIndex: 1,
     },
     innerContainer: {
         paddingHorizontal: 25,
         paddingBottom: 25,
+        flex: 1,
     },
     header: {
         alignItems: "center",
         marginBottom: 24,
+        position: 'relative',
     },
     headerTitle: {
         fontSize: 18,
@@ -262,14 +274,37 @@ const styles = StyleSheet.create({
     headerSubtitle: {
         fontSize: 14,
         opacity: 0.7,
+        marginBottom: 8,
     },
     section: {
         marginBottom: 20,
+    },
+    dropdownSection: {
+        marginBottom: 30,
+        zIndex: 1000,
+        position: 'relative',
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: '600',
         marginBottom: 12,
+    },
+    dropdownContainer: {
+        zIndex: 1000,
+        ...Platform.select({
+            web: {
+                position: 'relative',
+                zIndex: 1000,
+            },
+        }),
+    },
+    dropdown: {
+        zIndex: 1000,
+        ...Platform.select({
+            web: {
+                zIndex: 1000,
+            },
+        }),
     },
     infoRow: {
         flexDirection: 'row',
@@ -290,7 +325,6 @@ const styles = StyleSheet.create({
     deleteButton: {
         marginTop: 8,
     },
-
     tokenButtonsContainer: {
         flexDirection: 'row',
         gap: 8,
@@ -299,10 +333,6 @@ const styles = StyleSheet.create({
     },
     tokenButton: {
         paddingHorizontal: 12,
-    },
-    tokenButtonText: {
-        fontSize: 12,
-        fontWeight: '500',
     },
     statusContainer: {
         flexDirection: 'row',
