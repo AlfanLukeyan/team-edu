@@ -4,6 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { UpcomingAssessmentCard } from "@/components/UpcomingAssessmentCard";
 import { Colors } from "@/constants/Colors";
+import { useAuth } from "@/hooks/useAuth";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useUserRole } from "@/hooks/useUserRole";
 import { assessmentService } from "@/services/assessmentService";
@@ -34,6 +35,7 @@ export default function HomeScreen() {
     const router = useRouter();
     const theme = useColorScheme() ?? 'light';
     const { isAdmin } = useUserRole();
+    const { user } = useAuth();
     const [upcomingAssessments, setUpcomingAssessments] = useState<ClassAssessment[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -58,16 +60,15 @@ export default function HomeScreen() {
     ];
 
     const checkFaceReference = useCallback(async () => {
+        if (!user) return;
+
         try {
-            const profile = await userService.getProfile();
-            if (profile.uuid) {
-                const faceRef = await userService.checkFaceReference(profile.uuid);
-                setShowFaceReferenceAlert(!faceRef.has_face_reference);
-            }
+            const faceRef = await userService.checkFaceReference(user.uuid);
+            setShowFaceReferenceAlert(!faceRef.has_face_reference);
         } catch (error) {
-            console.error('Failed to check face reference:', error);
+
         }
-    }, []);
+    }, [user]);
 
     const fetchUpcomingAssessments = useCallback(async () => {
         if (isAdmin()) {
