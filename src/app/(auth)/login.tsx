@@ -19,12 +19,13 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { ModalEmitter } from "@/services/modalEmitter";
+import { Image } from "expo-image";
 
 export default function LoginScreen() {
     const theme = useColorScheme() ?? "light";
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const { loginUser } = useAuth();
+    const { loginUser, isGuest } = useAuth();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -42,9 +43,11 @@ export default function LoginScreen() {
             console.log("User Data:", userData);
             if (userData) {
                 ModalEmitter.emit("SHOW_SUCCESS", "Login successful!");
-                setTimeout(() => {
+                if (isGuest()) {
+                    router.replace("/(auth)/warning_screen");
+                } else {
                     router.replace("/(main)");
-                }, 1000);
+                }
             }
         } catch (error: any) {
 
@@ -72,9 +75,16 @@ export default function LoginScreen() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <ThemedView style={styles.header}>
-                        <ThemedText type="title">
-                            Team Edu
-                        </ThemedText>
+                        <View style={styles.titleContainer}>
+                            <Image
+                                source={require('../../../assets/images/team-edu-logo.png')}
+                                style={styles.logo}
+                                contentFit="contain"
+                            />
+                            <ThemedText type="title">
+                                Team Edu
+                            </ThemedText>
+                        </View>
                         <ThemedText>
                             Sign in to continue your learning journey
                         </ThemedText>
@@ -212,5 +222,15 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
+    },
+    titleContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 8,
+    },
+    logo: {
+        width: 40,
+        height: 40,
     },
 });

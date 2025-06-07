@@ -38,6 +38,7 @@ const MAPPING = {
     'lock.circle.fill': 'lock',
     'phone.fill': 'phone',
     'mail.fill': 'email',
+    'person.badge.plus.fill': 'person-add',
 } as IconMapping;
 
 /**

@@ -1,4 +1,4 @@
-import { UserByRole } from "@/types/api";
+import { Role, UserByRole } from "@/types/api";
 import { UserProfile } from "@/types/user";
 import { Platform } from "react-native";
 import { userApi } from "./api/userApi";
@@ -81,10 +81,81 @@ class UserService {
         }
     }
 
+    async getAllRoles(): Promise<Role[]> {
+        try {
+            const response = await userApi.getAllRoles();
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async modifyUserRole(uuid: string, roleId: string): Promise<any> {
+        try {
+            return await userApi.modifyUserRole({ uuid, role_id: roleId });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async deleteUser(uuid: string): Promise<any> {
+        try {
+            return await userApi.deleteUser(uuid);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async injectCrucialToken(userIndex: number): Promise<any> {
+        try {
+            return await userApi.injectCrucialToken({ user_id: userIndex.toString() });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async deleteCrucialToken(userIndex: number): Promise<any> {
+        try {
+            return await userApi.deleteCrucialToken({ user_id: userIndex.toString() });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async verifyEmailUser(uuid: string): Promise<any> {
+        try {
+            return await userApi.verifyEmailUser({ uuid });
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async getUsersByRole(roleId: number): Promise<UserByRole[]> {
         try {
             const response = await userApi.getUsersByRole(roleId);
             return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async searchUsers(params?: { name?: string; role_id?: number }): Promise<UserByRole[]> {
+        try {
+            const response = await userApi.searchUsers(params);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getAllUsers(searchQuery?: string): Promise<UserByRole[]> {
+        try {
+            if (searchQuery) {
+                return await this.searchUsers({ name: searchQuery });
+            } else {
+                const response = await userApi.getAllUsers();
+                return response.data;
+            }
         } catch (error) {
             throw error;
         }

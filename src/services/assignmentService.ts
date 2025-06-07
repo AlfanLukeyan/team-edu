@@ -1,10 +1,23 @@
 import { Assignment, AssignmentSubmission, AssignmentSubmissionResponse, CreateAssignmentData, StudentAssignment, UpdateAssignmentData } from '@/types/api';
 import { AssignmentFormData } from '@/types/common';
 import { assignmentApi } from './api/assignmentApi';
+import { downloadService } from './DownloadService';
 import { tokenService } from './tokenService';
 
 class AssignmentService {
     private static instance: AssignmentService;
+
+    async downloadAssignmentFile(url: string): Promise<void> {
+        return downloadService.downloadFile(url);
+    }
+
+    async downloadSubmissionFile(url: string): Promise<void> {
+        return downloadService.downloadFile(url);
+    }
+
+    async openAssignmentFile(url: string): Promise<void> {
+        return downloadService.openFile(url);
+    }
 
     async submitAssignment(assignmentId: string, file: any): Promise<AssignmentSubmissionResponse> {
         try {
@@ -22,11 +35,10 @@ class AssignmentService {
         }
         return AssignmentService.instance;
     }
-
-    async getAssignmentDetails(assignmentId: string, userId?: string): Promise<Assignment | StudentAssignment> {
+    async getAssignmentDetails(assignmentId: string): Promise<Assignment | StudentAssignment> {
         try {
             if (tokenService.isStudent()) {
-                const response = await assignmentApi.getStudentAssignmentDetails(assignmentId, userId);
+                const response = await assignmentApi.getStudentAssignmentDetails(assignmentId);
                 return response.data;
             } else {
                 const response = await assignmentApi.getAssignmentDetails(assignmentId);
@@ -38,9 +50,9 @@ class AssignmentService {
         }
     }
 
-    async getStudentAssignmentDetails(assignmentId: string, userId?: string): Promise<StudentAssignment> {
+    async getStudentAssignmentDetails(assignmentId: string): Promise<StudentAssignment> {
         try {
-            const response = await assignmentApi.getStudentAssignmentDetails(assignmentId, userId);
+            const response = await assignmentApi.getStudentAssignmentDetails(assignmentId);
             return response.data;
         } catch (error) {
             console.error('Failed to fetch student assignment details:', error);

@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import {
     StyleSheet,
@@ -11,10 +11,11 @@ import {
 
 export type ButtonProps = TouchableOpacityProps & {
     children?: React.ReactNode;
-    type?: "default" | "secondary" | "delete";
+    type?: "default" | "secondary" | "delete" | "filter";
     disabled?: boolean;
+    active?: boolean;
     icon?: {
-        name: React.ComponentProps<typeof IconSymbol>["name"];
+        name: React.ComponentProps<typeof MaterialIcons>["name"];
         size?: number;
     };
 };
@@ -24,19 +25,56 @@ export function Button({
     type = "default",
     children,
     disabled = false,
+    active = false,
     icon,
     ...rest
 }: ButtonProps) {
     const theme = useColorScheme() ?? "light";
 
-    const textColor =
-        type === "default"
-            ? theme === "light"
-                ? Colors.dark.text
-                : Colors.light.text
-            : type === "delete"
-                ? Colors[theme].error
-                : Colors[theme].button;
+    const getTextColor = () => {
+        if (type === "filter") {
+            return active ? Colors[theme].tint : Colors[theme].text;
+        }
+
+        switch (type) {
+            case "default":
+                return theme === "light" ? Colors.dark.text : Colors.light.text;
+            case "delete":
+                return Colors[theme].error;
+            default:
+                return Colors[theme].button;
+        }
+    };
+
+    const getButtonStyle = () => {
+        switch (type) {
+            case "default":
+                return { backgroundColor: Colors[theme].button };
+            case "secondary":
+                return {
+                    backgroundColor: "transparent",
+                    borderWidth: 1,
+                    borderColor: Colors[theme].button,
+                };
+            case "delete":
+                return {
+                    backgroundColor: "transparent",
+                    borderWidth: 1,
+                    borderColor: Colors[theme].error,
+                };
+            case "filter":
+                return {
+                    backgroundColor: active ? Colors[theme].tint + '20' : "transparent",
+                    borderWidth: 1,
+                    borderColor: active ? Colors[theme].tint : Colors[theme].border,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                };
+            default:
+                return {};
+        }
+    };
 
     return (
         <TouchableOpacity
@@ -45,25 +83,9 @@ export function Button({
                 styles.content,
                 {
                     justifyContent: icon ? "space-between" : "center",
-                    paddingHorizontal: icon ? 16 : 8,
+                    paddingHorizontal: type === "filter" ? 12 : (icon ? 16 : 8),
                 },
-                type === "default"
-                    ? { backgroundColor: Colors[theme].button }
-                    : undefined,
-                type === "secondary"
-                    ? {
-                        backgroundColor: "transparent",
-                        borderWidth: 1,
-                        borderColor: Colors[theme].button,
-                    }
-                    : undefined,
-                type === "delete"
-                    ? {
-                        backgroundColor: "transparent",
-                        borderWidth: 1,
-                        borderColor: Colors[theme].error,
-                    }
-                    : undefined,
+                getButtonStyle(),
                 disabled && { opacity: 0.5 },
                 style,
             ]}
@@ -72,18 +94,20 @@ export function Button({
         >
             <ThemedText
                 style={{
-                    color: textColor,
+                    color: getTextColor(),
                     marginRight: icon ? 8 : 0,
+                    fontSize: type === "filter" ? 12 : undefined,
+                    fontWeight: type === "filter" ? '500' : undefined,
                 }}
             >
                 {children}
             </ThemedText>
 
             {icon && (
-                <IconSymbol
+                <MaterialIcons
                     name={icon.name}
-                    size={icon.size || 24}
-                    color={textColor}
+                    size={icon.size || 18}
+                    color={getTextColor()}
                 />
             )}
         </TouchableOpacity>

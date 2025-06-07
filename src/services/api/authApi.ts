@@ -1,4 +1,3 @@
-import { simplePostFormData } from '@/utils/httpUtils';
 import { Platform } from 'react-native';
 import { httpClient } from '../httpClient';
 
@@ -28,7 +27,7 @@ export const authApi = {
             } as any);
         }
 
-        return simplePostFormData('/auth/login-face', formData, 'POST', false);
+        return httpClient.postFormDataNoAuth('/auth/login-face', formData);
     },
 
     crucialVerify: async (faceImage: string) => {
@@ -52,7 +51,7 @@ export const authApi = {
             } as any);
         }
 
-        return simplePostFormData('/auth/crucial-verify', formData);
+        return httpClient.postFormData('/auth/crucial-verify', formData);
     },
 
     register: async (
@@ -89,7 +88,7 @@ export const authApi = {
             });
         }
 
-        return simplePostFormData('/user/register', formData, 'POST', false);
+        return httpClient.postFormDataNoAuth('/user/register', formData);
     },
 
     logout: async () => {

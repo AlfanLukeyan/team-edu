@@ -10,6 +10,13 @@ interface AlertOptions {
     onCancel?: () => void;
 }
 
+interface CrucialAuthOptions {
+    title?: string;
+    description?: string;
+    onSuccess: () => void;
+    onCancel: () => void;
+}
+
 class ModalEmitterClass extends EventEmitter {
     // Error Modal
     showError(message: string) {
@@ -46,6 +53,14 @@ class ModalEmitterClass extends EventEmitter {
 
     anotherDeviceLogin(message: string) {
         this.emit('ANOTHER_DEVICE_LOGIN', message);
+    }
+
+    showCrucialAuth(options: CrucialAuthOptions) {
+        this.emit('SHOW_CRUCIAL_AUTH', options);
+    }
+
+    hideCrucialAuth() {
+        this.emit('HIDE_CRUCIAL_AUTH');
     }
 }
 

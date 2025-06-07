@@ -1,6 +1,5 @@
-import { GetUsersByRoleResponse } from '@/types/api';
+import { DeleteCrucialTokenResponse, GetUsersByRoleResponse, InjectCrucialTokenResponse, RoleListResponse, VerifyEmailUserResponse } from '@/types/api';
 import { UserProfile } from '@/types/user';
-import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
 
 interface UpdateProfileRequest {
@@ -10,6 +9,23 @@ interface UpdateProfileRequest {
 
 interface UpdateEmailRequest {
     email: string;
+}
+
+interface ModifyUserRoleRequest {
+    uuid: string;
+    role_id: string;
+}
+
+interface VerifyEmailUserRequest {
+    uuid: string;
+}
+
+interface InjectCrucialTokenRequest {
+    user_id: string;
+}
+
+interface DeleteCrucialTokenRequest {
+    user_id: string;
 }
 
 export const userApi = {
@@ -26,14 +42,51 @@ export const userApi = {
     },
 
     updateProfilePicture: async (formData: FormData): Promise<any> => {
-        return simplePostFormData('/user/update/profile-picture', formData);
+        return httpClient.postFormData('/user/update/profile-picture', formData);
     },
 
     updateFaceReference: async (formData: FormData): Promise<any> => {
-        return simplePostFormData('/user/update/face-reference', formData, 'POST', true);
+        return httpClient.postFormData('/user/update/face-reference', formData);
+    },
+
+    getAllUsers: async (): Promise<GetUsersByRoleResponse> => {
+        return httpClient.get('/admin/get-user');
     },
 
     getUsersByRole: async (roleId: number): Promise<GetUsersByRoleResponse> => {
         return httpClient.get(`/admin/get-user?role_id=${roleId}`);
+    },
+
+    searchUsers: async (params?: { name?: string; role_id?: number }): Promise<GetUsersByRoleResponse> => {
+        const queryParams = new URLSearchParams();
+        if (params?.name) queryParams.append('name', params.name);
+        if (params?.role_id) queryParams.append('role_id', params.role_id.toString());
+
+        const queryString = queryParams.toString();
+        return httpClient.get(`/admin/search-user${queryString ? `?${queryString}` : ''}`);
+    },
+
+    getAllRoles: async (): Promise<RoleListResponse> => {
+        return httpClient.get('/role/list');
+    },
+
+    modifyUserRole: async (data: ModifyUserRoleRequest): Promise<any> => {
+        return httpClient.post('/admin/modify-role', data);
+    },
+
+    deleteUser: async (uuid: string): Promise<any> => {
+        return httpClient.delete(`/admin/delete-user/${uuid}`);
+    },
+
+    injectCrucialToken: async (data: InjectCrucialTokenRequest): Promise<InjectCrucialTokenResponse> => {
+        return httpClient.post('/admin/inject-crucial-token', data);
+    },
+
+    deleteCrucialToken: async (data: DeleteCrucialTokenRequest): Promise<DeleteCrucialTokenResponse> => {
+        return httpClient.deleteWithData('/admin/delete-crucial-token', data);
+    },
+
+    verifyEmailUser: async (data: VerifyEmailUserRequest): Promise<VerifyEmailUserResponse> => {
+        return httpClient.post('/admin/verify-email-user', data);
     },
 };

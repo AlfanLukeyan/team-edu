@@ -186,7 +186,6 @@ const formatTimeRemaining = (timeInSeconds: number): string => {
 
 const styles = StyleSheet.create({
     container: {
-        marginHorizontal: 16,
         padding: 16,
         borderRadius: 12,
         flexDirection: 'row',

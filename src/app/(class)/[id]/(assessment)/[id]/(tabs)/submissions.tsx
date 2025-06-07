@@ -1,3 +1,4 @@
+import { ProgressiveHint } from "@/components/ProgressiveHint";
 import SubmissionActionsMenu from "@/components/SubmissionActionsMenu";
 import { SubmissionCard } from "@/components/SubmissionCard";
 import { ThemedText } from "@/components/ThemedText";
@@ -5,6 +6,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import { useHeader } from "@/contexts/HeaderContext";
+import { useSubmissionHints } from "@/hooks/useCustomHints";
 import { useUserRole } from "@/hooks/useUserRole";
 import { assessmentService } from "@/services/assessmentService";
 import { ModalEmitter } from "@/services/modalEmitter";
@@ -35,6 +37,17 @@ export default function SubmissionsScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [hasPerformedLongPress, setHasPerformedLongPress] = useState(false);
+
+    const submittedCount = submissions.filter(s => s.status === 'submitted').length;
+
+    const submissionHints = useSubmissionHints(
+        submissions.length,
+        selectedSubmissionIds.length,
+        hasPerformedLongPress,
+        submittedCount
+    );
 
     const fetchSubmissions = useCallback(async () => {
         if (!assessmentId) return;
@@ -131,59 +144,55 @@ export default function SubmissionsScreen() {
         setShowActionsMenu(false);
     };
 
-const handleDeleteSubmissions = async () => {
-    const selectedSubmissions = submissions.filter(s => 
-        selectedSubmissionIds.includes(s.user_user_id)
-    );
+    const handleDeleteSubmissions = async () => {
+        const selectedSubmissions = submissions.filter(s =>
+            selectedSubmissionIds.includes(s.user_user_id)
+        );
 
-    ModalEmitter.showAlert({
-        title: "Delete Submissions",
-        message: `Are you sure you want to delete ${selectedSubmissionIds.length} submission(s)?`,
-        confirmText: "Delete",
-        cancelText: "Cancel",
-        type: "danger",
-        onConfirm: async () => {
-            try {
-                ModalEmitter.showLoading("Deleting submissions...");
+        ModalEmitter.showAlert({
+            title: "Delete Submissions",
+            message: `Are you sure you want to delete ${selectedSubmissionIds.length} submission(s)?`,
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    const submissionIdsToDelete = selectedSubmissions
+                        .filter(s => s.id !== null)
+                        .map(s => s.id as string);
 
-                const submissionIdsToDelete = selectedSubmissions
-                    .filter(s => s.id !== null)
-                    .map(s => s.id as string);
+                    if (submissionIdsToDelete.length === 0) {
+                        ModalEmitter.showError("No valid submissions to delete");
+                        return;
+                    }
 
-                if (submissionIdsToDelete.length === 0) {
-                    ModalEmitter.hideLoading();
-                    ModalEmitter.showError("No valid submissions to delete");
-                    return;
+                    await assessmentService.deleteMultipleSubmissions(submissionIdsToDelete);
+
+                    setSubmissions(submissions.filter(submission =>
+                        !selectedSubmissionIds.includes(submission.user_user_id)
+                    ));
+                    setSelectedSubmissionIds([]);
+                    setShowActionsMenu(false);
+
+                    ModalEmitter.showSuccess(`Successfully deleted ${submissionIdsToDelete.length} submission(s)`);
+
+                    await fetchSubmissions();
+                } catch (error) {
+                    ModalEmitter.showError("Failed to delete submissions. Please try again.");
+                    setSelectedSubmissionIds([]);
+                    setShowActionsMenu(false);
                 }
-
-                await assessmentService.deleteMultipleSubmissions(submissionIdsToDelete);
-
-                setSubmissions(submissions.filter(submission => 
-                    !selectedSubmissionIds.includes(submission.user_user_id)
-                ));
-                setSelectedSubmissionIds([]);
-                setShowActionsMenu(false);
-
-                ModalEmitter.hideLoading();
-                ModalEmitter.showSuccess(`Successfully deleted ${submissionIdsToDelete.length} submission(s)`);
-
-                await fetchSubmissions();
-            } catch (error) {
-                ModalEmitter.hideLoading();
-                ModalEmitter.showError("Failed to delete submissions. Please try again.");
-                setSelectedSubmissionIds([]);
+            },
+            onCancel: () => {
                 setShowActionsMenu(false);
             }
-        },
-        onCancel: () => {
-            setShowActionsMenu(false);
-        }
-    });
-};
+        });
+    };
 
     const handleSubmissionLongPress = (user_id: string) => {
         const submission = submissions.find(s => s.user_user_id === user_id);
         if (submission && canSelectSubmission(submission)) {
+            setHasPerformedLongPress(true);
             setSelectedSubmissionIds([user_id]);
             setShowActionsMenu(false);
         }
@@ -252,6 +261,7 @@ const handleDeleteSubmissions = async () => {
                     />
                 }
             >
+                <ProgressiveHint hints={submissionHints}/>
                 {submissions.length === 0 ? (
                     <ThemedView style={styles.emptyState}>
                         <ThemedText style={styles.emptyText}>
@@ -296,6 +306,7 @@ const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
         borderRadius: 15,
+        paddingHorizontal: 16,
     },
     submissionsList: {
         gap: 8,

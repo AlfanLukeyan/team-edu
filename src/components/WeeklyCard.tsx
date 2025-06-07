@@ -247,7 +247,7 @@ export function WeeklyCard({
                             <Button
                                 type="secondary"
                                 onPress={handleCreateAssignment}
-                                icon={{ name: "plus.circle.fill" }}
+                                icon={{ name: "assignment-add", size: 16 }}
                                 style={styles.createAssignmentButton}
                             >
                                 Create Assignment

@@ -1,8 +1,9 @@
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Checkbox } from "./Checkbox";
 import ThemedBottomSheetTextInput from "./ThemedBottomSheetTextInput";
 
 interface Choice {
@@ -43,8 +44,8 @@ const ChoiceRow: React.FC<ChoiceRowProps> = ({
                     style={styles.actionButton}
                     onPress={() => onAddChoice(questionId)}
                 >
-                    <IconSymbol
-                        name="plus.circle.fill"
+                    <Ionicons
+                        name="add-circle"
                         color={Colors[theme].button}
                         size={28}
                     />
@@ -58,8 +59,8 @@ const ChoiceRow: React.FC<ChoiceRowProps> = ({
                     style={styles.actionButton}
                     onPress={() => onRemoveChoice(questionId, choice.id)}
                 >
-                    <IconSymbol
-                        name="minus.circle.fill"
+                    <Ionicons
+                        name="remove-circle"
                         color={Colors[theme].error}
                         size={28}
                     />
@@ -69,8 +70,8 @@ const ChoiceRow: React.FC<ChoiceRowProps> = ({
 
         return (
             <View style={styles.actionButtonDisabled}>
-                <IconSymbol
-                    name="minus.circle.fill"
+                <Ionicons
+                    name="remove-circle"
                     color={theme === "dark" ? "#555" : "#ccc"}
                     size={28}
                 />
@@ -80,21 +81,12 @@ const ChoiceRow: React.FC<ChoiceRowProps> = ({
 
     return (
         <View style={styles.choiceRow}>
-            <Pressable
-                style={[
-                    styles.checkboxContainer,
-                    choice.is_correct ? styles.checkedContainer : styles.checkbox,
-                ]}
-                onPress={() => onToggleCorrect(questionId, choice.id)}
-            >
-                {choice.is_correct && (
-                    <IconSymbol
-                        name="checkmark.circle.fill"
-                        color="green"
-                        size={28}
-                    />
-                )}
-            </Pressable>
+            <View style={styles.checkboxContainer}>
+                <Checkbox
+                    checked={choice.is_correct}
+                    onPress={() => onToggleCorrect(questionId, choice.id)}
+                />
+            </View>
 
             <View style={styles.choiceInput}>
                 <ThemedBottomSheetTextInput
@@ -124,14 +116,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         marginRight: 10,
-    },
-    checkbox: {
-        borderWidth: 1,
-        borderColor: "#999",
-        borderRadius: 100,
-    },
-    checkedContainer: {
-        // No border needed when checked
     },
     actionButton: {
         padding: 5,

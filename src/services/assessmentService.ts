@@ -66,13 +66,7 @@ class AssessmentService {
 
     async startAssessmentSession(assessmentId: string): Promise<AssessmentSessionResponse> {
         try {
-            const userId = tokenService.getUserId();
-            if (!userId) {
-                throw new Error('User ID not found');
-            }
-
             const payload: CreateSubmissionRequest = {
-                user_id: userId,
                 assessment_id: assessmentId
             };
 
@@ -136,10 +130,9 @@ class AssessmentService {
         }
     }
 
-    async getUpcomingAssessments(userID?: string): Promise<ClassAssessment[]> {
+    async getUpcomingAssessments(): Promise<ClassAssessment[]> {
         try {
-            const finalUserID = userID ?? tokenService.getUserId() ?? undefined;
-            const response = await assessmentApi.getUpcomingAssessments(finalUserID);
+            const response = await assessmentApi.getUpcomingAssessments();
             return response.data || [];
         } catch (error) {
             console.error('Failed to fetch upcoming assessments:', error);
@@ -147,10 +140,10 @@ class AssessmentService {
         }
     }
 
-    async getAssessmentDetails(assessmentId: string, userId?: string): Promise<AssessmentDetails> {
+    async getAssessmentDetails(assessmentId: string): Promise<AssessmentDetails> {
         try {
             if (tokenService.isStudent()) {
-                const response = await assessmentApi.getStudentAssessmentDetails(assessmentId, userId);
+                const response = await assessmentApi.getStudentAssessmentDetails(assessmentId);
                 const studentData = response.data;
 
                 return {
@@ -180,9 +173,9 @@ class AssessmentService {
         }
     }
 
-    async getStudentAssessmentDetails(assessmentId: string, userId?: string): Promise<StudentAssessmentDetails> {
+    async getStudentAssessmentDetails(assessmentId: string): Promise<StudentAssessmentDetails> {
         try {
-            const response = await assessmentApi.getStudentAssessmentDetails(assessmentId, userId);
+            const response = await assessmentApi.getStudentAssessmentDetails(assessmentId);
             return response.data;
         } catch (error) {
             console.error('Failed to fetch student assessment details:', error);

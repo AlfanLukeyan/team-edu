@@ -12,8 +12,8 @@ interface AuthContextType {
     faceLoginUser: (email: string, faceImage: string) => Promise<User>;
     registerUser: (name: string, email: string, password: string, phone: string, faceImages: string[]) => Promise<any>;
     logout: () => Promise<any>;
-    hasPermission: (permission: string) => boolean;
     getUserId: () => string | null;
+    isGuest: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,8 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return {
             uuid: decoded.uuid,
             email,
-            name: '', // You can fetch this from user profile 
-            permissions: decoded.permissions || [],
+            name: '',
+            role_name: decoded.role_name || tokenService.getRoleText(),
         };
     };
 
@@ -132,12 +132,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const hasPermission = (permission: string): boolean => {
-        return tokenService.hasPermission(permission);
-    };
-
     const getUserId = (): string | null => {
         return tokenService.getUserId();
+    };
+
+    const isGuest = (): boolean => {
+        return tokenService.isGuest();
     };
 
     const isAuthenticated = !!user && !tokenService.isTokenExpired();
@@ -152,8 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 faceLoginUser,
                 registerUser,
                 logout,
-                hasPermission,
                 getUserId,
+                isGuest,
             }}
         >
             {children}

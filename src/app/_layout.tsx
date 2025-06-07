@@ -1,7 +1,9 @@
+import CrucialFeatureAuthModal from "@/components/CrucialFeatureAuthModal";
 import CustomAlert from "@/components/CustomAlert";
 import ErrorModal from "@/components/ErrorModal";
 import LoadingModal from "@/components/LoadingModal";
 import SuccessModal from "@/components/SuccessModal";
+import { NavigationProvider } from "@/contexts/NavigationContext";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { ModalEmitter } from "@/services/modalEmitter";
@@ -20,7 +22,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 function NavigationHandler({ children }: { children: React.ReactNode }) {
-    const {isAuthenticated, isLoading } = useAuth();
+    const { isAuthenticated, isLoading, isGuest } = useAuth();
     const segments = useSegments();
     const router = useRouter();
 
@@ -29,11 +31,15 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
 
         const inAuthGroup = segments[0] === '(auth)';
         const inProtectedGroup = segments[0] === '(main)'
-            || segments[0] === '(class)'
-            || segments[0] === '(verification)';
+            || segments[0] === '(class)';
+
+        const onWarningScreen = segments.some(segment => segment === 'warning_screen') ||
+            segments[segments.length - 1] === 'warning_screen';
 
         if (isAuthenticated) {
-            if (inAuthGroup) {
+            if (isGuest() && !onWarningScreen) {
+                router.replace('/(auth)/warning_screen');
+            } else if (!isGuest() && inAuthGroup && !onWarningScreen) {
                 router.replace('/(main)');
             }
         } else {
@@ -41,24 +47,25 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
                 router.replace('/(auth)/login');
             }
         }
-    }, [isAuthenticated, segments, isLoading]);
+    }, [isAuthenticated, segments, isLoading, isGuest]);
 
     return <>{children}</>;
 }
 
 export default function RootLayout() {
-    const router = useRouter();
     const colorScheme = useColorScheme();
+    const router = useRouter();
     const [loaded] = useFonts({
         "Poppins-Regular": require("../../assets/fonts/Poppins-Regular.ttf"),
         "Poppins-SemiBold": require("../../assets/fonts/Poppins-SemiBold.ttf"),
         "Poppins-Bold": require("../../assets/fonts/Poppins-Bold.ttf"),
     });
+
+    // Modal states
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [loadingMessage, setLoadingMessage] = useState<string | undefined>(undefined);
-
     const [alertOptions, setAlertOptions] = useState<{
         visible: boolean;
         title: string;
@@ -73,51 +80,52 @@ export default function RootLayout() {
         title: '',
         message: '',
     });
+    const [crucialAuthOptions, setCrucialAuthOptions] = useState<{
+        visible: boolean;
+        title?: string;
+        description?: string;
+        onSuccess?: () => void;
+        onCancel?: () => void;
+    }>({
+        visible: false,
+    });
 
+
+    // Modal event handlers
     useEffect(() => {
-        const handleError = (message: string) => {
-            setErrorMessage(message);
-        };
-
-        const handleSuccess = (message: string) => {
-            setSuccessMessage(message);
-        };
-
+        const handleError = (message: string) => setErrorMessage(message);
+        const handleSuccess = (message: string) => setSuccessMessage(message);
         const handleShowLoading = (message?: string) => {
             setLoadingMessage(message);
             setIsLoading(true);
         };
-
         const handleHideLoading = () => {
             setIsLoading(false);
             setLoadingMessage(undefined);
         };
-
         const handleUnauthorized = () => {
             setErrorMessage("Session expired. Please log in again.");
-            setTimeout(() => {
-                router.replace('/(auth)/login');
-            }, 1000);
+            router.replace('/(auth)/login');
         };
-
         const handleAnotherDeviceLogin = (message: string) => {
             setErrorMessage(message);
-            setTimeout(() => {
-                router.replace('/(auth)/login');
-            }, 1000);
+            router.replace('/(auth)/login');
         };
-
         const handleShowAlert = (options: any) => {
-            setAlertOptions({
-                visible: true,
-                ...options,
-            });
+            setAlertOptions({ visible: true, ...options });
         };
-
         const handleHideAlert = () => {
             setAlertOptions(prev => ({ ...prev, visible: false }));
         };
 
+        const handleShowCrucialAuth = (options: any) => {
+            setCrucialAuthOptions({ visible: true, ...options });
+        };
+        const handleHideCrucialAuth = () => {
+            setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
+        };
+
+        // Register event listeners
         ModalEmitter.on("SHOW_ERROR", handleError);
         ModalEmitter.on("SHOW_SUCCESS", handleSuccess);
         ModalEmitter.on("SHOW_LOADING", handleShowLoading);
@@ -126,8 +134,11 @@ export default function RootLayout() {
         ModalEmitter.on("ANOTHER_DEVICE_LOGIN", handleAnotherDeviceLogin);
         ModalEmitter.on("SHOW_ALERT", handleShowAlert);
         ModalEmitter.on("HIDE_ALERT", handleHideAlert);
+        ModalEmitter.on("SHOW_CRUCIAL_AUTH", handleShowCrucialAuth);
+        ModalEmitter.on("HIDE_CRUCIAL_AUTH", handleHideCrucialAuth);
 
         return () => {
+            // Cleanup event listeners
             ModalEmitter.off("SHOW_ERROR", handleError);
             ModalEmitter.off("SHOW_SUCCESS", handleSuccess);
             ModalEmitter.off("SHOW_LOADING", handleShowLoading);
@@ -136,6 +147,8 @@ export default function RootLayout() {
             ModalEmitter.off("ANOTHER_DEVICE_LOGIN", handleAnotherDeviceLogin);
             ModalEmitter.off("SHOW_ALERT", handleShowAlert);
             ModalEmitter.off("HIDE_ALERT", handleHideAlert);
+            ModalEmitter.off("SHOW_CRUCIAL_AUTH", handleShowCrucialAuth);
+            ModalEmitter.off("HIDE_CRUCIAL_AUTH", handleHideCrucialAuth);
         };
     }, [router]);
 
@@ -144,68 +157,98 @@ export default function RootLayout() {
     }
 
     return (
-        <AuthProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-                <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-                    <BottomSheetModalProvider>
-                        <NavigationHandler>
-                            <Slot />
-                        </NavigationHandler>
-                        <StatusBar style="auto" />
+        <NavigationProvider>
+            <AuthProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+                        <BottomSheetModalProvider>
+                            <NavigationHandler>
+                                <Slot />
+                            </NavigationHandler>
+                            <StatusBar style="auto" />
 
-                        {(isLoading || !!errorMessage || !!successMessage || alertOptions.visible) && (
-                            <View style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                zIndex: 9999,
-                                pointerEvents: 'auto'
-                            }}>
-                                {!!errorMessage && (
-                                    <ErrorModal
+                            {/* ✅ Regular Global Modals */}
+                            {(isLoading || !!errorMessage || !!successMessage || alertOptions.visible) && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    zIndex: 9999,
+                                    pointerEvents: 'auto'
+                                }}>
+                                    {!!errorMessage && (
+                                        <ErrorModal
+                                            visible={true}
+                                            errorMessage={errorMessage}
+                                            onClose={() => setErrorMessage(null)}
+                                        />
+                                    )}
+                                    {!!successMessage && (
+                                        <SuccessModal
+                                            visible={true}
+                                            successMessage={successMessage}
+                                            onClose={() => setSuccessMessage(null)}
+                                        />
+                                    )}
+                                    {isLoading && (
+                                        <LoadingModal
+                                            visible={true}
+                                            message={loadingMessage}
+                                        />
+                                    )}
+                                    {alertOptions.visible && (
+                                        <CustomAlert
+                                            visible={true}
+                                            title={alertOptions.title}
+                                            message={alertOptions.message}
+                                            confirmText={alertOptions.confirmText}
+                                            cancelText={alertOptions.cancelText}
+                                            type={alertOptions.type}
+                                            onConfirm={() => {
+                                                alertOptions.onConfirm?.();
+                                                setAlertOptions(prev => ({ ...prev, visible: false }));
+                                            }}
+                                            onCancel={() => {
+                                                alertOptions.onCancel?.();
+                                                setAlertOptions(prev => ({ ...prev, visible: false }));
+                                            }}
+                                        />
+                                    )}
+                                </View>
+                            )}
+
+                            {/* ✅ Crucial Auth Modal - Separate and Higher Z-Index */}
+                            {crucialAuthOptions.visible && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    zIndex: 10000, // Higher than other modals
+                                    pointerEvents: 'auto'
+                                }}>
+                                    <CrucialFeatureAuthModal
                                         visible={true}
-                                        errorMessage={errorMessage}
-                                        onClose={() => setErrorMessage(null)}
-                                    />
-                                )}
-                                {!!successMessage && (
-                                    <SuccessModal
-                                        visible={true}
-                                        successMessage={successMessage}
-                                        onClose={() => setSuccessMessage(null)}
-                                    />
-                                )}
-                                {isLoading && (
-                                    <LoadingModal
-                                        visible={true}
-                                        message={loadingMessage}
-                                    />
-                                )}
-                                {alertOptions.visible && (
-                                    <CustomAlert
-                                        visible={true}
-                                        title={alertOptions.title}
-                                        message={alertOptions.message}
-                                        confirmText={alertOptions.confirmText}
-                                        cancelText={alertOptions.cancelText}
-                                        type={alertOptions.type}
-                                        onConfirm={() => {
-                                            alertOptions.onConfirm?.();
-                                            setAlertOptions(prev => ({ ...prev, visible: false }));
+                                        title={crucialAuthOptions.title}
+                                        description={crucialAuthOptions.description}
+                                        onSuccess={() => {
+                                            crucialAuthOptions.onSuccess?.();
+                                            setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
                                         }}
                                         onCancel={() => {
-                                            alertOptions.onCancel?.();
-                                            setAlertOptions(prev => ({ ...prev, visible: false }));
+                                            crucialAuthOptions.onCancel?.();
+                                            setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
                                         }}
                                     />
-                                )}
-                            </View>
-                        )}
-                    </BottomSheetModalProvider>
-                </ThemeProvider>
-            </GestureHandlerRootView>
-        </AuthProvider>
+                                </View>
+                            )}
+                        </BottomSheetModalProvider>
+                    </ThemeProvider>
+                </GestureHandlerRootView>
+            </AuthProvider>
+        </NavigationProvider>
     );
 }

@@ -28,12 +28,9 @@ export default function AssignmentSubmissionsScreen() {
             type: "danger",
             onConfirm: async () => {
                 try {
-                    ModalEmitter.showLoading("Deleting submission...");
                     await deleteSubmission(submissionId);
-                    ModalEmitter.hideLoading();
                     ModalEmitter.showSuccess("Submission deleted successfully");
                 } catch (error) {
-                    ModalEmitter.hideLoading();
                     ModalEmitter.showError("Failed to delete submission");
                 }
             },
@@ -45,12 +42,9 @@ export default function AssignmentSubmissionsScreen() {
 
     const handleUpdateScore = useCallback(async (submissionId: string, score: number) => {
         try {
-            ModalEmitter.showLoading("Updating score...");
             await updateSubmissionScore(submissionId, score);
-            ModalEmitter.hideLoading();
             ModalEmitter.showSuccess("Score updated successfully");
         } catch (error) {
-            ModalEmitter.hideLoading();
             ModalEmitter.showError("Failed to update score");
         }
     }, [updateSubmissionScore]);

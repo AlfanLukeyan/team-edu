@@ -88,9 +88,7 @@ export default function FaceRegistrationScreen() {
             ModalEmitter.showSuccess(response.message || "Registration successful! Please check your email for verification.");
             clearRegistrationData();
 
-            setTimeout(() => {
-                router.replace("/(auth)/login");
-            }, 1500);
+            router.replace("/(auth)/login");
 
         } catch (error: any) {
             ModalEmitter.hideLoading();

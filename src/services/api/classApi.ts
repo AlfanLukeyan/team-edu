@@ -1,8 +1,6 @@
-import { AssessmentResponse, ClassInfoResponse, ClassMemberResponse, CreateClassRequest, CreateClassResponse, DeleteClassResponse, StudentAssessmentResponse, UpdateClassRequest, UpdateClassResponse, WeeklySectionResponse } from '@/types/api';
+import { AddMemberRequest, AddMemberResponse, AssessmentResponse, ClassInfoResponse, ClassMemberResponse, CreateClassRequest, CreateClassResponse, DeleteClassResponse, DeleteMemberResponse, StudentAssessmentResponse, UpdateClassRequest, UpdateClassResponse, WeeklySectionResponse } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
-import { simplePostFormData } from '@/utils/httpUtils';
 import { httpClient } from '../httpClient';
-import { tokenService } from '../tokenService';
 
 export const classApi = {
 
@@ -34,9 +32,8 @@ export const classApi = {
         return httpClient.get(`/kelas/admin${queryString ? `?${queryString}` : ''}`);
     },
 
-    getAllClasses: async (userID?: string) => {
-        const finalUserID = userID || tokenService.getUserId();
-        return httpClient.get(`/public/user/class/?userID=${finalUserID}`);
+    getAllClasses: async () => {
+        return httpClient.get('/public/user/class/');
     },
 
     getClassInfo: async (classId: string): Promise<ClassInfoResponse> => {
@@ -55,8 +52,8 @@ export const classApi = {
         return httpClient.get(`/teacher/assessment/class/?classID=${classId}`);
     },
 
-    getStudentClassAssessments: async (classId: string, userId: string): Promise<StudentAssessmentResponse> => {
-        return httpClient.get(`/student/assessment/class/?classID=${classId}&userID=${userId}`);
+    getStudentClassAssessments: async (classId: string): Promise<StudentAssessmentResponse> => {
+        return httpClient.get(`/student/assessment/class/?classID=${classId}`);
     },
 
     getClassMembers: async (classId: string): Promise<ClassMemberResponse> => {
@@ -79,7 +76,7 @@ export const classApi = {
             formData.append('file', data.file as any);
         }
 
-        return simplePostFormData('/teacher/kelas/weekly-section', formData);
+        return httpClient.postFormData('/teacher/kelas/weekly-section', formData);
     },
 
     updateWeeklySection: async (weekId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> => {
@@ -97,10 +94,18 @@ export const classApi = {
             formData.append('file', data.file as any);
         }
 
-        return simplePostFormData('/teacher/kelas/weekly-section', formData, 'PUT');
+        return httpClient.putFormData('/teacher/kelas/weekly-section', formData);
     },
 
     deleteWeeklySection: async (weekId: string): Promise<{ status: string; message: string; data: string }> => {
         return httpClient.delete(`/teacher/kelas/weekly-section?id=${weekId}`);
-    }
+    },
+
+    addClassMembers: async (data: AddMemberRequest): Promise<AddMemberResponse> => {
+        return httpClient.post('/member/admin', data);
+    },
+
+    deleteClassMember: async (userId: string, classId: string): Promise<DeleteMemberResponse> => {
+        return httpClient.delete(`/member/admin?user_id=${userId}&class_id=${classId}`);
+    },
 };

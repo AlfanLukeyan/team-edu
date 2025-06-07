@@ -82,6 +82,7 @@ export const AssignmentProvider: React.FC<AssignmentProviderProps> = ({ children
 
             if (status === 'submitted') {
                 setSubmittedSubmissions(data);
+                console.log('Refetched submitted submissions:', data);
             } else if (status === 'todo') {
                 setTodoSubmissions(data);
             }

@@ -25,12 +25,14 @@ export default function ClassesScreen() {
         refreshing,
         loadingMore,
         showSearch,
+        searchInput,
         searchQuery,
         isSearching,
         classBottomSheetRef,
         refetchClasses,
         loadMoreClasses,
         handleSearch,
+        handleInputChange,
         toggleSearch,
         clearSearch,
         handleClassSubmit,
@@ -101,26 +103,19 @@ export default function ClassesScreen() {
         </ThemedView>
     );
 
-    const renderListHeader = () => (
+    const renderListHeader = useCallback(() => (
         <View>
             {isAdmin() && (
                 <Button
                     onPress={handleOpenCreateSheet}
                     style={{ marginBottom: 16 }}
+                    icon={{ name: "bookmark-add", size: 16}}
                 >
                     Create Class
                 </Button>
             )}
-            <SearchBar
-                visible={isAdmin() && showSearch}
-                value={searchQuery}
-                onChangeText={handleSearch}
-                onClear={clearSearch}
-                placeholder="Search classes..."
-                loading={isSearching}
-            />
         </View>
-    );
+    ), [isAdmin, handleOpenCreateSheet]);
 
     if (loading && classes.length === 0) {
         return (
@@ -134,6 +129,16 @@ export default function ClassesScreen() {
         <>
             <ThemedView style={{ flex: 1 }}>
                 <View style={{ margin: 16, borderRadius: 15, flex: 1, overflow: 'hidden' }}>
+                    <SearchBar
+                        visible={isAdmin() && showSearch}
+                        value={searchInput}
+                        onChangeText={handleInputChange}
+                        onSubmit={handleSearch}
+                        onClear={clearSearch}
+                        placeholder="Search classes..."
+                        loading={isSearching}
+                        autoFocus={false}
+                    />
                     <FlatList
                         data={classes}
                         renderItem={renderClassItem}
@@ -155,6 +160,7 @@ export default function ClassesScreen() {
                         ListEmptyComponent={renderEmptyState}
                         ListFooterComponent={renderFooter}
                         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+                        keyboardShouldPersistTaps="handled"
                     />
                 </View>
             </ThemedView>

@@ -1,8 +1,8 @@
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -44,6 +44,8 @@ export function Dropdown({
     const theme = useColorScheme() ?? "light";
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [dropdownLayout, setDropdownLayout] = useState({ width: 0, height: 0, x: 0, y: 0 });
+    const dropdownRef = useRef<View>(null);
 
     const selectedItem = useMemo(() => {
         return items.find(item => item.value === selectedValue);
@@ -59,8 +61,11 @@ export function Dropdown({
 
     const handleOpen = useCallback(() => {
         if (!disabled && !loading) {
-            setIsOpen(true);
-            setSearchQuery("");
+            dropdownRef.current?.measure((x, y, width, height, pageX, pageY) => {
+                setDropdownLayout({ width, height, x: pageX, y: pageY });
+                setIsOpen(true);
+                setSearchQuery("");
+            });
         }
     }, [disabled, loading]);
 
@@ -75,6 +80,16 @@ export function Dropdown({
         onSelect(item);
         handleClose();
     }, [onSelect, handleClose]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        if (isOpen) {
+            const timer = setTimeout(() => {
+                // Auto close after a reasonable time if no interaction
+            }, 30000);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen]);
 
     const defaultRenderItem = useCallback((item: DropdownItem, isSelected: boolean) => (
         <View style={[
@@ -121,8 +136,9 @@ export function Dropdown({
     };
 
     return (
-        <>
+        <View style={[{ position: 'relative' }, style]}>
             <TouchableOpacity
+                ref={dropdownRef}
                 onPress={handleOpen}
                 disabled={disabled || loading}
                 style={[
@@ -132,7 +148,6 @@ export function Dropdown({
                         borderColor: error ? '#FF3B30' : Colors[theme].border,
                     },
                     (disabled || loading) && styles.disabledDropdown,
-                    style
                 ]}
             >
                 <View style={styles.dropdownContent}>
@@ -164,19 +179,24 @@ export function Dropdown({
                 </ThemedText>
             )}
 
-            <Modal
-                visible={isOpen}
-                transparent
-                animationType="fade"
-                onRequestClose={handleClose}
-            >
-                <Pressable style={styles.modalOverlay} onPress={handleClose}>
+            {isOpen && (
+                <>
+                    {/* Backdrop */}
+                    <TouchableOpacity
+                        style={styles.backdrop}
+                        onPress={handleClose}
+                        activeOpacity={1}
+                    />
+
+                    {/* Dropdown Menu */}
                     <ThemedView style={[
-                        styles.dropdownModal,
+                        styles.dropdownMenu,
                         {
                             backgroundColor: Colors[theme].background,
                             borderColor: Colors[theme].border,
-                            maxHeight: maxHeight + (searchable ? 60 : 0)
+                            width: dropdownLayout.width,
+                            top: dropdownLayout.height + 4,
+                            maxHeight: maxHeight + (searchable ? 60 : 0),
                         }
                     ]}>
                         {searchable && (
@@ -199,7 +219,6 @@ export function Dropdown({
                                     placeholderTextColor={Colors[theme].icon}
                                     value={searchQuery}
                                     onChangeText={setSearchQuery}
-                                    autoFocus
                                 />
                                 {searchQuery.length > 0 && (
                                     <TouchableOpacity
@@ -222,6 +241,7 @@ export function Dropdown({
                             keyExtractor={(item) => item.value}
                             style={[styles.dropdownList, { maxHeight }]}
                             showsVerticalScrollIndicator={false}
+                            nestedScrollEnabled={true}
                             ListEmptyComponent={
                                 <View style={styles.emptyContainer}>
                                     <ThemedText style={styles.emptyText}>
@@ -231,9 +251,9 @@ export function Dropdown({
                             }
                         />
                     </ThemedView>
-                </Pressable>
-            </Modal>
-        </>
+                </>
+            )}
+        </View>
     );
 }
 
@@ -266,25 +286,22 @@ const styles = StyleSheet.create({
         marginTop: 4,
         marginLeft: 4,
     },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 20,
+    backdrop: {
+        position: 'absolute',
+        top: 0,
+        left: -1000,
+        right: -1000,
+        bottom: -1000,
+        zIndex: 10,
     },
-    dropdownModal: {
+    dropdownMenu: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
         borderRadius: 12,
         borderWidth: 1,
-        width: '100%',
-        maxWidth: 400,
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        zIndex: 1000,
+        elevation: 10,
     },
     searchContainer: {
         flexDirection: 'row',

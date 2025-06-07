@@ -93,21 +93,15 @@ export default function ChangeFaceReferenceScreen() {
         if (capturedPhotos.length !== FACE_REFERENCE_CONFIG.TOTAL_STEPS) return;
 
         setIsUpdating(true);
-        ModalEmitter.showLoading("Updating face reference...");
 
         try {
             const response = await userService.updateFaceReference(capturedPhotos);
 
-            ModalEmitter.hideLoading();
             ModalEmitter.showSuccess(response.message || "Face reference updated successfully!");
 
-            // Delay navigation to allow user to see success message
-            setTimeout(() => {
                 router.back();
-            }, 1500);
 
         } catch (error: any) {
-            ModalEmitter.hideLoading();
             ModalEmitter.showError(error.message || "Failed to update face reference");
             setIsUpdating(false);
         }

@@ -1,7 +1,7 @@
 export interface DecodedJWT {
     uuid: string;
     sub: string;
-    permissions: string[];
+    role_name: string;
     exp: number;
     iat: number;
     jti: string;
@@ -32,7 +32,7 @@ export interface User {
     uuid: string;
     email: string;
     name: string;
-    permissions: string[];
+    role_name: string;
 }
 
 export const USER_ROLES = {

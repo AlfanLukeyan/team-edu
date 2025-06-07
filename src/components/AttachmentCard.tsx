@@ -1,11 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { ModalEmitter } from "@/services/modalEmitter";
-import { tokenService } from "@/services/tokenService";
 import { Ionicons } from "@expo/vector-icons";
-import * as FileSystem from "expo-file-system";
-import * as Linking from "expo-linking";
-import * as Sharing from "expo-sharing";
 import React, { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "./ThemedText";
@@ -14,90 +9,49 @@ interface AttachmentCardProps {
     name: string;
     url: string;
     downloadable?: boolean;
+    onDownload?: (url: string) => Promise<void>;
+    onOpen?: (url: string) => Promise<void>;
 }
 
-export function AttachmentCard({ name, url, downloadable = true }: AttachmentCardProps) {
+export function AttachmentCard({
+    name,
+    url,
+    downloadable = true,
+    onDownload,
+    onOpen
+}: AttachmentCardProps) {
     const theme = useColorScheme() ?? "light";
-    const [downloading, setDownloading] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const handleDownload = async () => {
-        if (!url) {
-            ModalEmitter.showError("No download URL available");
-            return;
-        }
-
-        if (!downloadable) {
-            Linking.openURL(url).catch(() => {
-                ModalEmitter.showError("Failed to open attachment");
-            });
-            return;
-        }
+    const handlePress = async () => {
+        if (!url) return;
 
         try {
-            setDownloading(true);
-            ModalEmitter.showLoading("Downloading...");
+            setLoading(true);
 
-            const token = await tokenService.getValidToken();
-            const fileExtension = url.split('.').pop()?.split('?')[0] || 'pdf';
-            const fileName = name.includes('.') ? name : `${name}.${fileExtension}`;
-            const downloadUri = FileSystem.documentDirectory + fileName;
-
-            const downloadResult = await FileSystem.downloadAsync(url, downloadUri, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            ModalEmitter.hideLoading();
-
-            if (downloadResult.status === 200) {
-                ModalEmitter.showSuccess("Downloaded successfully!");
-
-                if (await Sharing.isAvailableAsync()) {
-                    await Sharing.shareAsync(downloadResult.uri, {
-                        mimeType: getMimeType(fileExtension),
-                        dialogTitle: `Share ${fileName}`,
-                    });
-                }
-            } else {
-                throw new Error(`Download failed`);
+            if (downloadable && onDownload) {
+                await onDownload(url);
+            } else if (onOpen) {
+                await onOpen(url);
             }
         } catch (error) {
-            ModalEmitter.hideLoading();
-            ModalEmitter.showError("Download failed. Opening in browser...");
-
-            setTimeout(() => {
-                Linking.openURL(url);
-            }, 1000);
+            // Error handling is done in the service
         } finally {
-            setDownloading(false);
+            setLoading(false);
         }
-    };
-
-    const getMimeType = (extension: string): string => {
-        const types: Record<string, string> = {
-            pdf: 'application/pdf',
-            doc: 'application/msword',
-            docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            txt: 'text/plain',
-            jpg: 'image/jpeg',
-            jpeg: 'image/jpeg',
-            png: 'image/png',
-            mp4: 'video/mp4',
-            mp3: 'audio/mpeg',
-        };
-        return types[extension.toLowerCase()] || 'application/octet-stream';
     };
 
     return (
-        <Pressable onPress={handleDownload} style={styles.pressable} disabled={downloading}>
+        <Pressable onPress={handlePress} style={styles.pressable} disabled={loading}>
             <View style={[
                 styles.container,
                 {
                     borderColor: Colors[theme].border,
-                    opacity: downloading ? 0.7 : 1
+                    opacity: loading ? 0.7 : 1
                 }
             ]}>
                 <Ionicons
-                    name={downloading ? "download" : "document-attach"}
+                    name={loading ? "download" : "document-attach"}
                     size={24}
                     color={Colors[theme].text}
                     style={styles.icon}
@@ -108,10 +62,10 @@ export function AttachmentCard({ name, url, downloadable = true }: AttachmentCar
                     numberOfLines={2}
                     ellipsizeMode="tail"
                 >
-                    {downloading ? "Downloading..." : name}
+                    {loading ? "Processing..." : name}
                 </ThemedText>
 
-                {downloadable && !downloading && (
+                {downloadable && !loading && (
                     <Ionicons
                         name="download-outline"
                         size={16}

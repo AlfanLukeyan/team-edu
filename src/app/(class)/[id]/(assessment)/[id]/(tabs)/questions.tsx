@@ -1,4 +1,5 @@
 import { Button } from "@/components/Button";
+import { ProgressiveHint } from "@/components/ProgressiveHint";
 import QuestionActionsMenu from "@/components/QuestionActionsMenu";
 import { QuestionCard } from "@/components/QuestionCard";
 import QuestionBottomSheet, { QuestionBottomSheetRef } from "@/components/teacher/QuestionBottomSheet";
@@ -7,6 +8,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import { useHeader } from "@/contexts/HeaderContext";
+import { useQuestionHints } from "@/hooks/useCustomHints";
 import { useUserRole } from "@/hooks/useUserRole";
 import { assessmentService } from "@/services/assessmentService";
 import { ModalEmitter } from "@/services/modalEmitter";
@@ -21,14 +23,13 @@ interface QuestionsFormData {
 }
 
 export default function QuestionsScreen() {
-    const { isStudent } = useUserRole(); // ✅ Add role check
-    const router = useRouter(); // ✅ Add router
+    const { isStudent } = useUserRole();
+    const router = useRouter();
 
-    // ✅ Early return for students - prevent any API calls
     useEffect(() => {
         if (isStudent()) {
             console.log('🚫 Student accessing questions tab - redirecting');
-            router.replace('../'); // Redirect to about tab
+            router.replace('../');
         }
     }, [isStudent, router]);
 
@@ -42,6 +43,13 @@ export default function QuestionsScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [hasPerformedLongPress, setHasPerformedLongPress] = useState(false);
+
+    const questionHints = useQuestionHints(
+        questions.length,
+        selectedQuestionIds.length,
+        hasPerformedLongPress
+    );
 
     const questionBottomSheetRef = useRef<QuestionBottomSheetRef>(null);
 
@@ -79,12 +87,6 @@ export default function QuestionsScreen() {
         try {
             if (questionIds && questionIds.length > 0) {
                 // Edit mode - update questions
-                ModalEmitter.showLoading(
-                    questionIds.length === 1
-                        ? 'Updating question...'
-                        : `Updating ${questionIds.length} questions...`
-                );
-
                 if (questionIds.length === 1) {
                     // Single question update
                     await assessmentService.updateQuestion(questionIds[0], {
@@ -103,7 +105,6 @@ export default function QuestionsScreen() {
                 );
             } else {
                 // Create mode - create multiple questions
-                ModalEmitter.showLoading('Creating questions...');
                 await assessmentService.createQuestions(assessmentId, data);
                 ModalEmitter.showSuccess('Questions created successfully');
             }
@@ -112,8 +113,6 @@ export default function QuestionsScreen() {
         } catch (error) {
             console.error('Failed to save questions:', error);
             ModalEmitter.showError('Failed to save questions. Please try again.');
-        } finally {
-            ModalEmitter.hideLoading();
         }
     }, [assessmentId, handleRefresh]);
 
@@ -157,7 +156,6 @@ export default function QuestionsScreen() {
         fetchQuestions();
     }, [fetchQuestions]);
 
-    // Clean up on screen focus/blur
     useFocusEffect(
         useCallback(() => {
             return () => {
@@ -188,8 +186,6 @@ export default function QuestionsScreen() {
             type: "danger",
             onConfirm: async () => {
                 try {
-                    ModalEmitter.showLoading('Deleting questions...');
-
                     if (selectedQuestionIds.length === 1) {
                         await assessmentService.deleteQuestion(selectedQuestionIds[0]);
                     } else {
@@ -203,8 +199,6 @@ export default function QuestionsScreen() {
                 } catch (error) {
                     console.error('Failed to delete questions:', error);
                     ModalEmitter.showError('Failed to delete questions. Please try again.');
-                } finally {
-                    ModalEmitter.hideLoading();
                 }
             },
         });
@@ -231,6 +225,7 @@ export default function QuestionsScreen() {
     }, [selectedQuestionIds, questions]);
 
     const handleQuestionLongPress = (id: string) => {
+        setHasPerformedLongPress(true);
         setSelectedQuestionIds([id]);
         setShowActionsMenu(false);
     };
@@ -296,8 +291,9 @@ export default function QuestionsScreen() {
                         />
                     }
                 >
+                    <ProgressiveHint hints={questionHints} />
                     {/* Create Questions Button */}
-                    <Button onPress={handleOpenQuestionSheet}>
+                    <Button onPress={handleOpenQuestionSheet} icon={{ name: 'format-list-bulleted-add' }}>
                         Create Questions
                     </Button>
 
@@ -344,10 +340,10 @@ const styles = StyleSheet.create({
         margin: 16,
     },
     contentContainer: {
-        gap: 16,
     },
     questionsList: {
         gap: 8,
+        paddingTop: 16,
     },
     emptyState: {
         padding: 24,
