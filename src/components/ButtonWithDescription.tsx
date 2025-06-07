@@ -45,5 +45,6 @@ const styles = StyleSheet.create({
     },
     description: {
         flex: 1,
+        paddingRight: 8,
     },
 });

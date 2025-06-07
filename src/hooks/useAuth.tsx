@@ -10,7 +10,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     loginUser: (email: string, password: string) => Promise<User>;
     faceLoginUser: (email: string, faceImage: string) => Promise<User>;
-    registerUser: (name: string, email: string, password: string, phone: string, faceImages: string[]) => Promise<any>;
+    registerUser: (name: string, email: string, password: string, phone: string, faceImages?: string[]) => Promise<any>;
     logout: () => Promise<any>;
     getUserId: () => string | null;
     isGuest: () => boolean;
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: string,
         password: string,
         phone: string,
-        faceImages: string[]
+        faceImages?: string[]
     ) => {
         return authApi.register(name, email, password, phone, faceImages);
     };

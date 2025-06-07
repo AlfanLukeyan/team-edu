@@ -1,4 +1,5 @@
 import { AdminShortcut } from "@/components/AdminShortcut";
+import { FaceReferenceAlertCard } from "@/components/FaceReferenceAlertCard";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { UpcomingAssessmentCard } from "@/components/UpcomingAssessmentCard";
@@ -6,6 +7,8 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useUserRole } from "@/hooks/useUserRole";
 import { assessmentService } from "@/services/assessmentService";
+import { ModalEmitter } from "@/services/modalEmitter";
+import { userService } from "@/services/userService";
 import { ClassAssessment, ComponentAssessment } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -35,6 +38,7 @@ export default function HomeScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showFaceReferenceAlert, setShowFaceReferenceAlert] = useState(false);
 
     const adminShortcuts: AdminShortcutData[] = [
         {
@@ -52,6 +56,18 @@ export default function HomeScreen() {
             route: '/(main)/user_management'
         },
     ];
+
+    const checkFaceReference = useCallback(async () => {
+        try {
+            const profile = await userService.getProfile();
+            if (profile.uuid) {
+                const faceRef = await userService.checkFaceReference(profile.uuid);
+                setShowFaceReferenceAlert(!faceRef.has_face_reference);
+            }
+        } catch (error) {
+            console.error('Failed to check face reference:', error);
+        }
+    }, []);
 
     const fetchUpcomingAssessments = useCallback(async () => {
         if (isAdmin()) {
@@ -72,13 +88,26 @@ export default function HomeScreen() {
 
     const handleRefresh = useCallback(async () => {
         setRefreshing(true);
-        await fetchUpcomingAssessments();
+        await Promise.all([
+            fetchUpcomingAssessments(),
+            checkFaceReference()
+        ]);
         setRefreshing(false);
-    }, [fetchUpcomingAssessments]);
+    }, [fetchUpcomingAssessments, checkFaceReference]);
+
+    const handleRegisterFaceReference = () => {
+        ModalEmitter.showFaceRegistration({
+            onSuccess: () => {
+                setShowFaceReferenceAlert(false);
+                checkFaceReference();
+            }
+        });
+    };
 
     useEffect(() => {
         fetchUpcomingAssessments();
-    }, [fetchUpcomingAssessments]);
+        checkFaceReference();
+    }, [fetchUpcomingAssessments, checkFaceReference]);
 
     const handleAssessmentPress = (assessment: ComponentAssessment, classId: string) => {
         router.push(`/(class)/${classId}/(assessment)/${assessment.id}/(tabs)`);
@@ -91,9 +120,15 @@ export default function HomeScreen() {
     const componentData: ClassAssessmentData[] = assessmentService.transformToComponentFormat(upcomingAssessments);
 
     const renderHeader = () => (
-        <ThemedText type="title" style={styles.title}>
-            {isAdmin() ? 'Admin Dashboard' : 'Upcoming Assessments'}
-        </ThemedText>
+        <View>
+            {showFaceReferenceAlert && (
+                <FaceReferenceAlertCard onRegisterPress={handleRegisterFaceReference} />
+            )}
+            <ThemedText type="title" style={styles.title}>
+                {isAdmin() ? 'Admin Dashboard' : 'Upcoming Assessments'}
+            </ThemedText>
+            {isAdmin() && renderAdminShortcuts()}
+        </View>
     );
 
     const renderEmptyState = () => (
@@ -126,7 +161,7 @@ export default function HomeScreen() {
 
     const renderAdminShortcuts = () => (
         <View style={styles.shortcutsGrid}>
-            {adminShortcuts.map((shortcut, index) => (
+            {adminShortcuts.map((shortcut) => (
                 <AdminShortcut
                     key={shortcut.id}
                     title={shortcut.title}
@@ -179,12 +214,7 @@ export default function HomeScreen() {
                 data={isAdmin() ? [] : componentData}
                 renderItem={renderAssessmentCard}
                 keyExtractor={(item) => item.classId}
-                ListHeaderComponent={() => (
-                    <View>
-                        {renderHeader()}
-                        {isAdmin() && renderAdminShortcuts()}
-                    </View>
-                )}
+                ListHeaderComponent={renderHeader}
                 ListEmptyComponent={!isAdmin() ? renderEmptyState : null}
                 ListFooterComponent={renderFooter}
                 showsVerticalScrollIndicator={false}

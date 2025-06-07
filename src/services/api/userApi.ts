@@ -1,4 +1,4 @@
-import { DeleteCrucialTokenResponse, GetUsersByRoleResponse, InjectCrucialTokenResponse, RoleListResponse, VerifyEmailUserResponse } from '@/types/api';
+import { DeleteCrucialTokenResponse, FaceReferenceCheckResponse, GetUsersByRoleResponse, InjectCrucialTokenResponse, RoleListResponse, VerifyEmailUserResponse } from '@/types/api';
 import { UserProfile } from '@/types/user';
 import { httpClient } from '../httpClient';
 
@@ -89,4 +89,13 @@ export const userApi = {
     verifyEmailUser: async (data: VerifyEmailUserRequest): Promise<VerifyEmailUserResponse> => {
         return httpClient.post('/admin/verify-email-user', data);
     },
+
+    registerFaceReference: async (formData: FormData): Promise<any> => {
+        return httpClient.postFormData('/auth/upload-face', formData);
+    },
+
+    checkFaceReference: async (uuid: string): Promise<FaceReferenceCheckResponse> => {
+        return httpClient.get(`/auth/check-face-reference/${uuid}`);
+    },
+
 };

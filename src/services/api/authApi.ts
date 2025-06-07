@@ -58,7 +58,7 @@ export const authApi = {
         email: string,
         password: string,
         phone: string,
-        faceImages: string[]
+        faceImages?: string[]
     ) => {
         const formData = new FormData();
         formData.append('name', name);
@@ -66,24 +66,27 @@ export const authApi = {
         formData.append('password', password);
         formData.append('phone', phone);
 
-        if (Platform.OS === 'web') {
-            for (let i = 0; i < faceImages.length; i++) {
-                try {
-                    const response = await fetch(faceImages[i]);
-                    const blob = await response.blob();
-                    formData.append('face_reference', blob, `face_${i + 1}.jpg`);
-                } catch (error) {
-                    throw new Error(`Failed to process image ${i + 1} for upload`);
+        // Only add face images if provided
+        if (faceImages && faceImages.length > 0) {
+            if (Platform.OS === 'web') {
+                for (let i = 0; i < faceImages.length; i++) {
+                    try {
+                        const response = await fetch(faceImages[i]);
+                        const blob = await response.blob();
+                        formData.append('face_reference', blob, `face_${i + 1}.jpg`);
+                    } catch (error) {
+                        throw new Error(`Failed to process image ${i + 1} for upload`);
+                    }
                 }
+            } else {
+                faceImages.forEach((image, index) => {
+                    formData.append('face_reference', {
+                        uri: image,
+                        type: 'image/jpeg',
+                        name: `face_${index + 1}.jpg`,
+                    } as any);
+                });
             }
-        } else {
-            faceImages.forEach((image, index) => {
-                formData.append('face_reference', {
-                    uri: image,
-                    type: 'image/jpeg',
-                    name: `face_${index + 1}.jpg`,
-                } as any);
-            });
         }
 
         return httpClient.postFormDataNoAuth('/user/register', formData);
@@ -98,7 +101,7 @@ export const authApi = {
             headers: { "Authorization": `Bearer ${refreshToken}` }
         });
     },
-    
+
     requestPasswordReset: async (email: string) => {
         return httpClient.postNoAuth('/user/reset-password/request', { email });
     }

@@ -17,6 +17,11 @@ interface CrucialAuthOptions {
     onCancel: () => void;
 }
 
+interface FaceRegistrationOptions {
+    onSuccess: () => void;
+    onCancel?: () => void;
+}
+
 class ModalEmitterClass extends EventEmitter {
     // Error Modal
     showError(message: string) {
@@ -61,6 +66,14 @@ class ModalEmitterClass extends EventEmitter {
 
     hideCrucialAuth() {
         this.emit('HIDE_CRUCIAL_AUTH');
+    }
+
+    showFaceRegistration(options: FaceRegistrationOptions) {
+        this.emit('SHOW_FACE_REGISTRATION', options);
+    }
+
+    hideFaceRegistration() {
+        this.emit('HIDE_FACE_REGISTRATION');
     }
 }
 

@@ -19,7 +19,7 @@ export interface RegisterData {
     email: string;
     password: string;
     phone: string;
-    faceImages: string[];
+    faceImages?: string[];
 }
 
 export interface AuthResponse {

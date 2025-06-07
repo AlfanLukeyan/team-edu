@@ -1,6 +1,7 @@
 import CrucialFeatureAuthModal from "@/components/CrucialFeatureAuthModal";
 import CustomAlert from "@/components/CustomAlert";
 import ErrorModal from "@/components/ErrorModal";
+import FaceRegistrationModal from "@/components/FaceRegistrationModal";
 import LoadingModal from "@/components/LoadingModal";
 import SuccessModal from "@/components/SuccessModal";
 import { NavigationProvider } from "@/contexts/NavigationContext";
@@ -30,9 +31,7 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
         if (isLoading) return;
 
         const inAuthGroup = segments[0] === '(auth)';
-        const inProtectedGroup = segments[0] === '(main)'
-            || segments[0] === '(class)';
-
+        const inProtectedGroup = segments[0] === '(main)' || segments[0] === '(class)';
         const onWarningScreen = segments.some(segment => segment === 'warning_screen') ||
             segments[segments.length - 1] === 'warning_screen';
 
@@ -90,6 +89,13 @@ export default function RootLayout() {
         visible: false,
     });
 
+    const [faceRegistrationOptions, setFaceRegistrationOptions] = useState<{
+        visible: boolean;
+        onSuccess?: () => void;
+        onCancel?: () => void;
+    }>({
+        visible: false,
+    });
 
     // Modal event handlers
     useEffect(() => {
@@ -118,11 +124,20 @@ export default function RootLayout() {
             setAlertOptions(prev => ({ ...prev, visible: false }));
         };
 
+        // Crucial Auth handlers
         const handleShowCrucialAuth = (options: any) => {
             setCrucialAuthOptions({ visible: true, ...options });
         };
         const handleHideCrucialAuth = () => {
             setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
+        };
+
+        // Face Registration handlers
+        const handleShowFaceRegistration = (options: any) => {
+            setFaceRegistrationOptions({ visible: true, ...options });
+        };
+        const handleHideFaceRegistration = () => {
+            setFaceRegistrationOptions(prev => ({ ...prev, visible: false }));
         };
 
         // Register event listeners
@@ -136,6 +151,8 @@ export default function RootLayout() {
         ModalEmitter.on("HIDE_ALERT", handleHideAlert);
         ModalEmitter.on("SHOW_CRUCIAL_AUTH", handleShowCrucialAuth);
         ModalEmitter.on("HIDE_CRUCIAL_AUTH", handleHideCrucialAuth);
+        ModalEmitter.on("SHOW_FACE_REGISTRATION", handleShowFaceRegistration);
+        ModalEmitter.on("HIDE_FACE_REGISTRATION", handleHideFaceRegistration);
 
         return () => {
             // Cleanup event listeners
@@ -149,6 +166,8 @@ export default function RootLayout() {
             ModalEmitter.off("HIDE_ALERT", handleHideAlert);
             ModalEmitter.off("SHOW_CRUCIAL_AUTH", handleShowCrucialAuth);
             ModalEmitter.off("HIDE_CRUCIAL_AUTH", handleHideCrucialAuth);
+            ModalEmitter.off("SHOW_FACE_REGISTRATION", handleShowFaceRegistration);
+            ModalEmitter.off("HIDE_FACE_REGISTRATION", handleHideFaceRegistration);
         };
     }, [router]);
 
@@ -167,7 +186,7 @@ export default function RootLayout() {
                             </NavigationHandler>
                             <StatusBar style="auto" />
 
-                            {/* ✅ Regular Global Modals */}
+                            {/* Regular Global Modals */}
                             {(isLoading || !!errorMessage || !!successMessage || alertOptions.visible) && (
                                 <View style={{
                                     position: 'absolute',
@@ -219,7 +238,7 @@ export default function RootLayout() {
                                 </View>
                             )}
 
-                            {/* ✅ Crucial Auth Modal - Separate and Higher Z-Index */}
+                            {/* Crucial Auth Modal */}
                             {crucialAuthOptions.visible && (
                                 <View style={{
                                     position: 'absolute',
@@ -227,7 +246,7 @@ export default function RootLayout() {
                                     left: 0,
                                     right: 0,
                                     bottom: 0,
-                                    zIndex: 10000, // Higher than other modals
+                                    zIndex: 10000,
                                     pointerEvents: 'auto'
                                 }}>
                                     <CrucialFeatureAuthModal
@@ -241,6 +260,30 @@ export default function RootLayout() {
                                         onCancel={() => {
                                             crucialAuthOptions.onCancel?.();
                                             setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
+                                        }}
+                                    />
+                                </View>
+                            )}
+
+                            {faceRegistrationOptions.visible && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    zIndex: 10001,
+                                    pointerEvents: 'auto'
+                                }}>
+                                    <FaceRegistrationModal
+                                        visible={true}
+                                        onSuccess={() => {
+                                            faceRegistrationOptions.onSuccess?.();
+                                            setFaceRegistrationOptions(prev => ({ ...prev, visible: false }));
+                                        }}
+                                        onCancel={() => {
+                                            faceRegistrationOptions.onCancel?.();
+                                            setFaceRegistrationOptions(prev => ({ ...prev, visible: false }));
                                         }}
                                     />
                                 </View>
