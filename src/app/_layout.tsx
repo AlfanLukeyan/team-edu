@@ -44,7 +44,7 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
         } else {
             if (inProtectedGroup) {
                 setTimeout(() => {
-                    router.push('/(auth)/login');
+                    router.replace('/(auth)/login');
                 }, 100);
             }
         }

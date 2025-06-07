@@ -54,24 +54,6 @@ export default function MainLayout() {
     const pathname = usePathname();
     const [activeIndex, setActiveIndex] = useState(0);
 
-    useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
-            router.replace('/(auth)/login');
-        }
-    }, [isAuthenticated, isLoading, router]);
-
-    if (isLoading) {
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color={Colors[colorScheme].tint} />
-            </View>
-        );
-    }
-
-    if (!isAuthenticated) {
-        return null;
-    }
-
     const tabConfig = getTabConfig(isAdmin());
     const TAB_WIDTH = tabConfig.width;
 
@@ -116,28 +98,6 @@ export default function MainLayout() {
             }
         });
     }, [translateX, scaleValues, getSliderPosition]);
-
-    useEffect(() => {
-        initializeAnimations();
-    }, [initializeAnimations]);
-
-    useEffect(() => {
-        let newIndex = 0;
-        if (pathname.includes('/classes')) {
-            newIndex = 1;
-        } else if (pathname.includes('/user_management')) {
-            newIndex = isAdmin() ? 2 : 0;
-        } else if (pathname.includes('/profile')) {
-            newIndex = isAdmin() ? 3 : 2;
-        } else if (pathname === '/(main)' || pathname === '/') {
-            newIndex = 0;
-        }
-
-        if (newIndex !== activeIndex) {
-            setActiveIndex(newIndex);
-            animateToIndex(newIndex);
-        }
-    }, [pathname, activeIndex, animateToIndex, isAdmin]);
 
     const animateTab = useCallback((index: number) => {
         animateToIndex(index);
@@ -232,6 +192,46 @@ export default function MainLayout() {
             </View>
         );
     }, [colorScheme, handleTabPress, getIconName, translateX, scaleValues, pathname, activeIndex, animateToIndex, isAdmin, TAB_WIDTH]);
+
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            router.replace('/(auth)/login');
+        }
+    }, [isAuthenticated, isLoading, router]);
+
+    useEffect(() => {
+        initializeAnimations();
+    }, [initializeAnimations]);
+
+    useEffect(() => {
+        let newIndex = 0;
+        if (pathname.includes('/classes')) {
+            newIndex = 1;
+        } else if (pathname.includes('/user_management')) {
+            newIndex = isAdmin() ? 2 : 0;
+        } else if (pathname.includes('/profile')) {
+            newIndex = isAdmin() ? 3 : 2;
+        } else if (pathname === '/(main)' || pathname === '/') {
+            newIndex = 0;
+        }
+
+        if (newIndex !== activeIndex) {
+            setActiveIndex(newIndex);
+            animateToIndex(newIndex);
+        }
+    }, [pathname, activeIndex, animateToIndex, isAdmin]);
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={Colors[colorScheme].tint} />
+            </View>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return null;
+    }
 
     return (
         <Tabs
