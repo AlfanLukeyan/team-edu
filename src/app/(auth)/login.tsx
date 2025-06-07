@@ -41,7 +41,7 @@ export default function LoginScreen() {
         try {
             const userData = await loginUser(email, password);
             if (userData) {
-                ModalEmitter.emit("SHOW_SUCCESS", "Login successful!");
+                ModalEmitter.showSuccess("Login successful!");
                 if (isGuest()) {
                     router.replace("/(auth)/warning_screen");
                 } else {

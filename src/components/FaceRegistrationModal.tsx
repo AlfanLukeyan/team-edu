@@ -6,7 +6,6 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/hooks/useAuth";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { ModalEmitter } from "@/services/modalEmitter";
 import { userService } from "@/services/userService";
 import { restoreBrightness, setMaxBrightness } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
@@ -103,6 +102,22 @@ const FaceRegistrationModal: React.FC<FaceRegistrationModalProps> = ({
     const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
 
+    // Internal states for loading and toast
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState("");
+    const [toast, setToast] = useState<{
+        visible: boolean;
+        message: string;
+        type: 'success' | 'error';
+    }>({
+        visible: false,
+        message: "",
+        type: 'success'
+    });
+
+    // Toast animation
+    const toastAnim = useRef(new Animated.Value(-100)).current;
+
     // Custom hooks
     useBrightnessControl(visible);
     const fadeAnim = useModalAnimation(visible);
@@ -113,8 +128,35 @@ const FaceRegistrationModal: React.FC<FaceRegistrationModalProps> = ({
             setCurrentStep(1);
             setCapturedPhotos([]);
             setIsProcessing(false);
+            setIsLoading(false);
+            setToast({ visible: false, message: "", type: 'success' });
         }
     }, [visible]);
+
+    // Toast animation effect
+    useEffect(() => {
+        if (toast.visible) {
+            Animated.sequence([
+                Animated.timing(toastAnim, {
+                    toValue: 20,
+                    duration: 300,
+                    useNativeDriver: true,
+                }),
+                Animated.delay(2500),
+                Animated.timing(toastAnim, {
+                    toValue: -100,
+                    duration: 300,
+                    useNativeDriver: true,
+                })
+            ]).start(() => {
+                setToast(prev => ({ ...prev, visible: false }));
+            });
+        }
+    }, [toast.visible, toastAnim]);
+
+    const showToast = useCallback((message: string, type: 'success' | 'error') => {
+        setToast({ visible: true, message, type });
+    }, []);
 
     // Auto-process registration when all photos are captured
     useEffect(() => {
@@ -125,31 +167,32 @@ const FaceRegistrationModal: React.FC<FaceRegistrationModalProps> = ({
 
     const handleRegistrationComplete = useCallback(async () => {
         if (!user?.uuid) {
-            ModalEmitter.showError("User not authenticated");
+            showToast("User not authenticated", 'error');
             return;
         }
 
         setIsProcessing(true);
-        ModalEmitter.showLoading("Processing face reference...");
+        setIsLoading(true);
+        setLoadingMessage("Processing face reference...");
 
         try {
             const response = await userService.registerFaceReference(capturedPhotos, user.uuid);
-            ModalEmitter.hideLoading();
-            ModalEmitter.showSuccess(response.message || "Face reference registered successfully!");
+            setIsLoading(false);
+            showToast(response.message || "Face reference registered successfully!", 'success');
 
             setTimeout(onSuccess, FACE_REFERENCE_CONFIG.SUCCESS_DELAY);
         } catch (error: any) {
-            ModalEmitter.hideLoading();
-            ModalEmitter.showError(error.message || "Failed to register face reference");
+            setIsLoading(false);
+            showToast(error.message || "Failed to register face reference", 'error');
             setIsProcessing(false);
         }
-    }, [capturedPhotos, user?.uuid, onSuccess]);
+    }, [capturedPhotos, user?.uuid, onSuccess, showToast]);
 
     const handleTakePicture = useCallback(async () => {
         if (!cameraRef.current) return;
 
-        const stepMessage = `Capturing photo ${currentStep}...`;
-        ModalEmitter.showLoading(stepMessage);
+        setIsLoading(true);
+        setLoadingMessage(`Capturing photo ${currentStep}...`);
 
         try {
             const photo = await cameraRef.current.takePictureAsync({
@@ -159,21 +202,22 @@ const FaceRegistrationModal: React.FC<FaceRegistrationModalProps> = ({
 
             const newPhotos = [...capturedPhotos, photo.uri];
             setCapturedPhotos(newPhotos);
-            ModalEmitter.hideLoading();
+            setIsLoading(false);
 
             if (currentStep < FACE_REFERENCE_CONFIG.TOTAL_STEPS) {
                 setCurrentStep(prev => prev + 1);
-                ModalEmitter.showSuccess(
-                    `Photo ${currentStep} captured! Now step ${currentStep + 1} of ${FACE_REFERENCE_CONFIG.TOTAL_STEPS}`
+                showToast(
+                    `Photo ${currentStep} captured! Now step ${currentStep + 1} of ${FACE_REFERENCE_CONFIG.TOTAL_STEPS}`,
+                    'success'
                 );
             } else {
-                ModalEmitter.showSuccess("All photos captured! Processing...");
+                showToast("All photos captured! Processing...", 'success');
             }
         } catch (error) {
-            ModalEmitter.hideLoading();
-            ModalEmitter.showError("Failed to capture image. Please try again.");
+            setIsLoading(false);
+            showToast("Failed to capture image. Please try again.", 'error');
         }
-    }, [currentStep, capturedPhotos]);
+    }, [currentStep, capturedPhotos, showToast]);
 
     const resetCapture = useCallback(() => {
         if (isProcessing) return;
@@ -235,6 +279,41 @@ const FaceRegistrationModal: React.FC<FaceRegistrationModalProps> = ({
         >
             <Animated.View style={[styles.centeredView, { opacity: fadeAnim }]}>
                 <ThemedView isCard={true} style={styles.modalContainer}>
+                    {/* Loading Overlay */}
+                    {isLoading && (
+                        <View style={styles.loadingOverlay}>
+                            <ActivityIndicator
+                                size="large"
+                                color={Colors[colorScheme].tint}
+                            />
+                            <ThemedText style={styles.loadingText}>
+                                {loadingMessage}
+                            </ThemedText>
+                        </View>
+                    )}
+
+                    {/* Toast Notification */}
+                    {toast.visible && (
+                        <Animated.View
+                            style={[
+                                styles.toastContainer,
+                                {
+                                    transform: [{ translateY: toastAnim }],
+                                    backgroundColor: toast.type === 'success' ? '#4CAF50' : '#F44336'
+                                }
+                            ]}
+                        >
+                            <Ionicons
+                                name={toast.type === 'success' ? "checkmark-circle" : "close-circle"}
+                                size={20}
+                                color="white"
+                            />
+                            <ThemedText style={styles.toastText}>
+                                {toast.message}
+                            </ThemedText>
+                        </Animated.View>
+                    )}
+
                     {/* Top-right cancel button */}
                     <TouchableOpacity
                         onPress={onCancel}
@@ -299,9 +378,9 @@ const FaceRegistrationModal: React.FC<FaceRegistrationModalProps> = ({
                         <ButtonWithDescription
                             description={`Capture photo ${currentStep} of ${FACE_REFERENCE_CONFIG.TOTAL_STEPS} for face reference registration`}
                             onPress={handleTakePicture}
-                            disabled={isProcessing}
+                            disabled={isProcessing || isLoading}
                         >
-                            {isProcessing ? "Processing..." : "Take Picture"}
+                            {isLoading ? "Capturing..." : isProcessing ? "Processing..." : "Take Picture"}
                         </ButtonWithDescription>
 
                         {canStartOver && (
@@ -341,6 +420,50 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 15,
         position: 'relative',
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+        borderRadius: 20,
+        gap: 15,
+    },
+    loadingText: {
+        color: 'white',
+        textAlign: 'center',
+        fontSize: 16,
+    },
+    toastContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 20,
+        right: 20,
+        zIndex: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 8,
+        gap: 8,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    toastText: {
+        color: 'white',
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '500',
     },
     topRightCancel: {
         position: 'absolute',
@@ -430,6 +553,5 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
 });
-
 
 export default FaceRegistrationModal;

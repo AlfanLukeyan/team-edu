@@ -29,7 +29,7 @@ export function FaceReferenceAlertCard({ onRegisterPress }: FaceReferenceAlertCa
                         Face Reference Required
                     </ThemedText>
                     <ThemedText style={[styles.message, { color: Colors[theme].text + '80' }]}>
-                        Please register your face for access to crutial features.
+                        Please register your face for access to crucial features.
                     </ThemedText>
                 </View>
                 <Button

@@ -22,15 +22,49 @@ interface FaceRegistrationOptions {
     onCancel?: () => void;
 }
 
+interface ErrorOptions {
+    message: string;
+    autoDismiss?: boolean;
+    autoDismissDelay?: number;
+}
+
+interface SuccessOptions {
+    message: string;
+    autoDismiss?: boolean;
+    autoDismissDelay?: number;
+}
+
 class ModalEmitterClass extends EventEmitter {
-    // Error Modal
-    showError(message: string) {
-        this.emit('SHOW_ERROR', message);
+    showError(messageOrOptions: string | ErrorOptions) {
+        if (typeof messageOrOptions === 'string') {
+            this.emit('SHOW_ERROR', {
+                message: messageOrOptions,
+                autoDismiss: true,
+                autoDismissDelay: 3000
+            });
+        } else {
+            this.emit('SHOW_ERROR', {
+                autoDismiss: true,
+                autoDismissDelay: 3000,
+                ...messageOrOptions
+            });
+        }
     }
 
-    // Success Modal  
-    showSuccess(message: string) {
-        this.emit('SHOW_SUCCESS', message);
+    showSuccess(messageOrOptions: string | SuccessOptions) {
+        if (typeof messageOrOptions === 'string') {
+            this.emit('SHOW_SUCCESS', {
+                message: messageOrOptions,
+                autoDismiss: true,
+                autoDismissDelay: 2000
+            });
+        } else {
+            this.emit('SHOW_SUCCESS', {
+                autoDismiss: true,
+                autoDismissDelay: 2000,
+                ...messageOrOptions
+            });
+        }
     }
 
     // Loading Modal
@@ -74,6 +108,36 @@ class ModalEmitterClass extends EventEmitter {
 
     hideFaceRegistration() {
         this.emit('HIDE_FACE_REGISTRATION');
+    }
+
+    showErrorPersistent(message: string) {
+        this.showError({
+            message,
+            autoDismiss: false
+        });
+    }
+
+    showSuccessPersistent(message: string) {
+        this.showSuccess({
+            message,
+            autoDismiss: false
+        });
+    }
+
+    showQuickSuccess(message: string, delay: number = 1000) {
+        this.showSuccess({
+            message,
+            autoDismiss: true,
+            autoDismissDelay: delay
+        });
+    }
+
+    showQuickError(message: string, delay: number = 2000) {
+        this.showError({
+            message,
+            autoDismiss: true,
+            autoDismissDelay: delay
+        });
     }
 }
 
