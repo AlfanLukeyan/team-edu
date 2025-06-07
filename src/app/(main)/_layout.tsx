@@ -1,10 +1,11 @@
 import { Colors } from '@/constants/Colors';
+import { useAuth } from '@/hooks/useAuth';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, usePathname } from 'expo-router';
+import { Tabs, usePathname, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -48,8 +49,28 @@ const ICON_MAP = {
 export default function MainLayout() {
     const colorScheme = useColorScheme() || 'light';
     const { isAdmin } = useUserRole();
+    const { isAuthenticated, isLoading } = useAuth();
+    const router = useRouter();
     const pathname = usePathname();
     const [activeIndex, setActiveIndex] = useState(0);
+
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            router.replace('/(auth)/login');
+        }
+    }, [isAuthenticated, isLoading, router]);
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={Colors[colorScheme].tint} />
+            </View>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return null;
+    }
 
     const tabConfig = getTabConfig(isAdmin());
     const TAB_WIDTH = tabConfig.width;

@@ -43,10 +43,16 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
             }
         } else {
             if (inProtectedGroup) {
-                router.replace('/(auth)/login');
+                setTimeout(() => {
+                    router.push('/(auth)/login');
+                }, 100);
             }
         }
-    }, [isAuthenticated, segments, isLoading, isGuest]);
+    }, [isAuthenticated, segments, isLoading, isGuest, router]);
+
+    if (!isLoading && !isAuthenticated && (segments[0] === '(main)' || segments[0] === '(class)')) {
+        return null;
+    }
 
     return <>{children}</>;
 }
