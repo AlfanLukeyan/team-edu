@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>team-edu</string>
+    <string>Team Edu</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -52,7 +52,7 @@
     <key>NSDocumentsFolderUsageDescription</key>
     <string>This app needs access to save downloaded files</string>
     <key>NSDownloadsUsageDescription</key>
-    <string>This app downloads assignment files</string>
+    <string>This app downloads attachments files</string>
     <key>NSFaceIDUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your Face ID biometric data.</string>
     <key>NSMicrophoneUsageDescription</key>

@@ -1,10 +1,10 @@
 {
     "expo": {
-        "name": "team-edu",
+        "name": "Team Edu",
         "slug": "team-edu",
         "version": "1.0.0",
         "orientation": "portrait",
-        "icon": "./assets/images/icon.png",
+        "icon": "./assets/icons/adaptive-icon.png",
         "scheme": "teamedu",
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
@@ -13,14 +13,20 @@
             "bundleIdentifier": "com.anonymous.teamedu",
             "infoPlist": {
                 "NSDocumentsFolderUsageDescription": "This app needs access to save downloaded files",
-                "NSDownloadsUsageDescription": "This app downloads assignment files",
+                "NSDownloadsUsageDescription": "This app downloads attachments files",
                 "LSSupportsOpeningDocumentsInPlace": true,
                 "UIFileSharingEnabled": true
+            },
+            "icon": {
+                "dark": "./assets/icons/ios-dark.png",
+                "light": "./assets/icons/ios-light.png",
+                "tinted": "./assets/icons/ios-tinted.png"
             }
         },
         "android": {
             "adaptiveIcon": {
-                "foregroundImage": "./assets/images/adaptive-icon.png",
+                "foregroundImage": "./assets/icons/adaptive-icon.png",
+                "monochromeImage": "./assets/icons/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
             },
             "edgeToEdgeEnabled": true,
@@ -45,10 +51,22 @@
             [
                 "expo-splash-screen",
                 {
-                    "image": "./assets/images/splash-icon.png",
                     "imageWidth": 200,
                     "resizeMode": "contain",
-                    "backgroundColor": "#ffffff"
+                    "light": {
+                        "image": "./assets/icons/splash-icon-light.png",
+                        "backgroundColor": "#ffffff",
+                        "statusBar": {
+                            "style": "dark"
+                        }
+                    },
+                    "dark": {
+                        "image": "./assets/icons/splash-icon-dark.png",
+                        "backgroundColor": "#000000",
+                        "statusBar": {
+                            "style": "light"
+                        }
+                    }
                 }
             ],
             "expo-secure-store",
