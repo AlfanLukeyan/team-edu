@@ -46,16 +46,7 @@
                 "android.permission.WRITE_EXTERNAL_STORAGE",
                 "android.permission.CAMERA",
                 "android.permission.RECORD_AUDIO"
-            ],
-            "usesCleartextTraffic": true,
-            "networkSecurityConfig": {
-                "cleartextTrafficPermitted": true,
-                "domainConfig": {
-                    "20.2.83.17": {
-                        "cleartextTrafficPermitted": true
-                    }
-                }
-            }
+            ]
         },
         "web": {
             "bundler": "metro",
@@ -67,6 +58,21 @@
                 "expo-router",
                 {
                     "root": "./src/app"
+                }
+            ],
+            [
+                "expo-build-properties",
+                {
+                    "android": {
+                        "usesCleartextTraffic": true,
+                        "minSdkVersion": 24,
+                        "compileSdkVersion": 35,
+                        "targetSdkVersion": 35,
+                        "buildToolsVersion": "35.0.0"
+                    },
+                    "ios": {
+                        "deploymentTarget": "15.1"
+                    }
                 }
             ],
             [
