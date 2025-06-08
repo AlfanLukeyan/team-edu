@@ -8,28 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		24AA16CF22B31235BC4427F2 /* libPods-teamedu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 826A69FD90963DBDA1C5C3FC /* libPods-teamedu.a */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		4EC6E596CCD72F7BA0D4A98C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E6D383731E0FE739BC9A7795 /* PrivacyInfo.xcprivacy */; };
+		42E2909CE68C23115613E925 /* libPods-TeamEdu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E91C14BBE1E7921DC3BB0CA /* libPods-TeamEdu.a */; };
+		55ACA83F72BA394D19C14B56 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AEDE843A1CD06720D16E5C10 /* PrivacyInfo.xcprivacy */; };
+		953D318EC86D6BE0D8A05321 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22E4F582EB139FE068D140A4 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		D69133AA4B13B860644A228D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2692143621E1D77DAD8388 /* ExpoModulesProvider.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0ADB15F7A30F2AFEB1413D56 /* Pods-teamedu.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-teamedu.release.xcconfig"; path = "Target Support Files/Pods-teamedu/Pods-teamedu.release.xcconfig"; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* teamedu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = teamedu.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = teamedu/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = teamedu/Info.plist; sourceTree = "<group>"; };
-		4F2692143621E1D77DAD8388 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-teamedu/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		826A69FD90963DBDA1C5C3FC /* libPods-teamedu.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-teamedu.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = teamedu/SplashScreen.storyboard; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* TeamEdu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TeamEdu.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TeamEdu/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = TeamEdu/Info.plist; sourceTree = "<group>"; };
+		22E4F582EB139FE068D140A4 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TeamEdu/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		2E91C14BBE1E7921DC3BB0CA /* libPods-TeamEdu.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TeamEdu.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		41275463A4D9FE86730F44F1 /* Pods-TeamEdu.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TeamEdu.debug.xcconfig"; path = "Target Support Files/Pods-TeamEdu/Pods-TeamEdu.debug.xcconfig"; sourceTree = "<group>"; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = TeamEdu/SplashScreen.storyboard; sourceTree = "<group>"; };
+		AEDE843A1CD06720D16E5C10 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = TeamEdu/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		E6D383731E0FE739BC9A7795 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = teamedu/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BF402515164820E6689507F6 /* Pods-TeamEdu.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TeamEdu.release.xcconfig"; path = "Target Support Files/Pods-TeamEdu/Pods-TeamEdu.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = teamedu/AppDelegate.swift; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* teamedu-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "teamedu-Bridging-Header.h"; path = "teamedu/teamedu-Bridging-Header.h"; sourceTree = "<group>"; };
-		F9812D9B4EF1ABB5B79E573A /* Pods-teamedu.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-teamedu.debug.xcconfig"; path = "Target Support Files/Pods-teamedu/Pods-teamedu.debug.xcconfig"; sourceTree = "<group>"; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = TeamEdu/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* TeamEdu-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "TeamEdu-Bridging-Header.h"; path = "TeamEdu/TeamEdu-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,60 +37,60 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				24AA16CF22B31235BC4427F2 /* libPods-teamedu.a in Frameworks */,
+				42E2909CE68C23115613E925 /* libPods-TeamEdu.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* teamedu */ = {
+		006E0270AFDE9E37C627385C /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				41275463A4D9FE86730F44F1 /* Pods-TeamEdu.debug.xcconfig */,
+				BF402515164820E6689507F6 /* Pods-TeamEdu.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		13B07FAE1A68108700A75B9A /* TeamEdu */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* teamedu-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* TeamEdu-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				E6D383731E0FE739BC9A7795 /* PrivacyInfo.xcprivacy */,
+				AEDE843A1CD06720D16E5C10 /* PrivacyInfo.xcprivacy */,
 			);
-			name = teamedu;
-			sourceTree = "<group>";
-		};
-		23EB6A59BB7AA6ABA7EADB88 /* teamedu */ = {
-			isa = PBXGroup;
-			children = (
-				4F2692143621E1D77DAD8388 /* ExpoModulesProvider.swift */,
-			);
-			name = teamedu;
+			name = TeamEdu;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				826A69FD90963DBDA1C5C3FC /* libPods-teamedu.a */,
+				2E91C14BBE1E7921DC3BB0CA /* libPods-TeamEdu.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		4084868F321BB5CBB37C0DC2 /* Pods */ = {
+		4B38B67CE1F7C1414D6AC800 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				F9812D9B4EF1ABB5B79E573A /* Pods-teamedu.debug.xcconfig */,
-				0ADB15F7A30F2AFEB1413D56 /* Pods-teamedu.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		45DE7F5434EC662C802E0713 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				23EB6A59BB7AA6ABA7EADB88 /* teamedu */,
+				7C6DBC2122830F1BAA262E42 /* TeamEdu */,
 			);
 			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		7C6DBC2122830F1BAA262E42 /* TeamEdu */ = {
+			isa = PBXGroup;
+			children = (
+				22E4F582EB139FE068D140A4 /* ExpoModulesProvider.swift */,
+			);
+			name = TeamEdu;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -103,12 +103,12 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* teamedu */,
+				13B07FAE1A68108700A75B9A /* TeamEdu */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				4084868F321BB5CBB37C0DC2 /* Pods */,
-				45DE7F5434EC662C802E0713 /* ExpoModulesProviders */,
+				006E0270AFDE9E37C627385C /* Pods */,
+				4B38B67CE1F7C1414D6AC800 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -118,7 +118,7 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* teamedu.app */,
+				13B07F961A680F5B00A75B9A /* TeamEdu.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -129,32 +129,32 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = teamedu/Supporting;
+			path = TeamEdu/Supporting;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* teamedu */ = {
+		13B07F861A680F5B00A75B9A /* TeamEdu */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "teamedu" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "TeamEdu" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				D48E4233EDAFDC0814C0301B /* [Expo] Configure project */,
+				A9A29AB9B71575397D3F3043 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				5AA30700A2F3FF5F1600F150 /* [CP] Embed Pods Frameworks */,
+				AEA1EE3CC915AFC2BFF2BBEF /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = teamedu;
-			productName = teamedu;
-			productReference = 13B07F961A680F5B00A75B9A /* teamedu.app */;
+			name = TeamEdu;
+			productName = TeamEdu;
+			productReference = 13B07F961A680F5B00A75B9A /* TeamEdu.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -170,7 +170,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "teamedu" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "TeamEdu" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -183,7 +183,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* teamedu */,
+				13B07F861A680F5B00A75B9A /* TeamEdu */,
 			);
 		};
 /* End PBXProject section */
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				4EC6E596CCD72F7BA0D4A98C /* PrivacyInfo.xcprivacy in Resources */,
+				55ACA83F72BA394D19C14B56 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -233,29 +233,11 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-teamedu-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-TeamEdu-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		5AA30700A2F3FF5F1600F150 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-teamedu/Pods-teamedu-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-teamedu/Pods-teamedu-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
@@ -264,7 +246,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-teamedu/Pods-teamedu-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-TeamEdu/Pods-TeamEdu-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
@@ -293,10 +275,10 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-teamedu/Pods-teamedu-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TeamEdu/Pods-TeamEdu-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D48E4233EDAFDC0814C0301B /* [Expo] Configure project */ = {
+		A9A29AB9B71575397D3F3043 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -313,7 +295,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-teamedu/expo-configure-project.sh\"\n";
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TeamEdu/expo-configure-project.sh\"\n";
+		};
+		AEA1EE3CC915AFC2BFF2BBEF /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TeamEdu/Pods-TeamEdu-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TeamEdu/Pods-TeamEdu-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -323,7 +323,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				D69133AA4B13B860644A228D /* ExpoModulesProvider.swift in Sources */,
+				953D318EC86D6BE0D8A05321 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -332,18 +332,18 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F9812D9B4EF1ABB5B79E573A /* Pods-teamedu.debug.xcconfig */;
+			baseConfigurationReference = 41275463A4D9FE86730F44F1 /* Pods-TeamEdu.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = teamedu/teamedu.entitlements;
+				CODE_SIGN_ENTITLEMENTS = TeamEdu/TeamEdu.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = teamedu/Info.plist;
+				INFOPLIST_FILE = TeamEdu/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -358,7 +358,7 @@
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.anonymous.teamedu;
 				PRODUCT_NAME = TeamEdu;
-				SWIFT_OBJC_BRIDGING_HEADER = "teamedu/teamedu-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "TeamEdu/TeamEdu-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -368,13 +368,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0ADB15F7A30F2AFEB1413D56 /* Pods-teamedu.release.xcconfig */;
+			baseConfigurationReference = BF402515164820E6689507F6 /* Pods-TeamEdu.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = teamedu/teamedu.entitlements;
+				CODE_SIGN_ENTITLEMENTS = TeamEdu/TeamEdu.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = teamedu/Info.plist;
+				INFOPLIST_FILE = TeamEdu/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -389,7 +389,7 @@
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.anonymous.teamedu;
 				PRODUCT_NAME = TeamEdu;
-				SWIFT_OBJC_BRIDGING_HEADER = "teamedu/teamedu-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "TeamEdu/TeamEdu-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -523,7 +523,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "teamedu" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "TeamEdu" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -532,7 +532,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "teamedu" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "TeamEdu" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
