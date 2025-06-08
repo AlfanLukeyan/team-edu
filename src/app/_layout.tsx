@@ -1,6 +1,7 @@
 import CrucialFeatureAuthModal from "@/components/CrucialFeatureAuthModal";
 import CustomAlert from "@/components/CustomAlert";
 import ErrorModal from "@/components/ErrorModal";
+import FaceRegistrationModal from "@/components/FaceRegistrationModal";
 import LoadingModal from "@/components/LoadingModal";
 import SuccessModal from "@/components/SuccessModal";
 import { NavigationProvider } from "@/contexts/NavigationContext";
@@ -30,9 +31,7 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
         if (isLoading) return;
 
         const inAuthGroup = segments[0] === '(auth)';
-        const inProtectedGroup = segments[0] === '(main)'
-            || segments[0] === '(class)';
-
+        const inProtectedGroup = segments[0] === '(main)' || segments[0] === '(class)';
         const onWarningScreen = segments.some(segment => segment === 'warning_screen') ||
             segments[segments.length - 1] === 'warning_screen';
 
@@ -44,10 +43,16 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
             }
         } else {
             if (inProtectedGroup) {
-                router.replace('/(auth)/login');
+                setTimeout(() => {
+                    router.replace('/(auth)/login');
+                }, 100);
             }
         }
-    }, [isAuthenticated, segments, isLoading, isGuest]);
+    }, [isAuthenticated, segments, isLoading, isGuest, router]);
+
+    if (!isLoading && !isAuthenticated && (segments[0] === '(main)' || segments[0] === '(class)')) {
+        return null;
+    }
 
     return <>{children}</>;
 }
@@ -63,8 +68,28 @@ export default function RootLayout() {
 
     // Modal states
     const [isLoading, setIsLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [errorOptions, setErrorOptions] = useState<{
+        visible: boolean;
+        message: string;
+        autoDismiss: boolean;
+        autoDismissDelay: number;
+    }>({
+        visible: false,
+        message: "",
+        autoDismiss: true,
+        autoDismissDelay: 3000
+    });
+    const [successOptions, setSuccessOptions] = useState<{
+        visible: boolean;
+        message: string;
+        autoDismiss: boolean;
+        autoDismissDelay: number;
+    }>({
+        visible: false,
+        message: "",
+        autoDismiss: true,
+        autoDismissDelay: 2000
+    });
     const [loadingMessage, setLoadingMessage] = useState<string | undefined>(undefined);
     const [alertOptions, setAlertOptions] = useState<{
         visible: boolean;
@@ -90,11 +115,32 @@ export default function RootLayout() {
         visible: false,
     });
 
+    const [faceRegistrationOptions, setFaceRegistrationOptions] = useState<{
+        visible: boolean;
+        onSuccess?: () => void;
+        onCancel?: () => void;
+    }>({
+        visible: false,
+    });
 
     // Modal event handlers
     useEffect(() => {
-        const handleError = (message: string) => setErrorMessage(message);
-        const handleSuccess = (message: string) => setSuccessMessage(message);
+        const handleError = (options: any) => {
+            setErrorOptions({
+                visible: true,
+                message: options.message,
+                autoDismiss: options.autoDismiss,
+                autoDismissDelay: options.autoDismissDelay
+            });
+        };
+        const handleSuccess = (options: any) => {
+            setSuccessOptions({
+                visible: true,
+                message: options.message,
+                autoDismiss: options.autoDismiss,
+                autoDismissDelay: options.autoDismissDelay
+            });
+        };
         const handleShowLoading = (message?: string) => {
             setLoadingMessage(message);
             setIsLoading(true);
@@ -104,11 +150,21 @@ export default function RootLayout() {
             setLoadingMessage(undefined);
         };
         const handleUnauthorized = () => {
-            setErrorMessage("Session expired. Please log in again.");
+            setErrorOptions({
+                visible: true,
+                message: "Session expired. Please log in again.",
+                autoDismiss: true,
+                autoDismissDelay: 3000
+            });
             router.replace('/(auth)/login');
         };
         const handleAnotherDeviceLogin = (message: string) => {
-            setErrorMessage(message);
+            setErrorOptions({
+                visible: true,
+                message,
+                autoDismiss: true,
+                autoDismissDelay: 3000
+            });
             router.replace('/(auth)/login');
         };
         const handleShowAlert = (options: any) => {
@@ -118,11 +174,20 @@ export default function RootLayout() {
             setAlertOptions(prev => ({ ...prev, visible: false }));
         };
 
+        // Crucial Auth handlers
         const handleShowCrucialAuth = (options: any) => {
             setCrucialAuthOptions({ visible: true, ...options });
         };
         const handleHideCrucialAuth = () => {
             setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
+        };
+
+        // Face Registration handlers
+        const handleShowFaceRegistration = (options: any) => {
+            setFaceRegistrationOptions({ visible: true, ...options });
+        };
+        const handleHideFaceRegistration = () => {
+            setFaceRegistrationOptions(prev => ({ ...prev, visible: false }));
         };
 
         // Register event listeners
@@ -136,6 +201,8 @@ export default function RootLayout() {
         ModalEmitter.on("HIDE_ALERT", handleHideAlert);
         ModalEmitter.on("SHOW_CRUCIAL_AUTH", handleShowCrucialAuth);
         ModalEmitter.on("HIDE_CRUCIAL_AUTH", handleHideCrucialAuth);
+        ModalEmitter.on("SHOW_FACE_REGISTRATION", handleShowFaceRegistration);
+        ModalEmitter.on("HIDE_FACE_REGISTRATION", handleHideFaceRegistration);
 
         return () => {
             // Cleanup event listeners
@@ -149,6 +216,8 @@ export default function RootLayout() {
             ModalEmitter.off("HIDE_ALERT", handleHideAlert);
             ModalEmitter.off("SHOW_CRUCIAL_AUTH", handleShowCrucialAuth);
             ModalEmitter.off("HIDE_CRUCIAL_AUTH", handleHideCrucialAuth);
+            ModalEmitter.off("SHOW_FACE_REGISTRATION", handleShowFaceRegistration);
+            ModalEmitter.off("HIDE_FACE_REGISTRATION", handleHideFaceRegistration);
         };
     }, [router]);
 
@@ -167,84 +236,75 @@ export default function RootLayout() {
                             </NavigationHandler>
                             <StatusBar style="auto" />
 
-                            {/* ✅ Regular Global Modals */}
-                            {(isLoading || !!errorMessage || !!successMessage || alertOptions.visible) && (
-                                <View style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    zIndex: 9999,
-                                    pointerEvents: 'auto'
-                                }}>
-                                    {!!errorMessage && (
-                                        <ErrorModal
-                                            visible={true}
-                                            errorMessage={errorMessage}
-                                            onClose={() => setErrorMessage(null)}
-                                        />
-                                    )}
-                                    {!!successMessage && (
-                                        <SuccessModal
-                                            visible={true}
-                                            successMessage={successMessage}
-                                            onClose={() => setSuccessMessage(null)}
-                                        />
-                                    )}
-                                    {isLoading && (
-                                        <LoadingModal
-                                            visible={true}
-                                            message={loadingMessage}
-                                        />
-                                    )}
-                                    {alertOptions.visible && (
-                                        <CustomAlert
-                                            visible={true}
-                                            title={alertOptions.title}
-                                            message={alertOptions.message}
-                                            confirmText={alertOptions.confirmText}
-                                            cancelText={alertOptions.cancelText}
-                                            type={alertOptions.type}
-                                            onConfirm={() => {
-                                                alertOptions.onConfirm?.();
-                                                setAlertOptions(prev => ({ ...prev, visible: false }));
-                                            }}
-                                            onCancel={() => {
-                                                alertOptions.onCancel?.();
-                                                setAlertOptions(prev => ({ ...prev, visible: false }));
-                                            }}
-                                        />
-                                    )}
-                                </View>
-                            )}
+                            <View style={{ zIndex: 1000, elevation: 1000 }}>
+                                <CrucialFeatureAuthModal
+                                    visible={crucialAuthOptions.visible}
+                                    title={crucialAuthOptions.title}
+                                    description={crucialAuthOptions.description}
+                                    onSuccess={() => {
+                                        crucialAuthOptions.onSuccess?.();
+                                        setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
+                                    }}
+                                    onCancel={() => {
+                                        crucialAuthOptions.onCancel?.();
+                                        setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
+                                    }}
+                                />
+                            </View>
 
-                            {/* ✅ Crucial Auth Modal - Separate and Higher Z-Index */}
-                            {crucialAuthOptions.visible && (
-                                <View style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    zIndex: 10000, // Higher than other modals
-                                    pointerEvents: 'auto'
-                                }}>
-                                    <CrucialFeatureAuthModal
-                                        visible={true}
-                                        title={crucialAuthOptions.title}
-                                        description={crucialAuthOptions.description}
-                                        onSuccess={() => {
-                                            crucialAuthOptions.onSuccess?.();
-                                            setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
-                                        }}
-                                        onCancel={() => {
-                                            crucialAuthOptions.onCancel?.();
-                                            setCrucialAuthOptions(prev => ({ ...prev, visible: false }));
-                                        }}
-                                    />
-                                </View>
-                            )}
+                            <View style={{ zIndex: 2000, elevation: 2000 }}>
+                                <FaceRegistrationModal
+                                    visible={faceRegistrationOptions.visible}
+                                    onSuccess={() => {
+                                        faceRegistrationOptions.onSuccess?.();
+                                        setFaceRegistrationOptions(prev => ({ ...prev, visible: false }));
+                                    }}
+                                    onCancel={() => {
+                                        faceRegistrationOptions.onCancel?.();
+                                        setFaceRegistrationOptions(prev => ({ ...prev, visible: false }));
+                                    }}
+                                />
+                            </View>
+
+                            <View style={{ zIndex: 9000, elevation: 9000 }}>
+                                <ErrorModal
+                                    visible={errorOptions.visible}
+                                    errorMessage={errorOptions.message}
+                                    onClose={() => setErrorOptions(prev => ({ ...prev, visible: false }))}
+                                    autoDismiss={errorOptions.autoDismiss}
+                                    autoDismissDelay={errorOptions.autoDismissDelay}
+                                />
+
+                                <SuccessModal
+                                    visible={successOptions.visible}
+                                    successMessage={successOptions.message}
+                                    onClose={() => setSuccessOptions(prev => ({ ...prev, visible: false }))}
+                                    autoDismiss={successOptions.autoDismiss}
+                                    autoDismissDelay={successOptions.autoDismissDelay}
+                                />
+
+                                <LoadingModal
+                                    visible={isLoading}
+                                    message={loadingMessage}
+                                />
+
+                                <CustomAlert
+                                    visible={alertOptions.visible}
+                                    title={alertOptions.title}
+                                    message={alertOptions.message}
+                                    confirmText={alertOptions.confirmText}
+                                    cancelText={alertOptions.cancelText}
+                                    type={alertOptions.type}
+                                    onConfirm={() => {
+                                        alertOptions.onConfirm?.();
+                                        setAlertOptions(prev => ({ ...prev, visible: false }));
+                                    }}
+                                    onCancel={() => {
+                                        alertOptions.onCancel?.();
+                                        setAlertOptions(prev => ({ ...prev, visible: false }));
+                                    }}
+                                />
+                            </View>
                         </BottomSheetModalProvider>
                     </ThemeProvider>
                 </GestureHandlerRootView>

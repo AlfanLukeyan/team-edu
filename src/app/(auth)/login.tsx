@@ -40,9 +40,8 @@ export default function LoginScreen() {
         setIsLoading(true);
         try {
             const userData = await loginUser(email, password);
-            console.log("User Data:", userData);
             if (userData) {
-                ModalEmitter.emit("SHOW_SUCCESS", "Login successful!");
+                ModalEmitter.showSuccess("Login successful!");
                 if (isGuest()) {
                     router.replace("/(auth)/warning_screen");
                 } else {
@@ -77,7 +76,7 @@ export default function LoginScreen() {
                     <ThemedView style={styles.header}>
                         <View style={styles.titleContainer}>
                             <Image
-                                source={require('../../../assets/images/team-edu-logo.png')}
+                                source={require('../../../assets/images/icon.png')}
                                 style={styles.logo}
                                 contentFit="contain"
                             />

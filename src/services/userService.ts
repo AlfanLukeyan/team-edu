@@ -1,4 +1,4 @@
-import { Role, UserByRole } from "@/types/api";
+import { FaceReferenceCheck, Role, UserByRole } from "@/types/api";
 import { UserProfile } from "@/types/user";
 import { Platform } from "react-native";
 import { userApi } from "./api/userApi";
@@ -197,6 +197,47 @@ class UserService {
 
     isUserVerified(user: UserByRole): boolean {
         return user.is_verified;
+    }
+
+    async registerFaceReference(faceImages: string[], userUuid: string): Promise<any> {
+        try {
+            const formData = new FormData();
+
+            formData.append('uuid', userUuid);
+
+            if (Platform.OS === 'web') {
+                for (let i = 0; i < faceImages.length; i++) {
+                    try {
+                        const response = await fetch(faceImages[i]);
+                        const blob = await response.blob();
+                        formData.append('images', blob, `face_reference_${i + 1}.jpg`);
+                    } catch (error) {
+                        throw new Error(`Failed to process image ${i + 1} for upload`);
+                    }
+                }
+            } else {
+                faceImages.forEach((image, index) => {
+                    formData.append('images', {
+                        uri: image,
+                        type: 'image/jpeg',
+                        name: `face_reference_${index + 1}.jpg`,
+                    } as any);
+                });
+            }
+
+            return await userApi.registerFaceReference(formData);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async checkFaceReference(uuid: string): Promise<FaceReferenceCheck> {
+        try {
+            const response = await userApi.checkFaceReference(uuid);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
     }
 }
 

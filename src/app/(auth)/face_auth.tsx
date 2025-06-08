@@ -56,7 +56,6 @@ export default function FaceAuthScreen() {
                 quality: 0.8,
             });
 
-            console.log("Photo taken for face auth:", photo);
 
             const userData = await faceLoginUser(email.trim(), photo.uri);
 
@@ -70,7 +69,6 @@ export default function FaceAuthScreen() {
             }
 
         } catch (error: any) {
-            console.error("Face verification error:", error);
             ModalEmitter.hideLoading();
             ModalEmitter.showError(error.message || "Face verification failed. Please try again.");
         }

@@ -24,7 +24,6 @@ class AssignmentService {
             const response = await assignmentApi.submitAssignment(assignmentId, file);
             return response.data;
         } catch (error) {
-            console.error('Failed to submit assignment:', error);
             throw error;
         }
     }
@@ -35,6 +34,7 @@ class AssignmentService {
         }
         return AssignmentService.instance;
     }
+
     async getAssignmentDetails(assignmentId: string): Promise<Assignment | StudentAssignment> {
         try {
             if (tokenService.isStudent()) {
@@ -45,7 +45,6 @@ class AssignmentService {
                 return response.data;
             }
         } catch (error) {
-            console.error('Failed to fetch assignment details:', error);
             throw error;
         }
     }
@@ -55,7 +54,6 @@ class AssignmentService {
             const response = await assignmentApi.getStudentAssignmentDetails(assignmentId);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch student assignment details:', error);
             throw error;
         }
     }
@@ -65,7 +63,6 @@ class AssignmentService {
             const response = await assignmentApi.getAssignmentSubmissions(assignmentId, status);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch assignment submissions:', error);
             throw error;
         }
     }
@@ -73,10 +70,8 @@ class AssignmentService {
     async deleteAssignmentSubmission(submissionId: string): Promise<{ status: string; message: string; data: string }> {
         try {
             const response = await assignmentApi.deleteAssignmentSubmission(submissionId);
-            console.log('Assignment submission deleted successfully:', response);
             return response;
         } catch (error) {
-            console.error('Failed to delete assignment submission:', error);
             throw error;
         }
     }
@@ -84,10 +79,8 @@ class AssignmentService {
     async updateSubmissionScore(submissionId: string, score: number): Promise<{ status: string; message: string; data: string }> {
         try {
             const response = await assignmentApi.updateSubmissionScore(submissionId, score);
-            console.log('Assignment submission score updated successfully:', response);
             return response;
         } catch (error) {
-            console.error('Failed to update assignment submission score:', error);
             throw error;
         }
     }
@@ -104,19 +97,9 @@ class AssignmentService {
                 formData.append('file', data.file);
             }
 
-            console.log('Creating assignment with data:', {
-                weekId,
-                title: data.title,
-                description: data.description,
-                deadline: data.deadline,
-                file: data.file ? data.file.name : 'No file attached',
-            });
-
             const response = await assignmentApi.createAssignment(formData);
-            console.log('Assignment created successfully:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Failed to create assignment:', error);
             throw error;
         }
     }
@@ -137,7 +120,6 @@ class AssignmentService {
             const response = await assignmentApi.updateAssignment(formData);
             return response.data;
         } catch (error) {
-            console.error('Failed to update assignment:', error);
             throw error;
         }
     }
@@ -145,10 +127,8 @@ class AssignmentService {
     async deleteAssignment(assignmentId: string): Promise<{ status: string; message: string; data: string }> {
         try {
             const response = await assignmentApi.deleteAssignment(assignmentId);
-            console.log('Assignment deleted successfully:', response);
             return response;
         } catch (error) {
-            console.error('Failed to delete assignment:', error);
             throw error;
         }
     }

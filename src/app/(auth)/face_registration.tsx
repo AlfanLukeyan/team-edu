@@ -47,6 +47,7 @@ export default function FaceRegistrationScreen() {
     const [currentStep, setCurrentStep] = useState(1);
     const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
     const [isRegistrationComplete, setIsRegistrationComplete] = useState(false);
+    const [isRegistering, setIsRegistering] = useState(false);
 
     useEffect(() => {
         if (!registrationData && !isRegistrationComplete) {
@@ -65,14 +66,19 @@ export default function FaceRegistrationScreen() {
 
     useEffect(() => {
         if (capturedPhotos.length === FACE_REGISTRATION_CONFIG.TOTAL_STEPS) {
-            handleRegistrationComplete();
+            handleRegistrationComplete(capturedPhotos);
         }
     }, [capturedPhotos]);
 
-    const handleRegistrationComplete = useCallback(async () => {
-        if (!registrationData || capturedPhotos.length !== FACE_REGISTRATION_CONFIG.TOTAL_STEPS) return;
+    const handleRegistrationComplete = useCallback(async (faceImages?: string[]) => {
+        if (!registrationData || isRegistering) return;
 
-        ModalEmitter.showLoading("Creating your account...");
+        setIsRegistering(true);
+        const messageText = faceImages && faceImages.length > 0
+            ? "Creating your account..."
+            : "Creating your account...";
+
+        ModalEmitter.showLoading(messageText);
 
         try {
             const response = await registerUser(
@@ -80,23 +86,44 @@ export default function FaceRegistrationScreen() {
                 registrationData.email,
                 registrationData.password,
                 registrationData.phone,
-                capturedPhotos
+                faceImages
             );
 
             setIsRegistrationComplete(true);
             ModalEmitter.hideLoading();
-            ModalEmitter.showSuccess(response.message || "Registration successful! Please check your email for verification.");
+
+            const successMessage = faceImages && faceImages.length > 0
+                ? "Registration successful with face authentication! Please check your email for verification."
+                : "Registration successful! You can set up face authentication later. Please check your email for verification.";
+
+            ModalEmitter.showSuccess(response.message || successMessage);
             clearRegistrationData();
 
             router.replace("/(auth)/login");
 
         } catch (error: any) {
             ModalEmitter.hideLoading();
+            setIsRegistering(false);
         }
-    }, [registrationData, capturedPhotos, registerUser, clearRegistrationData, router]);
+    }, [registrationData, registerUser, clearRegistrationData, router, isRegistering]);
+
+    const handleSkipFaceRegistration = useCallback(() => {
+        ModalEmitter.showAlert({
+            title: "Skip Face Registration?",
+            message: "You can set up face authentication later in your home page. Continue without face authentication?",
+            type: "info",
+            confirmText: "Skip",
+            cancelText: "Cancel",
+            onConfirm: () => {
+                handleRegistrationComplete();
+            },
+            onCancel: () => {
+            }
+        });
+    }, [handleRegistrationComplete]);
 
     const handleTakePicture = useCallback(async () => {
-        if (!cameraRef.current) return;
+        if (!cameraRef.current || isRegistering) return;
 
         ModalEmitter.showLoading(`Capturing photo ${currentStep}...`);
 
@@ -105,8 +132,6 @@ export default function FaceRegistrationScreen() {
                 shutterSound: false,
                 quality: 0.8,
             });
-
-            console.log(`Photo taken for step ${currentStep}:`, photo);
 
             const newPhotos = [...capturedPhotos, photo.uri];
             setCapturedPhotos(newPhotos);
@@ -123,30 +148,39 @@ export default function FaceRegistrationScreen() {
             }
 
         } catch (error) {
-            console.error("Error taking picture:", error);
             ModalEmitter.hideLoading();
             ModalEmitter.showError("Failed to capture image. Please try again.");
         }
-    }, [cameraRef, currentStep, capturedPhotos]);
+    }, [cameraRef, currentStep, capturedPhotos, isRegistering]);
 
     const resetRegistration = useCallback(() => {
+        if (isRegistering) return;
         setCurrentStep(1);
         setCapturedPhotos([]);
-    }, []);
+    }, [isRegistering]);
 
     if (!permission?.granted) {
         return (
             <ThemedView style={styles.container}>
                 <View style={[styles.content, isWeb && styles.webContent]}>
                     <ThemedText type="title" style={styles.title}>
-                        Face Registration
+                        Face Registration (Optional)
                     </ThemedText>
                     <ThemedText style={styles.description}>
-                        We need camera permission to register your face for secure authentication
+                        Set up face authentication for secure and convenient login, or skip this step and set it up later.
                     </ThemedText>
-                    <Button onPress={requestPermission}>
-                        Allow Camera Access
-                    </Button>
+                    <View style={styles.buttonContainer}>
+                        <Button onPress={requestPermission}>
+                            Allow Camera Access
+                        </Button>
+                        <Button
+                            type="secondary"
+                            onPress={handleSkipFaceRegistration}
+                            style={styles.skipButton}
+                        >
+                            Skip Face Registration
+                        </Button>
+                    </View>
                 </View>
             </ThemedView>
         );
@@ -164,10 +198,13 @@ export default function FaceRegistrationScreen() {
                         <View style={styles.webLeftSection}>
                             <View style={styles.webHeader}>
                                 <ThemedText type="title" style={styles.webTitle}>
-                                    Face Registration
+                                    Face Registration (Optional)
                                 </ThemedText>
                                 <ThemedText style={styles.webSubtitle}>
                                     Registering as: {registrationData?.name}
+                                </ThemedText>
+                                <ThemedText style={styles.webDescription}>
+                                    Set up face authentication for secure login, or skip to complete registration.
                                 </ThemedText>
                             </View>
 
@@ -193,18 +230,30 @@ export default function FaceRegistrationScreen() {
                                     description={`Capture photo ${currentStep} of ${FACE_REGISTRATION_CONFIG.TOTAL_STEPS} for face registration`}
                                     onPress={handleTakePicture}
                                     style={styles.webButton}
+                                    disabled={isRegistering}
                                 >
-                                    Take Picture
+                                    {isRegistering ? "Processing..." : "Take Picture"}
                                 </ButtonWithDescription>
 
                                 {capturedPhotos.length > 0 && (
                                     <Button
                                         onPress={resetRegistration}
                                         style={styles.resetButton}
+                                        disabled={isRegistering}
+                                        type="secondary"
                                     >
                                         Start Over
                                     </Button>
                                 )}
+
+                                <Button
+                                    onPress={handleSkipFaceRegistration}
+                                    style={styles.skipButton}
+                                    disabled={isRegistering}
+                                    type="secondary"
+                                >
+                                    Skip & Complete Registration
+                                </Button>
                             </View>
                         </View>
 
@@ -236,6 +285,9 @@ export default function FaceRegistrationScreen() {
                 <ThemedText type='subtitle'>
                     Registering as: {registrationData?.name}
                 </ThemedText>
+                <ThemedText style={styles.optionalText}>
+                    Face authentication is optional
+                </ThemedText>
             </View>
 
             {/* Progress Indicator */}
@@ -264,18 +316,31 @@ export default function FaceRegistrationScreen() {
                 <ButtonWithDescription
                     description={`Capture photo ${currentStep} of ${FACE_REGISTRATION_CONFIG.TOTAL_STEPS} for face registration`}
                     onPress={handleTakePicture}
+                    disabled={isRegistering}
                 >
-                    Take Picture
+                    {isRegistering ? "Processing..." : "Take Picture"}
                 </ButtonWithDescription>
 
-                {capturedPhotos.length > 0 && (
+                <View style={styles.actionRow}>
+                    {capturedPhotos.length > 0 && (
+                        <Button
+                            onPress={resetRegistration}
+                            style={[styles.resetButton, { flex: 1 }]}
+                            disabled={isRegistering}
+                            type="secondary"
+                        >
+                            Start Over
+                        </Button>
+                    )}
                     <Button
-                        onPress={resetRegistration}
-                        style={styles.resetButton}
+                        onPress={handleSkipFaceRegistration}
+                        style={[styles.skipButton, { flex: 1 }]}
+                        disabled={isRegistering}
+                        type="secondary"
                     >
-                        Start Over
+                        Skip & Complete
                     </Button>
-                )}
+                </View>
             </View>
         </ThemedView>
     );
@@ -302,11 +367,20 @@ const styles = StyleSheet.create({
         textAlign: "center",
         opacity: 0.7,
     },
+    buttonContainer: {
+        gap: 12,
+    },
 
     // Mobile Styles
     header: {
         alignItems: "center",
         padding: 8,
+        gap: 4,
+    },
+    optionalText: {
+        fontSize: 12,
+        opacity: 0.6,
+        textAlign: "center",
     },
     cameraContainer: {
         marginHorizontal: 20,
@@ -322,7 +396,14 @@ const styles = StyleSheet.create({
         padding: 20,
         gap: 15,
     },
+    actionRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
     resetButton: {
+        marginTop: 10,
+    },
+    skipButton: {
         marginTop: 10,
     },
 
@@ -362,6 +443,12 @@ const styles = StyleSheet.create({
         textAlign: isTablet ? "left" : "center",
         opacity: 0.8,
         fontSize: 16,
+    },
+    webDescription: {
+        textAlign: isTablet ? "left" : "center",
+        opacity: 0.6,
+        fontSize: 14,
+        marginTop: 4,
     },
     webProgressSection: {
         width: '100%',

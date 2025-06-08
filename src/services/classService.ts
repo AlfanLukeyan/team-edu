@@ -92,7 +92,6 @@ class ClassService {
                 return response.data;
             }
         } catch (error) {
-            console.error('Failed to fetch weekly sections:', error);
             throw error;
         }
     }
@@ -107,7 +106,6 @@ class ClassService {
                 return response.data;
             }
         } catch (error) {
-            console.error('Failed to fetch class assessments:', error);
             throw error;
         }
     }
@@ -138,7 +136,6 @@ class ClassService {
             const response = await classApi.updateWeeklySection(weekId, data);
             return response;
         } catch (error) {
-            console.error('Failed to update weekly section:', error);
             throw error;
         }
     }

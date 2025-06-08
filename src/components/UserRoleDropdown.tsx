@@ -18,7 +18,6 @@ export const UserRoleDropdown = () => {
             const teachers = await userService.getTeachers();
             setUsers(teachers);
         } catch (error) {
-            console.error('Error fetching users:', error);
         } finally {
             setLoading(false);
         }

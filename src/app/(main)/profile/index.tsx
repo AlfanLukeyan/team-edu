@@ -93,7 +93,6 @@ export default function ProfileScreen() {
     };
 
     const handleChangeFaceReference = () => {
-        console.log('Change face reference pressed');
         setShowActionMenu(false);
         router.push('/(main)/profile/change_face_reference');
     };

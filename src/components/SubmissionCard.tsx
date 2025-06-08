@@ -49,14 +49,12 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({
 
     const handlePress = () => {
         if (disabled) return; // Don't handle press if disabled
-        console.log(`SubmissionCard pressed: ${id}`);
         onPress?.(id);
     };
 
     const handleLongPress = () => {
         if (disabled) return; // Don't handle long press if disabled
         onLongPress?.(id);
-        console.log(`SubmissionCard long pressed: ${id}`);
     };
 
     return (

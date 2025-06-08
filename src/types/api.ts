@@ -547,3 +547,19 @@ export interface AddMemberResponseData {
 
 export type AddMemberResponse = ApiResponse<AddMemberResponseData>;
 export type DeleteMemberResponse = ApiResponse<string>;
+
+export interface FaceReferenceCheck {
+    files: string[];
+    has_face_reference: boolean;
+    uuid: string;
+}
+
+export type FaceReferenceCheckResponse = ApiResponse<FaceReferenceCheck>;
+
+export interface FaceReferenceUploadData {
+    path: string;
+    saved_images: string[];
+    uuid: string;
+}
+
+export type FaceReferenceUploadResponse = ApiResponse<FaceReferenceUploadData>;

@@ -28,7 +28,6 @@ export default function QuestionsScreen() {
 
     useEffect(() => {
         if (isStudent()) {
-            console.log('🚫 Student accessing questions tab - redirecting');
             router.replace('../');
         }
     }, [isStudent, router]);
@@ -66,7 +65,6 @@ export default function QuestionsScreen() {
             setQuestions(data);
         } catch (err) {
             setError('Failed to load questions');
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -111,7 +109,6 @@ export default function QuestionsScreen() {
 
             await handleRefresh();
         } catch (error) {
-            console.error('Failed to save questions:', error);
             ModalEmitter.showError('Failed to save questions. Please try again.');
         }
     }, [assessmentId, handleRefresh]);
@@ -197,7 +194,6 @@ export default function QuestionsScreen() {
                     setShowActionsMenu(false);
                     await handleRefresh();
                 } catch (error) {
-                    console.error('Failed to delete questions:', error);
                     ModalEmitter.showError('Failed to delete questions. Please try again.');
                 }
             },

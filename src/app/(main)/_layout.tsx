@@ -1,10 +1,11 @@
 import { Colors } from '@/constants/Colors';
+import { useAuth } from '@/hooks/useAuth';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, usePathname } from 'expo-router';
+import { Tabs, usePathname, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -48,6 +49,8 @@ const ICON_MAP = {
 export default function MainLayout() {
     const colorScheme = useColorScheme() || 'light';
     const { isAdmin } = useUserRole();
+    const { isAuthenticated, isLoading } = useAuth();
+    const router = useRouter();
     const pathname = usePathname();
     const [activeIndex, setActiveIndex] = useState(0);
 
@@ -95,28 +98,6 @@ export default function MainLayout() {
             }
         });
     }, [translateX, scaleValues, getSliderPosition]);
-
-    useEffect(() => {
-        initializeAnimations();
-    }, [initializeAnimations]);
-
-    useEffect(() => {
-        let newIndex = 0;
-        if (pathname.includes('/classes')) {
-            newIndex = 1;
-        } else if (pathname.includes('/user_management')) {
-            newIndex = isAdmin() ? 2 : 0;
-        } else if (pathname.includes('/profile')) {
-            newIndex = isAdmin() ? 3 : 2;
-        } else if (pathname === '/(main)' || pathname === '/') {
-            newIndex = 0;
-        }
-
-        if (newIndex !== activeIndex) {
-            setActiveIndex(newIndex);
-            animateToIndex(newIndex);
-        }
-    }, [pathname, activeIndex, animateToIndex, isAdmin]);
 
     const animateTab = useCallback((index: number) => {
         animateToIndex(index);
@@ -211,6 +192,46 @@ export default function MainLayout() {
             </View>
         );
     }, [colorScheme, handleTabPress, getIconName, translateX, scaleValues, pathname, activeIndex, animateToIndex, isAdmin, TAB_WIDTH]);
+
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            router.replace('/(auth)/login');
+        }
+    }, [isAuthenticated, isLoading, router]);
+
+    useEffect(() => {
+        initializeAnimations();
+    }, [initializeAnimations]);
+
+    useEffect(() => {
+        let newIndex = 0;
+        if (pathname.includes('/classes')) {
+            newIndex = 1;
+        } else if (pathname.includes('/user_management')) {
+            newIndex = isAdmin() ? 2 : 0;
+        } else if (pathname.includes('/profile')) {
+            newIndex = isAdmin() ? 3 : 2;
+        } else if (pathname === '/(main)' || pathname === '/') {
+            newIndex = 0;
+        }
+
+        if (newIndex !== activeIndex) {
+            setActiveIndex(newIndex);
+            animateToIndex(newIndex);
+        }
+    }, [pathname, activeIndex, animateToIndex, isAdmin]);
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={Colors[colorScheme].tint} />
+            </View>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return null;
+    }
 
     return (
         <Tabs

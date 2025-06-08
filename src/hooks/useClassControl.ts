@@ -81,16 +81,13 @@ export const useClassControl = () => {
         await fetchClasses(nextPage, true, searchQuery);
     }, [isAdmin, pagination, loadingMore, currentPage, searchQuery, fetchClasses]);
 
-    // Simple input handler - only updates local state
     const handleInputChange = useCallback((text: string) => {
         setSearchInput(text);
     }, []);
 
-    // Execute search only when user submits
     const handleSearch = useCallback(async (query: string) => {
         if (!isAdmin()) return;
 
-        console.log('Executing search for:', query);
         setSearchQuery(query);
         setIsSearching(true);
         setCurrentPage(1);
@@ -100,7 +97,7 @@ export const useClassControl = () => {
     const toggleSearch = useCallback(() => {
         const newShowSearch = !showSearch;
         setShowSearch(newShowSearch);
-        
+
         if (!newShowSearch && (searchQuery || searchInput)) {
             setSearchQuery('');
             setSearchInput('');
@@ -135,7 +132,6 @@ export const useClassControl = () => {
                 ModalEmitter.showSuccess("Class created successfully!");
             }
         } catch (error: any) {
-            console.error('Class operation error:', error);
             const operation = isEdit ? 'update' : 'create';
             ModalEmitter.showError(error.message || `Failed to ${operation} class. Please try again.`);
         }
@@ -187,7 +183,6 @@ export const useClassControl = () => {
                 throw new Error(response.message || 'Failed to delete class');
             }
         } catch (error: any) {
-            console.error('Delete class error:', error);
             ModalEmitter.showError(error.message || "Failed to delete class. Please try again.");
         } finally {
             setDeletingClassId(null);

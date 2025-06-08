@@ -27,7 +27,7 @@ class CrucialAuthManager {
 
             ModalEmitter.showCrucialAuth({
                 title: context?.title || "Crucial Feature Authentication",
-                description: context?.description || "Look straight at the camera for crucial verification",
+                description: context?.description || "Look straight at the camera",
                 onSuccess: () => this.retryRequest(),
                 onCancel: () => this.cancelRequest()
             });

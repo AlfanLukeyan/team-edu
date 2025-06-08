@@ -10,9 +10,9 @@ import { ThemedView } from "./ThemedView";
 type StepState = 'completed' | 'active' | 'inactive';
 
 interface RegistrationProgressProps {
-    steps: {
-        image: any;
-        desc: string;
+    steps: readonly {
+        readonly image: any;
+        readonly desc: string;
     }[];
     currentStep: number;
     completedSteps: number;
@@ -98,7 +98,7 @@ export const RegistrationProgress: React.FC<RegistrationProgressProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        marginBottom: 20,
+        marginBottom: 8,
     },
     progressContainer: {
         flexDirection: "row",

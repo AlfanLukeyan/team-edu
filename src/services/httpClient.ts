@@ -12,10 +12,11 @@ interface RequestConfig {
 
 class HttpClient {
     private static instance: HttpClient;
-    public axiosInstance: AxiosInstance; // Made public for crucial auth retry
-    private defaultTimeout = 15000;
+    public axiosInstance: AxiosInstance;
+    private defaultTimeout = 30000;
 
     constructor() {
+        console.log('HttpClient: Creating axios instance with baseURL:', API_URL);
         this.axiosInstance = axios.create({
             baseURL: API_URL,
             timeout: this.defaultTimeout,
@@ -26,121 +27,86 @@ class HttpClient {
 
     static getInstance() {
         if (!HttpClient.instance) {
+            console.log('HttpClient: Creating new instance');
             HttpClient.instance = new HttpClient();
         }
         return HttpClient.instance;
     }
 
     private setupInterceptors() {
-        // Request interceptor
+        console.log('HttpClient: Setting up interceptors');
+
         this.axiosInstance.interceptors.request.use(
             async (config) => {
+                console.log('HttpClient: Request interceptor - URL:', config.url);
                 const token = await tokenService.getValidToken();
-                console.log('Stored token check:', token ? 'Token exists' : 'No token found');
                 if (token) {
+                    console.log('HttpClient: Adding authorization token to request');
                     config.headers.Authorization = `Bearer ${token}`;
+                } else {
+                    console.log('HttpClient: No token available for request');
                 }
-
-                console.log('🟡 API Request:', {
-                    method: config.method?.toUpperCase(),
-                    url: config.url,
-                    fullUrl: `${config.baseURL}${config.url}`,
-                    hasAuth: !!token,
-                    timestamp: new Date().toISOString()
-                });
-
                 return config;
             },
             (error) => {
-                console.error('🔴 Request Error:', error);
+                console.log('HttpClient: Request interceptor error:', error.message);
                 return Promise.reject(error);
             }
         );
 
-        // Response interceptor with global crucial auth handling
         this.axiosInstance.interceptors.response.use(
             (response: AxiosResponse) => {
-                console.log('🟢 API Response Success:', {
-                    method: response.config.method?.toUpperCase(),
-                    url: response.config.url,
-                    status: response.status,
-                    statusText: response.statusText,
-                    timestamp: new Date().toISOString()
-                });
+                console.log('HttpClient: Response received - Status:', response.status, 'URL:', response.config.url);
                 return response;
             },
             async (error) => {
                 const { response, config } = error;
-
-                console.log('🔴 API Response Error:', {
-                    method: config?.method?.toUpperCase(),
-                    url: config?.url,
-                    fullUrl: `${config?.baseURL}${config?.url}`,
-                    status: response?.status,
-                    statusText: response?.statusText,
-                    data: response?.data,
-                    timestamp: new Date().toISOString()
-                });
+                console.log('HttpClient: Response error interceptor - Status:', response?.status, 'URL:', config?.url);
 
                 if (response?.status === 401) {
-                    console.log('🚫 401 Unauthorized - Clearing tokens for:', config?.url);
+                    console.log('HttpClient: 401 Unauthorized - Clearing tokens');
                     await tokenService.clearTokens();
                     ModalEmitter.unauthorized();
                     throw new Error("Unauthorized");
                 } else if (response?.status === 403) {
                     const errorData = response.data || {};
-
-                    console.log('🚫 403 Forbidden - Details:', {
-                        url: config?.url,
-                        errorData,
-                        isCrucialRequired: errorData.error === "CRUCIAL_FEATURE_AUTH_REQUIRED"
-                    });
+                    console.log('HttpClient: 403 Forbidden - Error data:', errorData);
 
                     if (errorData.error === "CRUCIAL_FEATURE_AUTH_REQUIRED") {
-                        console.log('🔐 Crucial verification required for:', config?.url);
-
-                        // Check if this is already a retry after crucial auth
+                        console.log('HttpClient: Crucial feature auth required');
                         if (config?.headers?.['X-Crucial-Verified']) {
-                            console.log('🚨 Crucial verification failed even after auth');
+                            console.log('HttpClient: Crucial verification failed (already verified)');
                             throw new Error("Crucial verification failed");
                         }
 
-                        // Use the global crucial auth manager
                         try {
+                            console.log('HttpClient: Requiring crucial auth');
                             return await crucialAuthManager.requireCrucialAuth(config);
                         } catch (crucialError) {
+                            console.log('HttpClient: Crucial verification cancelled or failed');
                             throw new Error("Crucial verification required but cancelled");
                         }
                     } else {
-                        console.log('🔄 Another device login detected for:', config?.url);
+                        console.log('HttpClient: Another device login detected');
                         await tokenService.clearTokens();
                         ModalEmitter.anotherDeviceLogin(errorData.msg);
                         throw new Error("Another device login detected");
                     }
                 } else if (response) {
-                    // Handle other HTTP errors
                     const message = response.data?.error || response.data?.message || `Request failed with status ${response.status}`;
-                    console.log('⚠️ HTTP Error:', {
-                        url: config?.url,
-                        status: response.status,
-                        message,
-                        data: response.data
-                    });
-
+                    console.log('HttpClient: Response error with status:', response.status, 'Message:', message);
                     ModalEmitter.showError(message);
 
                     const customError = new Error(message);
                     (customError as any).response = { status: response.status, data: response.data };
                     throw customError;
                 } else if (error.code === 'ECONNABORTED') {
-                    // Handle timeout
-                    console.log('⏱️ Request timeout for:', config?.url);
+                    console.log('HttpClient: Request timeout');
                     ModalEmitter.showError("Request timeout");
                     throw new Error('Request timeout');
                 } else {
-                    // Handle network errors
                     const message = error.message || "Network error";
-                    console.log('🌐 Network error for:', config?.url, message);
+                    console.log('HttpClient: Network or other error:', message);
                     ModalEmitter.showError(message);
                     throw error;
                 }
@@ -148,18 +114,20 @@ class HttpClient {
         );
     }
 
-    // HTTP method implementations remain the same
     async get<T = any>(url: string, config?: RequestConfig): Promise<T> {
+        console.log('HttpClient: GET request to:', url);
         const response = await this.axiosInstance.get<T>(url, config);
         return response.data;
     }
 
     async post<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
+        console.log('HttpClient: POST request to:', url, 'with data:', data);
         const response = await this.axiosInstance.post<T>(url, data, config);
         return response.data;
     }
 
     async postFormData<T = any>(url: string, formData: FormData, config?: RequestConfig): Promise<T> {
+        console.log('HttpClient: POST FormData request to:', url);
         const response = await this.axiosInstance.post<T>(url, formData, {
             ...config,
             headers: {
@@ -171,6 +139,7 @@ class HttpClient {
     }
 
     async putFormData<T = any>(url: string, formData: FormData, config?: RequestConfig): Promise<T> {
+        console.log('HttpClient: PUT FormData request to:', url);
         const response = await this.axiosInstance.put<T>(url, formData, {
             ...config,
             headers: {
@@ -182,16 +151,19 @@ class HttpClient {
     }
 
     async put<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
+        console.log('HttpClient: PUT request to:', url, 'with data:', data);
         const response = await this.axiosInstance.put<T>(url, data, config);
         return response.data;
     }
 
     async delete<T = any>(url: string, config?: RequestConfig): Promise<T> {
+        console.log('HttpClient: DELETE request to:', url);
         const response = await this.axiosInstance.delete<T>(url, config);
         return response.data;
     }
 
     async deleteWithData<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
+        console.log('HttpClient: DELETE request with data to:', url, 'with data:', data);
         const response = await this.axiosInstance.delete<T>(url, {
             ...config,
             data,
@@ -199,8 +171,8 @@ class HttpClient {
         return response.data;
     }
 
-    // No auth requests
     async postNoAuth<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
+        console.log('HttpClient: POST request (no auth) to:', url, 'with data:', data);
         const configWithoutAuth = {
             ...config,
             headers: {
@@ -213,7 +185,8 @@ class HttpClient {
         return response.data;
     }
 
-        async postFormDataNoAuth<T = any>(url: string, formData: FormData, config?: RequestConfig): Promise<T> {
+    async postFormDataNoAuth<T = any>(url: string, formData: FormData, config?: RequestConfig): Promise<T> {
+        console.log('HttpClient: POST FormData request (no auth) to:', url);
         const configWithoutAuth = {
             ...config,
             headers: {

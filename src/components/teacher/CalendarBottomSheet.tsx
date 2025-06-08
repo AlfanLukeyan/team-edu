@@ -37,7 +37,7 @@ const CalendarBottomSheet = forwardRef<
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const { dismiss } = useBottomSheetModal();
     const theme = useColorScheme() || "light";
-    const snapPoints = useMemo(() => ["50%", "75%"], []);
+    const snapPoints = useMemo(() => ["75%"], []);
 
     const handleClose = useCallback(() => {
         if (onClose) onClose();
@@ -55,9 +55,10 @@ const CalendarBottomSheet = forwardRef<
                 disappearsOnIndex={-1}
                 appearsOnIndex={0}
                 opacity={0.5}
+                onPress={handleClose}
             />
         ),
-        []
+        [handleClose]
     );
 
     useImperativeHandle(ref, () => ({ open: handleOpen, close: handleClose }));
@@ -68,7 +69,9 @@ const CalendarBottomSheet = forwardRef<
             index={0}
             snapPoints={snapPoints}
             backdropComponent={renderBackdrop}
-            enablePanDownToClose
+            enablePanDownToClose={false}
+            enableHandlePanningGesture={false}
+            enableContentPanningGesture={false}
             handleIndicatorStyle={{
                 backgroundColor: Colors[theme].text,
                 opacity: 0.5,

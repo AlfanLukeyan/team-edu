@@ -104,7 +104,6 @@ export function WeeklyCard({
             try {
                 await Linking.openURL(videoUrl);
             } catch (error) {
-                console.error('Failed to open video URL:', error);
             }
         }
     };

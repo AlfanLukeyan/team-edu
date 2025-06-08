@@ -5,11 +5,12 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { authService } from "@/services/authService";
-import { ModalEmitter } from "@/services/modalEmitter";
 import { restoreBrightness, setMaxBrightness } from "@/utils/utils";
+import { Ionicons } from "@expo/vector-icons";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+    ActivityIndicator,
     Animated,
     Modal,
     StyleSheet,
@@ -38,12 +39,28 @@ const CrucialFeatureAuthModal: React.FC<CrucialFeatureAuthModalProps> = ({
     onSuccess,
     onCancel,
     title = "Crucial Feature Authentication",
-    description = "Look straight at the camera for crucial verification"
+    description = "Look straight at the camera"
 }) => {
     const colorScheme = useColorScheme() ?? "light";
     const cameraRef = useRef<CameraView>(null);
     const [permission, requestPermission] = useCameraPermissions();
     const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    // Internal states for loading and toast
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState("");
+    const [toast, setToast] = useState<{
+        visible: boolean;
+        message: string;
+        type: 'success' | 'error';
+    }>({
+        visible: false,
+        message: "",
+        type: 'success'
+    });
+
+    // Toast animation
+    const toastAnim = useRef(new Animated.Value(-100)).current;
 
     useEffect(() => {
         if (visible) {
@@ -60,6 +77,9 @@ const CrucialFeatureAuthModal: React.FC<CrucialFeatureAuthModalProps> = ({
                 duration: 300,
                 useNativeDriver: true,
             }).start();
+            // Reset states when modal closes
+            setIsLoading(false);
+            setToast({ visible: false, message: "", type: 'success' });
         }
 
         return () => {
@@ -69,10 +89,36 @@ const CrucialFeatureAuthModal: React.FC<CrucialFeatureAuthModalProps> = ({
         };
     }, [visible, fadeAnim]);
 
+    // Toast animation effect
+    useEffect(() => {
+        if (toast.visible) {
+            Animated.sequence([
+                Animated.timing(toastAnim, {
+                    toValue: 20,
+                    duration: 300,
+                    useNativeDriver: true,
+                }),
+                Animated.delay(2500),
+                Animated.timing(toastAnim, {
+                    toValue: -100,
+                    duration: 300,
+                    useNativeDriver: true,
+                })
+            ]).start(() => {
+                setToast(prev => ({ ...prev, visible: false }));
+            });
+        }
+    }, [toast.visible, toastAnim]);
+
+    const showToast = useCallback((message: string, type: 'success' | 'error') => {
+        setToast({ visible: true, message, type });
+    }, []);
+
     const handleVerify = useCallback(async () => {
         if (!cameraRef.current) return;
 
-        ModalEmitter.showLoading("Verifying crucial access...");
+        setIsLoading(true);
+        setLoadingMessage("Verifying crucial access...");
 
         try {
             const photo = await cameraRef.current.takePictureAsync({
@@ -80,13 +126,10 @@ const CrucialFeatureAuthModal: React.FC<CrucialFeatureAuthModalProps> = ({
                 quality: CAMERA_CONFIG.quality,
             });
 
-            console.log("Photo taken for crucial auth:", photo);
-
             const response = await authService.crucialVerify(photo.uri);
-            console.log("Crucial verification response:", response);
 
-            ModalEmitter.hideLoading();
-            ModalEmitter.showSuccess(response.message || "Crucial access granted!");
+            setIsLoading(false);
+            showToast(response.message || "Crucial access granted!", 'success');
 
             // Short delay for user to see success message
             setTimeout(() => {
@@ -94,11 +137,10 @@ const CrucialFeatureAuthModal: React.FC<CrucialFeatureAuthModalProps> = ({
             }, 1000);
 
         } catch (error: any) {
-            ModalEmitter.hideLoading();
-            ModalEmitter.showError(error.message || "Crucial verification failed. Please try again.");
-            console.error("Crucial verification error:", error);
+            setIsLoading(false);
+            showToast(error.message || "Crucial verification failed. Please try again.", 'error');
         }
-    }, [onSuccess]);
+    }, [onSuccess, showToast]);
 
     const handleCancel = useCallback(() => {
         onCancel();
@@ -150,6 +192,41 @@ const CrucialFeatureAuthModal: React.FC<CrucialFeatureAuthModalProps> = ({
         >
             <Animated.View style={[styles.centeredView, { opacity: fadeAnim }]}>
                 <ThemedView isCard={true} style={styles.modalContainer}>
+                    {/* Loading Overlay */}
+                    {isLoading && (
+                        <View style={styles.loadingOverlay}>
+                            <ActivityIndicator
+                                size="large"
+                                color={Colors[colorScheme].tint}
+                            />
+                            <ThemedText style={styles.loadingText}>
+                                {loadingMessage}
+                            </ThemedText>
+                        </View>
+                    )}
+
+                    {/* Toast Notification */}
+                    {toast.visible && (
+                        <Animated.View
+                            style={[
+                                styles.toastContainer,
+                                {
+                                    transform: [{ translateY: toastAnim }],
+                                    backgroundColor: toast.type === 'success' ? '#4CAF50' : '#F44336'
+                                }
+                            ]}
+                        >
+                            <Ionicons
+                                name={toast.type === 'success' ? "checkmark-circle" : "close-circle"}
+                                size={20}
+                                color="white"
+                            />
+                            <ThemedText style={styles.toastText}>
+                                {toast.message}
+                            </ThemedText>
+                        </Animated.View>
+                    )}
+
                     {/* Header */}
                     <View style={styles.header}>
                         <ThemedText type="defaultSemiBold" style={styles.modalTitle}>
@@ -183,15 +260,23 @@ const CrucialFeatureAuthModal: React.FC<CrucialFeatureAuthModalProps> = ({
                         <ButtonWithDescription
                             description="Verify your identity to continue"
                             onPress={handleVerify}
+                            disabled={isLoading}
                         >
-                            Verify Identity
+                            {isLoading ? 'Verifying...' : 'Verify Identity'}
                         </ButtonWithDescription>
 
                         <TouchableOpacity
                             onPress={handleCancel}
                             style={styles.cancelButton}
+                            disabled={isLoading}
                         >
-                            <ThemedText style={[styles.cancelText, { color: Colors[colorScheme].text }]}>
+                            <ThemedText style={[
+                                styles.cancelText,
+                                {
+                                    color: Colors[colorScheme].text,
+                                    opacity: isLoading ? 0.5 : 0.7
+                                }
+                            ]}>
                                 Cancel
                             </ThemedText>
                         </TouchableOpacity>
@@ -216,6 +301,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 0,
         overflow: 'hidden',
+        position: 'relative',
     },
     permissionContainer: {
         width: "100%",
@@ -224,6 +310,50 @@ const styles = StyleSheet.create({
         padding: 25,
         alignItems: "center",
         gap: 15,
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+        borderRadius: 20,
+        gap: 15,
+    },
+    loadingText: {
+        color: 'white',
+        textAlign: 'center',
+        fontSize: 16,
+    },
+    toastContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 20,
+        right: 20,
+        zIndex: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 8,
+        gap: 8,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    toastText: {
+        color: 'white',
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '500',
     },
     header: {
         padding: 20,

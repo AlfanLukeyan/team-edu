@@ -95,7 +95,6 @@ const WeeklySectionBottomSheet = forwardRef<
                 setSelectedFile(result.assets[0]);
             }
         } catch (error) {
-            console.error('Error picking file:', error);
         }
     }, []);
 
