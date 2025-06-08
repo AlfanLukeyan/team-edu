@@ -2,7 +2,6 @@ import { crucialAuthManager } from "@/services/crucialAuthManager";
 import { ModalEmitter } from "@/services/modalEmitter";
 import { tokenService } from "@/services/tokenService";
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { Platform } from "react-native";
 
 interface RequestConfig {
     headers?: Record<string, string>;
@@ -29,12 +28,9 @@ class HttpClient {
         return HttpClient.instance;
     }
 
-private getApiUrl(): string {
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-        return '/api/proxy';
+    private getApiUrl(): string {
+        return process.env.EXPO_PUBLIC_API_URL || '';
     }
-    return process.env.EXPO_PUBLIC_API_URL || '';
-}
 
     private setupInterceptors(): void {
         this.axiosInstance.interceptors.request.use(
