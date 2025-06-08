@@ -38,3 +38,6 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+/android/app/google-services.json
+/ios/GoogleService-Info.plist

@@ -10,7 +10,7 @@
         "newArchEnabled": true,
         "ios": {
             "supportsTablet": true,
-            "bundleIdentifier": "com.anonymous.teamedu",
+            "bundleIdentifier": "com.pmi.limited.PMIAPPM06904",
             "infoPlist": {
                 "NSDocumentsFolderUsageDescription": "This app needs access to save downloaded files",
                 "NSDownloadsUsageDescription": "This app downloads attachments files",
@@ -40,7 +40,7 @@
                 "backgroundColor": "#ffffff"
             },
             "edgeToEdgeEnabled": true,
-            "package": "com.anonymous.teamedu",
+            "package": "com.alfanlukeyan.teamedu",
             "permissions": [
                 "android.permission.READ_EXTERNAL_STORAGE",
                 "android.permission.WRITE_EXTERNAL_STORAGE",

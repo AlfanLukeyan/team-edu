@@ -1,4 +1,4 @@
-package com.anonymous.teamedu
+package com.alfanlukeyan.teamedu
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

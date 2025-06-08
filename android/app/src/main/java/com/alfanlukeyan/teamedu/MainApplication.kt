@@ -1,4 +1,4 @@
-package com.anonymous.teamedu
+package com.alfanlukeyan.teamedu
 
 import android.app.Application
 import android.content.res.Configuration
