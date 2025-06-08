@@ -3,6 +3,7 @@ import { Dropdown } from "@/components/Dropdown";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { ModalEmitter } from "@/services/modalEmitter";
 import { userService } from "@/services/userService";
 import { Role, UserByRole } from "@/types/api";
 import {
@@ -87,8 +88,19 @@ const UserBottomSheet = forwardRef<
 
     const handleDeletePress = useCallback(() => {
         if (selectedUser && onDeleteUser) {
-            onDeleteUser(selectedUser.uuid);
-            handleClose();
+            ModalEmitter.showAlert({
+                title: "Delete User",
+                message: `Are you sure you want to delete ${selectedUser.name}? This action cannot be undone.`,
+                type: "danger",
+                confirmText: "Delete",
+                cancelText: "Cancel",
+                onConfirm: () => {
+                    onDeleteUser(selectedUser.uuid);
+                    handleClose();
+                },
+                onCancel: () => {
+                }
+            });
         }
     }, [selectedUser, onDeleteUser, handleClose]);
 
