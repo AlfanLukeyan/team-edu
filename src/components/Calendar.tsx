@@ -6,9 +6,11 @@ export type { DateType };
 interface CalendarProps {
     selected: DateType;
     onDateChange: (date: DateType) => void;
+    minDate?: Date;
+    maxDate?: Date;
 }
 
-export function Calendar({ selected, onDateChange }: CalendarProps) {
+export function Calendar({ selected, onDateChange, minDate, maxDate }: CalendarProps) {
     const defaultStyles = useDefaultStyles();
 
     return (
@@ -20,6 +22,8 @@ export function Calendar({ selected, onDateChange }: CalendarProps) {
             showOutsideDays={true}
             timePicker={true}
             use12Hours={true}
+            minDate={minDate}
+            maxDate={maxDate}
         />
     );
 }

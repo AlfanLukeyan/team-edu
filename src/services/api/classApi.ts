@@ -60,11 +60,11 @@ export const classApi = {
         return httpClient.get(`/public/class/members/?classID=${classId}`);
     },
 
-    createWeeklySection: async (classId: string, weekNumber: number, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> => {
+    createWeeklySection: async (classId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> => {
         const formData = new FormData();
 
         formData.append('kelas_id', classId);
-        formData.append('week_number', weekNumber.toString());
+        formData.append('week_number', data.weekNumber.toString());
         formData.append('headingPertemuan', data.title);
         formData.append('bodyPertemuan', data.description);
 
@@ -83,6 +83,7 @@ export const classApi = {
         const formData = new FormData();
 
         formData.append('week_id', weekId);
+        formData.append('week_number', data.weekNumber.toString());
         formData.append('headingPertemuan', data.title);
         formData.append('bodyPertemuan', data.description);
 

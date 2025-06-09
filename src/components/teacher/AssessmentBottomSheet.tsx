@@ -54,9 +54,28 @@ const AssessmentBottomSheet = forwardRef<
         duration: "",
     });
 
-    // Edit mode state
+    const [dateError, setDateError] = useState<string | null>(null);
+
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingAssessmentId, setEditingAssessmentId] = useState<string | null>(null);
+
+    const validateDates = useCallback((startDate: string, endDate: string) => {
+        if (!startDate || !endDate) {
+            setDateError(null);
+            return true;
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (start >= end) {
+            setDateError("End date must be after start date");
+            return false;
+        }
+
+        setDateError(null);
+        return true;
+    }, []);
 
     const resetForm = useCallback(() => {
         setFormData({
@@ -66,6 +85,7 @@ const AssessmentBottomSheet = forwardRef<
             end_date: "",
             duration: "",
         });
+        setDateError(null);
         setIsEditMode(false);
         setEditingAssessmentId(null);
     }, []);
@@ -91,17 +111,21 @@ const AssessmentBottomSheet = forwardRef<
             end_date: assessment.end_time,
             duration: (assessment.duration / 60).toString(), // Convert seconds to minutes
         });
+        validateDates(assessment.start_time, assessment.end_time);
         bottomSheetModalRef.current?.present();
-    }, []);
+    }, [validateDates]);
 
     const handleFieldChange = (field: keyof AssessmentFormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = useCallback(() => {
+        if (!validateDates(formData.start_date, formData.end_date)) {
+            return;
+        }
         onSubmit(formData, isEditMode ? editingAssessmentId || undefined : undefined);
         handleClose();
-    }, [formData, onSubmit, isEditMode, editingAssessmentId, handleClose]);
+    }, [formData, onSubmit, isEditMode, editingAssessmentId, handleClose, validateDates]);
 
     const renderBackdrop = useCallback(
         (props: BottomSheetBackdropProps) => (
@@ -118,20 +142,24 @@ const AssessmentBottomSheet = forwardRef<
     const handleStartDateChange = (date: DateType) => {
         if (date) {
             const dateObj = date instanceof Date ? date : new Date(date as any);
+            const startDateISO = dateObj.toISOString();
             setFormData(prev => ({
                 ...prev,
-                start_date: dateObj.toISOString()
+                start_date: startDateISO
             }));
+            validateDates(startDateISO, formData.end_date);
         }
     };
 
     const handleEndDateChange = (date: DateType) => {
         if (date) {
             const dateObj = date instanceof Date ? date : new Date(date as any);
+            const endDateISO = dateObj.toISOString();
             setFormData(prev => ({
                 ...prev,
-                end_date: dateObj.toISOString()
+                end_date: endDateISO
             }));
+            validateDates(formData.start_date, endDateISO);
         }
     };
 
@@ -148,7 +176,23 @@ const AssessmentBottomSheet = forwardRef<
     };
 
     const isFormValid = formData.title.trim() && formData.description.trim() &&
-        formData.start_date && formData.end_date && formData.duration;
+        formData.start_date && formData.end_date && formData.duration && !dateError;
+
+    const getMinEndDate = () => {
+        if (formData.start_date) {
+            const startDate = new Date(formData.start_date);
+            return new Date(startDate.getTime() + 60000);
+        }
+        return new Date();
+    };
+
+    const getMaxStartDate = () => {
+        if (formData.end_date) {
+            const endDate = new Date(formData.end_date);
+            return new Date(endDate.getTime() - 60000);
+        }
+        return undefined;
+    };
 
     useImperativeHandle(ref, () => ({
         open: handleOpen,
@@ -202,7 +246,13 @@ const AssessmentBottomSheet = forwardRef<
                             <View>
                                 <ThemedText style={styles.label}>Start Date</ThemedText>
                                 <Pressable
-                                    style={{ borderColor: theme === "light" ? Colors.light.border : Colors.dark.border, borderWidth: 1, borderRadius: 15, paddingVertical: 10, paddingHorizontal: 16 }}
+                                    style={{
+                                        borderColor: dateError ? '#ff4444' : theme === "light" ? Colors.light.border : Colors.dark.border,
+                                        borderWidth: 1,
+                                        borderRadius: 15,
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 16
+                                    }}
                                     onPress={() => startDateRef.current?.open()}
                                 >
                                     <ThemedText type="placeholder">
@@ -214,7 +264,13 @@ const AssessmentBottomSheet = forwardRef<
                             <View>
                                 <ThemedText style={styles.label}>End Date</ThemedText>
                                 <Pressable
-                                    style={{ borderColor: theme === "light" ? Colors.light.border : Colors.dark.border, borderWidth: 1, borderRadius: 15, paddingVertical: 10, paddingHorizontal: 16 }}
+                                    style={{
+                                        borderColor: dateError ? '#ff4444' : theme === "light" ? Colors.light.border : Colors.dark.border,
+                                        borderWidth: 1,
+                                        borderRadius: 15,
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 16
+                                    }}
                                     onPress={() => endDateRef.current?.open()}
                                 >
                                     <ThemedText type="placeholder">
@@ -222,6 +278,14 @@ const AssessmentBottomSheet = forwardRef<
                                     </ThemedText>
                                 </Pressable>
                             </View>
+
+                            {dateError && (
+                                <View style={styles.errorContainer}>
+                                    <ThemedText style={styles.errorText}>
+                                        {dateError}
+                                    </ThemedText>
+                                </View>
+                            )}
 
                             <ThemedBottomSheetTextInput
                                 label="Duration (minutes)"
@@ -244,13 +308,15 @@ const AssessmentBottomSheet = forwardRef<
                 title="Select Start Date & Time"
                 selected={formData.start_date ? new Date(formData.start_date) : new Date()}
                 onDateChange={handleStartDateChange}
+                maxDate={getMaxStartDate()}
             />
 
             <CalendarBottomSheet
                 ref={endDateRef}
                 title="Select End Date & Time"
-                selected={formData.end_date ? new Date(formData.end_date) : new Date()}
+                selected={formData.end_date ? new Date(formData.end_date) : getMinEndDate()}
                 onDateChange={handleEndDateChange}
+                minDate={getMinEndDate()}
             />
         </>
     );
@@ -271,6 +337,15 @@ const styles = StyleSheet.create({
     label: {
         fontFamily: "Poppins-SemiBold",
         marginBottom: 4,
+    },
+    errorContainer: {
+        marginTop: -4,
+        marginBottom: 4,
+    },
+    errorText: {
+        color: '#ff4444',
+        fontSize: 12,
+        fontFamily: "Poppins-Regular",
     },
 });
 

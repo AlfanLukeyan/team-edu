@@ -227,6 +227,7 @@ const StudentsScreen = () => {
                         onRefresh={handleRefresh}
                     />
                 }
+                showsVerticalScrollIndicator={false}
             >
                 {isAdmin() && (
                     <ProgressiveHint hints={studentHints} />

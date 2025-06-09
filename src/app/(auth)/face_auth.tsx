@@ -247,7 +247,6 @@ const styles = StyleSheet.create({
         gap: 15,
     },
 
-    // Web Styles
     webScrollContainer: {
         flexGrow: 1,
         justifyContent: 'center',
@@ -312,7 +311,6 @@ const styles = StyleSheet.create({
         height: '100%',
     },
 
-    // Shared Styles
     overlay: {
         position: "absolute",
         top: 0,
