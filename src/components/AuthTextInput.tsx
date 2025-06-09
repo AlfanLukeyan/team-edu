@@ -98,6 +98,9 @@ export function TextInput({
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     {...props}
+                    accessible
+                    testID={label?.replace(/\s+/g, "_").toLowerCase()}
+                    accessibilityLabel={label}
                 />
 
                 {(rightIcon || isPassword) && (

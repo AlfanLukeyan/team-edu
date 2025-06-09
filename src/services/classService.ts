@@ -121,10 +121,7 @@ class ClassService {
 
     async createWeeklySection(classId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> {
         try {
-            const existingSections = await this.getWeeklySections(classId);
-            const nextWeekNumber = Math.max(0, ...existingSections.map(section => section.week_number)) + 1;
-
-            const response = await classApi.createWeeklySection(classId, nextWeekNumber, data);
+            const response = await classApi.createWeeklySection(classId, data);
             return response;
         } catch (error) {
             throw error;

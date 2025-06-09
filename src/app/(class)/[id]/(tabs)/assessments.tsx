@@ -296,6 +296,7 @@ const AssessmentsScreen = () => {
                             onRefresh={handleRefresh}
                         />
                     }
+                    showsVerticalScrollIndicator={false}
                 >
                     <TeacherOnly>
                         <ProgressiveHint hints={assessmentHints} />

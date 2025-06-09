@@ -208,7 +208,7 @@ const WeeklyScreen = () => {
                     showsVerticalScrollIndicator={false}
                 >
                     <TeacherOnly>
-                        <Button onPress={handleOpenWeeklySheet} icon={{name: 'playlist-add'}}>
+                        <Button onPress={handleOpenWeeklySheet} icon={{ name: 'playlist-add' }}>
                             Create Weekly Section
                         </Button>
                     </TeacherOnly>
@@ -257,6 +257,7 @@ const WeeklyScreen = () => {
                 <WeeklySectionBottomSheet
                     ref={createSectionRef}
                     onSubmit={handleCreateOrUpdateSection}
+                    existingWeekNumbers={weeklySections.map(section => section.week_number)}
                 />
 
                 <AssignmentBottomSheet

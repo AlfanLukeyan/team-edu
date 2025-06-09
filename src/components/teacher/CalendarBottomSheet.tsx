@@ -28,12 +28,14 @@ interface CalendarBottomSheetProps {
     selected: DateType;
     onDateChange: (date: DateType) => void;
     onClose?: () => void;
+    minDate?: Date;
+    maxDate?: Date;
 }
 
 const CalendarBottomSheet = forwardRef<
     CalendarBottomSheetRef,
     CalendarBottomSheetProps
->(({ title, selected, onDateChange, onClose }, ref) => {
+>(({ title, selected, onDateChange, onClose, minDate, maxDate }, ref) => {
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const { dismiss } = useBottomSheetModal();
     const theme = useColorScheme() || "light";
@@ -94,7 +96,12 @@ const CalendarBottomSheet = forwardRef<
                         </Pressable>
                     </View>
 
-                    <Calendar selected={selected} onDateChange={onDateChange} />
+                    <Calendar
+                        selected={selected}
+                        onDateChange={onDateChange}
+                        minDate={minDate}
+                        maxDate={maxDate}
+                    />
                 </View>
             </BottomSheetView>
         </BottomSheetModal>

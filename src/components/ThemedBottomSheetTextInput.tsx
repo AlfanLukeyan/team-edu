@@ -17,22 +17,28 @@ const ThemedBottomSheetTextInput: React.FC<ThemedBottomSheetTextInputProps> = ({
 }) => {
     const theme = useColorScheme();
 
-    const inputStyle = {
-        borderWidth: 1,
-        borderColor: theme === "light" ? Colors.light.border : Colors.dark.border,
-        color: theme === "light" ? Colors.light.text : Colors.dark.text,
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 15,
-        fontFamily: "Poppins-Regular",
-    };
+    const inputStyle = StyleSheet.create({
+        input: {
+            borderWidth: 1,
+            borderColor: theme === "light" ? Colors.light.border : Colors.dark.border,
+            color: theme === "light" ? Colors.light.text : Colors.dark.text,
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderRadius: 15,
+            fontFamily: "Poppins-Regular",
+            fontSize: 14,
+            height: 44,
+        }
+    }).input;
 
-    const multilineInputStyle = {
-        ...inputStyle,
-        minHeight: 100,
-        paddingTop: 12,
-        textAlignVertical: "top" as const,
-    };
+    const multilineInputStyle = StyleSheet.create({
+        input: {
+            ...inputStyle,
+            height: 100,
+            paddingTop: 12,
+            textAlignVertical: "top" as const,
+        }
+    }).input;
 
     return (
         <View style={styles.container}>
@@ -51,7 +57,8 @@ const ThemedBottomSheetTextInput: React.FC<ThemedBottomSheetTextInputProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        marginBottom: 8,
+        width: '100%',
     },
     label: {
         fontSize: 14,

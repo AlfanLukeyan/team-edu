@@ -7,6 +7,7 @@ export interface AssessmentFormData {
 }
 
 export interface WeeklySectionFormData {
+    weekNumber: number;
     title: string;
     description: string;
     videoUrl?: string;
