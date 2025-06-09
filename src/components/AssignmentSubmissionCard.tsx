@@ -58,11 +58,11 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
     const shouldShowImage = user_profile_url && !imageError;
 
     const handleDownloadSubmission = async () => {
-        if (!file_url) return;
+        if (!file_url || !file_name) return;
 
         try {
             setDownloading(true);
-            await downloadService.downloadFile(file_url);
+            await downloadService.downloadFile(file_url, file_name);
         } catch (error) {
             // Error handling is done in the download service
         } finally {

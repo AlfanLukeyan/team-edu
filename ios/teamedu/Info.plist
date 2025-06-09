@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>teamedu</string>
-          <string>com.pmi.limited.PMIAPPM06904</string>
+          <string>com.alfanlukeyan.teamedu</string>
         </array>
       </dict>
     </array>

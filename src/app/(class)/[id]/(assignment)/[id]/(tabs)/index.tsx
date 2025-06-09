@@ -91,8 +91,8 @@ export default function AboutAssignmentScreen() {
         }
     };
 
-    const handleDownloadFile = async (url: string) => {
-        await downloadService.downloadFile(url);
+    const handleDownloadFile = async (url: string, filename: string) => {
+        await downloadService.downloadFile(url, filename);
     };
 
     const handleOpenFile = async (url: string) => {

@@ -10,7 +10,7 @@
         "newArchEnabled": true,
         "ios": {
             "supportsTablet": true,
-            "bundleIdentifier": "com.pmi.limited.PMIAPPM06904",
+            "bundleIdentifier": "com.alfanlukeyan.teamedu",
             "infoPlist": {
                 "NSDocumentsFolderUsageDescription": "This app needs access to save downloaded files",
                 "NSDownloadsUsageDescription": "This app downloads attachments files",
@@ -51,7 +51,7 @@
         "web": {
             "bundler": "metro",
             "output": "static",
-            "favicon": "./assets/images/favicon.png"
+            "favicon": "./assets/icons/favicon.png"
         },
         "plugins": [
             [
