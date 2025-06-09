@@ -1,5 +1,6 @@
 import { AddMemberRequest, AddMemberResponse, AssessmentResponse, ClassInfoResponse, ClassMemberResponse, CreateClassRequest, CreateClassResponse, DeleteClassResponse, DeleteMemberResponse, StudentAssessmentResponse, UpdateClassRequest, UpdateClassResponse, WeeklySectionResponse } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
+import { Platform } from 'react-native';
 import { httpClient } from '../httpClient';
 
 export const classApi = {
@@ -73,7 +74,16 @@ export const classApi = {
         }
 
         if (data.file) {
-            formData.append('file', data.file as any);
+            if (Platform.OS === 'web') {
+                const response = await fetch(data.file.uri);
+                const blob = await response.blob();
+                const file = new File([blob], data.file.name, {
+                    type: data.file.type || 'application/octet-stream'
+                });
+                formData.append('file', file);
+            } else {
+                formData.append('file', data.file as any);
+            }
         }
 
         return httpClient.postFormData('/teacher/kelas/weekly-section', formData);
@@ -92,7 +102,16 @@ export const classApi = {
         }
 
         if (data.file) {
-            formData.append('file', data.file as any);
+            if (Platform.OS === 'web') {
+                const response = await fetch(data.file.uri);
+                const blob = await response.blob();
+                const file = new File([blob], data.file.name, {
+                    type: data.file.type || 'application/octet-stream'
+                });
+                formData.append('file', file);
+            } else {
+                formData.append('file', data.file as any);
+            }
         }
 
         return httpClient.putFormData('/teacher/kelas/weekly-section', formData);

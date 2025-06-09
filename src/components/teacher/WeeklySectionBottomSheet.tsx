@@ -20,7 +20,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import ThemedBottomSheetTextInput from "../ThemedBottomSheetTextInput";
 
 export interface WeeklySectionBottomSheetRef {
@@ -118,11 +118,18 @@ const WeeklySectionBottomSheet = forwardRef<
         try {
             const result = await DocumentPicker.getDocumentAsync({
                 type: '*/*',
-                copyToCacheDirectory: false,
+                copyToCacheDirectory: Platform.OS !== 'web',
             });
 
             if (!result.canceled && result.assets?.[0]) {
-                setSelectedFile(result.assets[0]);
+                const asset = result.assets[0];
+
+                setSelectedFile({
+                    ...asset,
+                    uri: asset.uri,
+                    name: asset.name,
+                    mimeType: asset.mimeType || 'application/octet-stream',
+                });
             }
         } catch (error) {
         }
@@ -239,7 +246,6 @@ const WeeklySectionBottomSheet = forwardRef<
                             onChangeText={setVideoUrl}
                         />
 
-                        {/* File Upload Section */}
                         <View style={styles.fileSection}>
                             <ThemedText style={styles.fileLabel}>Attachment (optional)</ThemedText>
                             {selectedFile ? (

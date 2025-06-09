@@ -20,7 +20,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { Alert, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { DateType } from "../Calendar";
 import ThemedBottomSheetTextInput from "../ThemedBottomSheetTextInput";
 import CalendarBottomSheet, { CalendarBottomSheetRef } from "./CalendarBottomSheet";
@@ -53,7 +53,6 @@ const AssignmentBottomSheet = forwardRef<
         file: null,
     });
 
-    // Edit mode state
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
     const [currentWeekId, setCurrentWeekId] = useState<string>("");
@@ -115,20 +114,30 @@ const AssignmentBottomSheet = forwardRef<
         try {
             const result = await DocumentPicker.getDocumentAsync({
                 type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'image/*'],
-                copyToCacheDirectory: false,
+                copyToCacheDirectory: Platform.OS !== 'web',
             });
 
             if (!result.canceled && result.assets[0]) {
                 const file = result.assets[0];
                 setSelectedFile(file);
-                setFormData(prev => ({
-                    ...prev,
-                    file: {
-                        uri: file.uri,
-                        name: file.name,
-                        type: file.mimeType || 'application/octet-stream',
-                    } as any
-                }));
+
+                if (Platform.OS === 'web') {
+                    const response = await fetch(file.uri);
+                    const blob = await response.blob();
+                    const webFile = new File([blob], file.name, {
+                        type: file.mimeType || 'application/octet-stream'
+                    });
+                    setFormData(prev => ({ ...prev, file: webFile }));
+                } else {
+                    setFormData(prev => ({
+                        ...prev,
+                        file: {
+                            uri: file.uri,
+                            name: file.name,
+                            type: file.mimeType || 'application/octet-stream',
+                        } as any
+                    }));
+                }
             }
         } catch (error) {
             Alert.alert('Error', 'Failed to pick document');

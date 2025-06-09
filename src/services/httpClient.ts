@@ -167,6 +167,18 @@ class HttpClient {
         const response = await this.axiosInstance.post<T>(url, formData, configWithoutAuth);
         return response.data;
     }
+
+    async downloadBlob(url: string, config?: RequestConfig): Promise<{ blob: Blob; headers: any }> {
+        const response = await this.axiosInstance.get(url, {
+            ...config,
+            responseType: 'blob',
+        });
+
+        return {
+            blob: response.data,
+            headers: response.headers
+        };
+    }
 }
 
 export const httpClient = HttpClient.getInstance();
