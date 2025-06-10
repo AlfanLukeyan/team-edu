@@ -80,17 +80,20 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                             color={iconConfig.color}
                         />
 
-                        <ThemedText type="defaultSemiBold" style={styles.title}>
+                        <ThemedText type="defaultSemiBold" style={styles.title} accessible accessibilityLabel="Alert title" testID="alert-title">
                             {title}
                         </ThemedText>
 
-                        <ThemedText style={styles.message}>
+                        <ThemedText style={styles.message} accessible accessibilityLabel="Alert message" testID="alert-message">
                             {message}
                         </ThemedText>
                     </ThemedView>
 
                     <ThemedView style={styles.buttonContainer}>
                         <TouchableOpacity
+                            accessible
+                            accessibilityLabel="Confirm action"
+                            testID="confirm-action"
                             style={[
                                 styles.button,
                                 styles.confirmButton,
@@ -104,6 +107,9 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                         </TouchableOpacity>
 
                         <TouchableOpacity
+                            accessible
+                            accessibilityLabel="Cancel action"
+                            testID="cancel-action"
                             style={[
                                 styles.button,
                                 styles.cancelButton,

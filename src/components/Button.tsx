@@ -78,6 +78,9 @@ export function Button({
 
     return (
         <TouchableOpacity
+            accessible
+            accessibilityLabel={`${children} Button`}
+            testID={`${String(children).replace(/\s+/g, '-').toLowerCase()}-button`}
             style={[
                 styles.base,
                 styles.content,

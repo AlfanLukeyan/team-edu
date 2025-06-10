@@ -106,6 +106,9 @@ export default function OnboardingScreen() {
                     Ready to Start Learning?
                 </ThemedText>
                 <TouchableOpacity
+                    accessible
+                    accessibilityLabel="Navigate to login"
+                    testID="navigate-to-login-button"
                     style={[styles.button, { backgroundColor: Colors[theme].button }]}
                     onPress={handleNavigateToLogin}
                 >
