@@ -53,7 +53,7 @@ export default function RegisterScreen() {
             return;
         }
 
-        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+        const phoneRegex = /^(\+?62|0)[0-9]{8,13}$/;
         if (!phoneRegex.test(phone)) {
             ModalEmitter.showError("Please enter a valid phone number");
             return;
