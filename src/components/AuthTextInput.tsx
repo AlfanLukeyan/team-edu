@@ -107,6 +107,9 @@ export function TextInput({
                     <TouchableOpacity
                         onPress={handleRightIconPress}
                         style={styles.rightIcon}
+                        accessible
+                        accessibilityLabel={isPassword ? "Toggle password visibility" : "Right icon"}
+                        testID={`right-icon-${label?.replace(/\s+/g, "_").toLowerCase()}`}
                     >
                         <IconSymbol
                             name={getRightIcon()}
@@ -118,7 +121,11 @@ export function TextInput({
             </View>
 
             {error && (
-                <ThemedText style={[styles.errorText, { color: Colors[theme].error }]}>
+                <ThemedText style={[styles.errorText, { color: Colors[theme].error }]}
+                    accessible
+                    accessibilityLabel={`Error in ${label}`}
+                    testID={`error-${label?.replace(/\s+/g, "_").toLowerCase()}`}
+                >
                     {error}
                 </ThemedText>
             )}

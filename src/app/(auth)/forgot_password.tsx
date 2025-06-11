@@ -29,24 +29,24 @@ export default function ForgotPasswordScreen() {
 
     const handleResetPassword = async () => {
         if (!email.trim()) {
-            ModalEmitter.emit("SHOW_ERROR", "Please enter your email address");
+            ModalEmitter.showError("Please enter your email address");
             return;
         }
 
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            ModalEmitter.emit("SHOW_ERROR", "Please enter a valid email address");
+            ModalEmitter.showError("Please enter a valid email address");
             return;
         }
 
         setIsLoading(true);
         try {
             const response = await authApi.requestPasswordReset(email);
-            ModalEmitter.emit("SHOW_SUCCESS", response.msg || "Reset password request sent! Please check your email.");
+            ModalEmitter.showSuccess(response.msg || "Reset password request sent! Please check your email.");
             setRequestSent(true);
         } catch (error: any) {
-            ModalEmitter.emit("SHOW_ERROR", error.message || "Failed to send reset password request");
+            ModalEmitter.showError(error.message || "Failed to send reset password request");
         } finally {
             setIsLoading(false);
         }

@@ -247,7 +247,7 @@ export default function MainLayout() {
             tabBar={renderTabBar}
         >
             <Tabs.Screen name="index" options={{
-                title: isAdmin() ? "Hi, Admin Team Edu" : "Hi, Team Edu"
+                title: "Hi, Team Edu"
             }} />
             <Tabs.Screen
                 name="classes"
@@ -291,7 +291,13 @@ const TabButton = React.memo((props: TabButtonProps) => {
     } = props;
 
     return (
-        <Pressable style={[styles.tabButton, { width: tabWidth }]} onPress={onPress}>
+        <Pressable
+            style={[styles.tabButton, { width: tabWidth }]}
+            onPress={onPress}
+            accessible
+            accessibilityLabel={`${route.name} tab`}
+            testID={`tab-${route.name}`}
+        >
             <Animated.View
                 style={[
                     styles.iconContainer,

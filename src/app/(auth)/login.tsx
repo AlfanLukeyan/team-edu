@@ -33,7 +33,13 @@ export default function LoginScreen() {
 
     const handleLogin = async () => {
         if (!email || !password) {
-            ModalEmitter.emit("SHOW_ERROR", "Please enter both email and password.");
+            ModalEmitter.showError("Please enter both email and password.");
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            ModalEmitter.showError("Please enter a valid email address.");
             return;
         }
 
@@ -140,6 +146,9 @@ export default function LoginScreen() {
                     </View>
 
                     <TouchableOpacity
+                        accessible
+                        accessibilityLabel="Sign in with Face ID"
+                        testID="face-auth-button"
                         style={[styles.faceAuthButton, { borderColor: Colors[theme].tint }]}
                         onPress={handleFaceAuth}
                     >

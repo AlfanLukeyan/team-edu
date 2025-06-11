@@ -33,23 +33,29 @@ export default function RegisterScreen() {
 
     const handleRegister = async () => {
         if (!name || !phone || !email || !password || !confirmPassword) {
-            ModalEmitter.emit("SHOW_ERROR", "Please fill in all fields");
+            ModalEmitter.showError("Please fill in all fields");
             return;
         }
 
         if (password !== confirmPassword) {
-            ModalEmitter.emit("SHOW_ERROR", "Passwords do not match");
+            ModalEmitter.showError("Passwords do not match");
             return;
         }
 
         if (password.length < 6) {
-            ModalEmitter.emit("SHOW_ERROR", "Password must be at least 6 characters long");
+            ModalEmitter.showError("Password must be at least 6 characters long");
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            ModalEmitter.emit("SHOW_ERROR", "Please enter a valid email address");
+            ModalEmitter.showError("Please enter a valid email address");
+            return;
+        }
+
+        const phoneRegex = /^(\+?62|0)[0-9]{8,13}$/;
+        if (!phoneRegex.test(phone)) {
+            ModalEmitter.showError("Please enter a valid phone number");
             return;
         }
 

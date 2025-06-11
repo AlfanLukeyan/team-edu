@@ -83,7 +83,14 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
                         size={48}
                         color="#4CAF50"
                     />
-                    <ThemedText style={{ textAlign: "center" }}>{successMessage}</ThemedText>
+                    <ThemedText
+                        style={{ textAlign: "center" }}
+                        accessible
+                        accessibilityLabel="Success message modal"
+                        testID="success-message-modal"
+                    >
+                        {successMessage}
+                    </ThemedText>
                     <Button onPress={handleClose}>Continue</Button>
                     {autoDismiss && (
                         <ThemedText style={styles.autoDismissText}>
