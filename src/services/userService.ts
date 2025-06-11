@@ -1,4 +1,4 @@
-import { FaceReferenceCheck, Role, UserByRole } from "@/types/api";
+import { FaceReferenceCheck, PasswordResetLog, Role, UserByRole } from "@/types/api";
 import { UserProfile } from "@/types/user";
 import { Platform } from "react-native";
 import { userApi } from "./api/userApi";
@@ -234,6 +234,15 @@ class UserService {
     async checkFaceReference(uuid: string): Promise<FaceReferenceCheck> {
         try {
             const response = await userApi.checkFaceReference(uuid);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getPasswordResetLogs(uuid: string): Promise<PasswordResetLog[]> {
+        try {
+            const response = await userApi.getPasswordResetLogs(uuid);
             return response.data;
         } catch (error) {
             throw error;

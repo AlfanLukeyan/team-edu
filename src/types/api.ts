@@ -563,3 +563,16 @@ export interface FaceReferenceUploadData {
 }
 
 export type FaceReferenceUploadResponse = ApiResponse<FaceReferenceUploadData>;
+
+
+export interface PasswordResetLog {
+    created_at: string;
+    expires_at: string;
+    id: number;
+    is_expired: boolean;
+    is_reset: boolean;
+    token: string;
+    uuid: string;
+}
+
+export type PasswordResetLogsResponse = ApiResponse<PasswordResetLog[]>;
