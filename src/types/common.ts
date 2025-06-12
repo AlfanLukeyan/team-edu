@@ -7,10 +7,16 @@ export interface AssessmentFormData {
 }
 
 export interface WeeklySectionFormData {
+    weekNumber: number;
     title: string;
     description: string;
     videoUrl?: string;
-    file?: File | null;
+    file?: {
+        uri: string;
+        name: string;
+        type: string;
+        size?: number;
+    };
 }
 
 export interface QuestionsFormData {

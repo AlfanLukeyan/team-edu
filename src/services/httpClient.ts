@@ -76,7 +76,7 @@ class HttpClient {
                 }
 
                 if (response) {
-                    const message = response.data?.error || response.data?.message || `Request failed with status ${response.status}`;
+                    const message = response.data?.error || response.data?.message || response.data?.msg || `Request failed with status ${response.status}`;
                     ModalEmitter.showError(message);
 
                     const customError = new Error(message);
@@ -89,7 +89,7 @@ class HttpClient {
                     throw new Error('Request timeout');
                 }
 
-                const message = error.message || "Network error";
+                const message = error.message || error.error || error.msg || error.message || "Network error";
                 ModalEmitter.showError(message);
                 throw error;
             }
@@ -166,6 +166,18 @@ class HttpClient {
 
         const response = await this.axiosInstance.post<T>(url, formData, configWithoutAuth);
         return response.data;
+    }
+
+    async downloadBlob(url: string, config?: RequestConfig): Promise<{ blob: Blob; headers: any }> {
+        const response = await this.axiosInstance.get(url, {
+            ...config,
+            responseType: 'blob',
+        });
+
+        return {
+            blob: response.data,
+            headers: response.headers
+        };
     }
 }
 

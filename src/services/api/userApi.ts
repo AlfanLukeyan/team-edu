@@ -97,5 +97,8 @@ export const userApi = {
     checkFaceReference: async (uuid: string): Promise<FaceReferenceCheckResponse> => {
         return httpClient.get(`/auth/check-face-reference/${uuid}`);
     },
-
+    
+    getPasswordResetLogs: async (uuid: string): Promise<any> => {
+        return httpClient.get(`/admin/log-password?uuid=${uuid}`);
+    },
 };

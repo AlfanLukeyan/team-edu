@@ -20,7 +20,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { Alert, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { DateType } from "../Calendar";
 import ThemedBottomSheetTextInput from "../ThemedBottomSheetTextInput";
 import CalendarBottomSheet, { CalendarBottomSheetRef } from "./CalendarBottomSheet";
@@ -53,11 +53,11 @@ const AssignmentBottomSheet = forwardRef<
         file: null,
     });
 
-    // Edit mode state
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
     const [currentWeekId, setCurrentWeekId] = useState<string>("");
     const [selectedFile, setSelectedFile] = useState<any>(null);
+    const [deadlineError, setDeadlineError] = useState<string>("");
 
     const resetForm = useCallback(() => {
         setFormData({
@@ -70,6 +70,7 @@ const AssignmentBottomSheet = forwardRef<
         setEditingAssignmentId(null);
         setCurrentWeekId("");
         setSelectedFile(null);
+        setDeadlineError("");
     }, []);
 
     const handleClose = useCallback(() => {
@@ -104,6 +105,14 @@ const AssignmentBottomSheet = forwardRef<
     const handleDeadlineChange = (date: DateType) => {
         if (date) {
             const dateObj = date instanceof Date ? date : new Date(date as any);
+            const now = new Date();
+
+            if (dateObj <= now) {
+                setDeadlineError("Please select a future date and time");
+                return;
+            }
+
+            setDeadlineError("");
             setFormData(prev => ({
                 ...prev,
                 deadline: dateObj.toISOString()
@@ -115,20 +124,30 @@ const AssignmentBottomSheet = forwardRef<
         try {
             const result = await DocumentPicker.getDocumentAsync({
                 type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'image/*'],
-                copyToCacheDirectory: false,
+                copyToCacheDirectory: Platform.OS !== 'web',
             });
 
             if (!result.canceled && result.assets[0]) {
                 const file = result.assets[0];
                 setSelectedFile(file);
-                setFormData(prev => ({
-                    ...prev,
-                    file: {
-                        uri: file.uri,
-                        name: file.name,
-                        type: file.mimeType || 'application/octet-stream',
-                    } as any
-                }));
+
+                if (Platform.OS === 'web') {
+                    const response = await fetch(file.uri);
+                    const blob = await response.blob();
+                    const webFile = new File([blob], file.name, {
+                        type: file.mimeType || 'application/octet-stream'
+                    });
+                    setFormData(prev => ({ ...prev, file: webFile }));
+                } else {
+                    setFormData(prev => ({
+                        ...prev,
+                        file: {
+                            uri: file.uri,
+                            name: file.name,
+                            type: file.mimeType || 'application/octet-stream',
+                        } as any
+                    }));
+                }
             }
         } catch (error) {
             Alert.alert('Error', 'Failed to pick document');
@@ -174,7 +193,7 @@ const AssignmentBottomSheet = forwardRef<
         });
     };
 
-    const isFormValid = formData.title.trim() && formData.description.trim() && formData.deadline;
+    const isFormValid = formData.title.trim() && formData.description.trim() && formData.deadline && !deadlineError;
 
     useImperativeHandle(ref, () => ({
         open: handleOpen,
@@ -238,6 +257,11 @@ const AssignmentBottomSheet = forwardRef<
                                         {formData.deadline ? formatDate(formData.deadline) : 'Select deadline'}
                                     </ThemedText>
                                 </Pressable>
+                                {deadlineError ? (
+                                    <ThemedText style={styles.errorText}>
+                                        {deadlineError}
+                                    </ThemedText>
+                                ) : null}
                             </View>
 
                             <View>
@@ -276,6 +300,7 @@ const AssignmentBottomSheet = forwardRef<
                 title="Select Deadline"
                 selected={formData.deadline ? new Date(formData.deadline) : new Date()}
                 onDateChange={handleDeadlineChange}
+                minDate={new Date()}
             />
         </>
     );
@@ -333,6 +358,11 @@ const styles = StyleSheet.create({
     removeButtonText: {
         color: '#ff4444',
         fontSize: 12,
+    },
+    errorText: {
+        color: '#ff4444',
+        fontSize: 12,
+        marginTop: 4,
     },
 });
 

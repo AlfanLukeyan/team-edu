@@ -1,5 +1,6 @@
 import { AddMemberRequest, AddMemberResponse, AssessmentResponse, ClassInfoResponse, ClassMemberResponse, CreateClassRequest, CreateClassResponse, DeleteClassResponse, DeleteMemberResponse, StudentAssessmentResponse, UpdateClassRequest, UpdateClassResponse, WeeklySectionResponse } from '@/types/api';
 import { WeeklySectionFormData } from '@/types/common';
+import { Platform } from 'react-native';
 import { httpClient } from '../httpClient';
 
 export const classApi = {
@@ -60,11 +61,11 @@ export const classApi = {
         return httpClient.get(`/public/class/members/?classID=${classId}`);
     },
 
-    createWeeklySection: async (classId: string, weekNumber: number, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> => {
+    createWeeklySection: async (classId: string, data: WeeklySectionFormData): Promise<{ status: string; message: string; data: any }> => {
         const formData = new FormData();
 
         formData.append('kelas_id', classId);
-        formData.append('week_number', weekNumber.toString());
+        formData.append('week_number', data.weekNumber.toString());
         formData.append('headingPertemuan', data.title);
         formData.append('bodyPertemuan', data.description);
 
@@ -73,7 +74,16 @@ export const classApi = {
         }
 
         if (data.file) {
-            formData.append('file', data.file as any);
+            if (Platform.OS === 'web') {
+                const response = await fetch(data.file.uri);
+                const blob = await response.blob();
+                const file = new File([blob], data.file.name, {
+                    type: data.file.type || 'application/octet-stream'
+                });
+                formData.append('file', file);
+            } else {
+                formData.append('file', data.file as any);
+            }
         }
 
         return httpClient.postFormData('/teacher/kelas/weekly-section', formData);
@@ -83,6 +93,7 @@ export const classApi = {
         const formData = new FormData();
 
         formData.append('week_id', weekId);
+        formData.append('week_number', data.weekNumber.toString());
         formData.append('headingPertemuan', data.title);
         formData.append('bodyPertemuan', data.description);
 
@@ -91,7 +102,16 @@ export const classApi = {
         }
 
         if (data.file) {
-            formData.append('file', data.file as any);
+            if (Platform.OS === 'web') {
+                const response = await fetch(data.file.uri);
+                const blob = await response.blob();
+                const file = new File([blob], data.file.name, {
+                    type: data.file.type || 'application/octet-stream'
+                });
+                formData.append('file', file);
+            } else {
+                formData.append('file', data.file as any);
+            }
         }
 
         return httpClient.putFormData('/teacher/kelas/weekly-section', formData);

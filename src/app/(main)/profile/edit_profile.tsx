@@ -12,7 +12,7 @@ import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface SaveData {
     name: string;
@@ -175,11 +175,11 @@ export default function EditProfileScreen() {
         setChangingEmail(true);
 
         try {
-            await userService.updateEmail(emailData.email);
-            ModalEmitter.showSuccess("Email updated successfully!");
+            const response = await userService.updateEmail(emailData.email);
+            ModalEmitter.showSuccess(response.msg || "Confirmation have beed sent to your old email address!");
             await fetchProfile();
         } catch (error: any) {
-            ModalEmitter.showError(error.message || "Failed to update email");
+            
         } finally {
             setChangingEmail(false);
         }
@@ -233,11 +233,21 @@ export default function EditProfileScreen() {
 
         try {
             const formData = new FormData();
-            formData.append('profile_picture', {
-                uri: imageUri,
-                type: 'image/jpeg',
-                name: 'profile.jpg',
-            } as any);
+
+            if (Platform.OS === 'web') {
+                const response = await fetch(imageUri);
+                const blob = await response.blob();
+                const file = new File([blob], 'profile.jpg', {
+                    type: 'image/jpeg'
+                });
+                formData.append('profile_picture', file);
+            } else {
+                formData.append('profile_picture', {
+                    uri: imageUri,
+                    type: 'image/jpeg',
+                    name: 'profile.jpg',
+                } as any);
+            }
 
             await userService.updateProfilePicture(formData);
             ModalEmitter.showSuccess("Profile picture updated successfully!");

@@ -84,7 +84,12 @@ const ErrorModal: React.FC<ErrorModalProps> = ({
                         size={48}
                         color={Colors[theme].error}
                     />
-                    <ThemedText style={{ textAlign: "center" }}>{errorMessage}</ThemedText>
+                    <ThemedText style={{ textAlign: "center" }}
+                        accessible
+                        accessibilityLabel="Error message modal"
+                        testID="error-message-modal"
+                    >
+                        {errorMessage}</ThemedText>
                     <Button onPress={handleClose}>Dismiss</Button>
                     {autoDismiss && (
                         <ThemedText style={styles.autoDismissText}>

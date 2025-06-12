@@ -1,3 +1,4 @@
+import { httpClient } from "@/services/httpClient";
 import { ModalEmitter } from "@/services/modalEmitter";
 import { tokenService } from "@/services/tokenService";
 import * as FileSystem from "expo-file-system";
@@ -15,73 +16,66 @@ class DownloadService {
         return DownloadService.instance;
     }
 
-    async downloadFile(url: string): Promise<void> {
+    async downloadFile(url: string, filename?: string): Promise<void> {
         if (!url) {
             throw new Error("No download URL available");
         }
 
+        if (Platform.OS === 'web') {
+            return this.downloadFileWeb(url, filename);
+        }
+
+        return this.downloadFileMobile(url, filename);
+    }
+
+    private async downloadFileWeb(url: string, filename?: string): Promise<void> {
+        try {
+            const { blob } = await httpClient.downloadBlob(url);
+            const finalFilename = filename || this.extractFilenameFromUrl(url);
+            this.triggerWebDownload(blob, finalFilename);
+        } catch (error) {
+            ModalEmitter.showError("Download failed. Opening in new tab...");
+            this.fallbackToNewTab(url);
+            throw error;
+        }
+    }
+
+    private async downloadFileMobile(url: string, filename?: string): Promise<void> {
         try {
             const token = await tokenService.getValidToken();
             if (!token) {
                 throw new Error("No valid token available");
             }
 
-            const fileName = await this.getFilenameFromServer(url, token);
-            const sanitizedFileName = this.sanitizeFileName(fileName);
+            const finalFilename = filename || this.extractFilenameFromUrl(url);
+            const sanitizedFileName = this.sanitizeFileName(finalFilename);
             const downloadUri = FileSystem.documentDirectory + sanitizedFileName;
 
             const downloadResult = await FileSystem.downloadAsync(url, downloadUri, {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             });
 
             if (downloadResult.status === 200) {
-                const fileInfo = await FileSystem.getInfoAsync(downloadResult.uri);
-                
-                if (!fileInfo.exists) {
-                    throw new Error("Downloaded file not found");
-                }
-
-                await this.shareFile(downloadResult.uri, sanitizedFileName);
+                await this.verifyAndShareFile(downloadResult.uri, sanitizedFileName);
             } else {
                 throw new Error(`Download failed with status ${downloadResult.status}`);
             }
         } catch (error) {
-            const message = Platform.OS === 'ios'
-                ? "Download failed. Opening in Safari..."
-                : "Download failed. Opening in browser...";
-
-            ModalEmitter.showError(message);
-            setTimeout(() => Linking.openURL(url), 1000);
+            this.handleMobileDownloadError(url);
             throw error;
         }
     }
 
-    private async shareFile(fileUri: string, fileName: string): Promise<void> {
-        try {
-            const isAvailable = await Sharing.isAvailableAsync();
-
-            if (isAvailable) {
-                await Sharing.shareAsync(fileUri, {
-                    dialogTitle: Platform.OS === 'ios' ? `Save ${fileName}` : `Share ${fileName}`,
-                    mimeType: this.getMimeType(fileName),
-                    UTI: Platform.OS === 'ios' ? this.getUTI(fileName) : undefined,
-                });
-            } else {
-                throw new Error("Sharing not available");
-            }
-        } catch (error) {
-            const message = Platform.OS === 'ios'
-                ? "File downloaded. Check Files app in Downloads folder."
-                : "File downloaded to device storage.";
-            
-            ModalEmitter.showError(message);
-        }
-    }
-
     async openFile(url: string): Promise<void> {
+        if (Platform.OS === 'web') {
+            this.fallbackToNewTab(url);
+            return;
+        }
+
         try {
             const canOpen = await Linking.canOpenURL(url);
-
             if (canOpen) {
                 await Linking.openURL(url);
             } else {
@@ -92,33 +86,71 @@ class DownloadService {
         }
     }
 
-    private async getFilenameFromServer(url: string, token: string): Promise<string> {
+    private extractFilenameFromUrl(url: string): string {
         try {
-            const response = await fetch(url, {
-                method: 'HEAD',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            const contentDisposition = response.headers.get('content-disposition');
-            if (contentDisposition) {
-                const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-                if (match) {
-                    const filename = match[1].replace(/['"]/g, '');
-                    return filename;
-                }
-            }
-
             const urlPath = new URL(url).pathname;
-            const urlFilename = urlPath.split('/').pop();
-
-            if (urlFilename && urlFilename.includes('.')) {
-                return urlFilename;
-            }
-
-            return `download_${Date.now()}.pdf`;
+            const filename = urlPath.split('/').pop();
+            return filename && filename.includes('.') ? filename : `download_${Date.now()}.pdf`;
         } catch (error) {
             return `download_${Date.now()}.pdf`;
         }
+    }
+
+    private triggerWebDownload(blob: Blob, filename: string): void {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    }
+
+    private fallbackToNewTab(url: string): void {
+        if (Platform.OS === 'web') {
+            window.open(url, '_blank');
+        } else {
+            setTimeout(() => Linking.openURL(url), 1000);
+        }
+    }
+
+    private async verifyAndShareFile(fileUri: string, fileName: string): Promise<void> {
+        const fileInfo = await FileSystem.getInfoAsync(fileUri);
+        if (!fileInfo.exists) {
+            throw new Error("Downloaded file not found");
+        }
+        await this.shareFile(fileUri, fileName);
+    }
+
+    private async shareFile(fileUri: string, fileName: string): Promise<void> {
+        try {
+            const isAvailable = await Sharing.isAvailableAsync();
+            if (!isAvailable) {
+                throw new Error("Sharing not available");
+            }
+
+            await Sharing.shareAsync(fileUri, {
+                dialogTitle: Platform.OS === 'ios' ? `Save ${fileName}` : `Share ${fileName}`,
+                mimeType: this.getMimeType(fileName),
+                UTI: Platform.OS === 'ios' ? this.getUTI(fileName) : undefined,
+            });
+        } catch (error) {
+            const message = Platform.OS === 'ios'
+                ? "File downloaded. Check Files app in Downloads folder."
+                : "File downloaded to device storage.";
+
+            ModalEmitter.showError(message);
+        }
+    }
+
+    private handleMobileDownloadError(url: string): void {
+        const message = Platform.OS === 'ios'
+            ? "Download failed. Opening in Safari..."
+            : "Download failed. Opening in browser...";
+
+        ModalEmitter.showError(message);
+        this.fallbackToNewTab(url);
     }
 
     private sanitizeFileName(fileName: string): string {
@@ -144,8 +176,7 @@ class DownloadService {
 
     private getMimeType(filename: string): string {
         const extension = filename.split('.').pop()?.toLowerCase();
-
-        const mimeTypes: { [key: string]: string } = {
+        const mimeTypes: Record<string, string> = {
             'pdf': 'application/pdf',
             'doc': 'application/msword',
             'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -160,14 +191,12 @@ class DownloadService {
             'gif': 'image/gif',
             'zip': 'application/zip',
         };
-
         return mimeTypes[extension || ''] || 'application/octet-stream';
     }
 
     private getUTI(filename: string): string {
         const extension = filename.split('.').pop()?.toLowerCase();
-
-        const utiTypes: { [key: string]: string } = {
+        const utiTypes: Record<string, string> = {
             'pdf': 'com.adobe.pdf',
             'doc': 'com.microsoft.word.doc',
             'docx': 'org.openxmlformats.wordprocessingml.document',
@@ -179,7 +208,6 @@ class DownloadService {
             'png': 'public.png',
             'zip': 'public.zip-archive',
         };
-
         return utiTypes[extension || ''] || 'public.data';
     }
 }

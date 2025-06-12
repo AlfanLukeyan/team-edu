@@ -5,6 +5,7 @@ import WeeklySectionActionsMenu from "@/components/WeeklySectionActionsMenu";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useUserRole } from "@/hooks/useUserRole";
+import { downloadService } from "@/services/DownloadService";
 import { getYoutubeEmbedUrl, getYoutubeVideoId } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -108,6 +109,14 @@ export function WeeklyCard({
         }
     };
 
+    const handleDownloadFile = async (url: string, filename: string) => {
+        await downloadService.downloadFile(url, filename);
+    };
+
+    const handleOpenFile = async (url: string) => {
+        await downloadService.openFile(url);
+    };
+
     const renderVideoSection = () => {
         if (!videoUrl) return null;
 
@@ -159,7 +168,6 @@ export function WeeklyCard({
 
     return (
         <ThemedView style={{ borderRadius: 15, marginBottom: 16 }} isCard>
-            {/* ✅ Only show actions menu for teachers */}
             <TeacherOnly>
                 <WeeklySectionActionsMenu
                     visible={showActionsMenu}
@@ -181,7 +189,6 @@ export function WeeklyCard({
                     end={{ x: 1, y: 1 }}
                 />
 
-                {/* ✅ Only show ellipsis menu for teachers */}
                 <TeacherOnly>
                     {weekId && onEdit && onDelete && (
                         <TouchableOpacity
@@ -231,6 +238,8 @@ export function WeeklyCard({
                             name={attachment.name}
                             url={attachment.url}
                             downloadable={true}
+                            onDownload={handleDownloadFile}
+                            onOpen={handleOpenFile}
                         />
                     </View>
                 )}
@@ -241,7 +250,6 @@ export function WeeklyCard({
                         <ThemedText type="subtitle">
                             Assignment
                         </ThemedText>
-                        {/* ✅ Only show create assignment button for teachers */}
                         <TeacherOnly>
                             <Button
                                 type="secondary"
@@ -268,7 +276,6 @@ export function WeeklyCard({
                                     title={assignment.title}
                                     dueDate={assignment.dueDate}
                                     onPress={() => onAssignmentPress?.(assignment.id)}
-                                    // ✅ Only show actions for teachers
                                     onEdit={hasTeacherPermissions() ? () => handleEditAssignment(assignment.id) : undefined}
                                     onDelete={hasTeacherPermissions() ? () => handleDeleteAssignment(assignment.id) : undefined}
                                     showActions={hasTeacherPermissions()}

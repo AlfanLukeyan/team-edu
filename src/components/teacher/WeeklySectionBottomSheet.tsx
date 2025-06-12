@@ -20,7 +20,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import ThemedBottomSheetTextInput from "../ThemedBottomSheetTextInput";
 
 export interface WeeklySectionBottomSheetRef {
@@ -32,34 +32,55 @@ export interface WeeklySectionBottomSheetRef {
 interface WeeklySectionBottomSheetProps {
     onSubmit: (data: WeeklySectionFormData, weekId?: string) => void;
     onClose?: () => void;
+    existingWeekNumbers?: number[];
 }
 
 const WeeklySectionBottomSheet = forwardRef<
     WeeklySectionBottomSheetRef,
     WeeklySectionBottomSheetProps
->(({ onSubmit, onClose }, ref) => {
+>(({ onSubmit, onClose, existingWeekNumbers = [] }, ref) => {
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const { dismiss } = useBottomSheetModal();
     const theme = useColorScheme() || "light";
-    const snapPoints = useMemo(() => ["25%", "60%", "95%"], []);
+    const snapPoints = useMemo(() => ["25%", "70%", "95%"], []);
 
-    // Form state
+    const [weekNumber, setWeekNumber] = useState("");
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [videoUrl, setVideoUrl] = useState("");
     const [selectedFile, setSelectedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
 
-    // Edit mode state
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingWeekId, setEditingWeekId] = useState<string | null>(null);
 
+    const [weekNumberError, setWeekNumberError] = useState<string | null>(null);
+
+    const validateWeekNumber = useCallback((value: string) => {
+        const num = parseInt(value);
+
+        if (!value.trim()) {
+            setWeekNumberError("Week number is required");
+            return false;
+        }
+
+        if (isNaN(num) || num < 1) {
+            setWeekNumberError("Week number must be a positive number");
+            return false;
+        }
+
+        setWeekNumberError(null);
+        return true;
+    }, []);
+
     const resetForm = useCallback(() => {
+        setWeekNumber("");
         setTitle("");
         setDescription("");
         setVideoUrl("");
         setSelectedFile(null);
         setIsEditMode(false);
         setEditingWeekId(null);
+        setWeekNumberError(null);
     }, []);
 
     const handleClose = useCallback(() => {
@@ -70,29 +91,45 @@ const WeeklySectionBottomSheet = forwardRef<
 
     const handleOpen = useCallback(() => {
         resetForm();
+        const nextWeekNumber = Math.max(0, ...existingWeekNumbers) + 1;
+        setWeekNumber(nextWeekNumber.toString());
         bottomSheetModalRef.current?.present();
-    }, [resetForm]);
+    }, [resetForm, existingWeekNumbers]);
 
     const handleOpenForEdit = useCallback((section: WeeklySection) => {
         setIsEditMode(true);
         setEditingWeekId(section.week_id.toString());
+        setWeekNumber(section.week_number.toString());
         setTitle(section.item_pembelajaran?.headingPertemuan || '');
         setDescription(section.item_pembelajaran?.bodyPertemuan || '');
         setVideoUrl(section.item_pembelajaran?.urlVideo || '');
-        // Note: We can't pre-load files in edit mode due to security restrictions
         setSelectedFile(null);
+        setWeekNumberError(null);
         bottomSheetModalRef.current?.present();
     }, []);
+
+    const handleWeekNumberChange = useCallback((value: string) => {
+        const numericValue = value.replace(/[^0-9]/g, '');
+        setWeekNumber(numericValue);
+        validateWeekNumber(numericValue);
+    }, [validateWeekNumber]);
 
     const handlePickFile = useCallback(async () => {
         try {
             const result = await DocumentPicker.getDocumentAsync({
                 type: '*/*',
-                copyToCacheDirectory: false,
+                copyToCacheDirectory: Platform.OS !== 'web',
             });
 
             if (!result.canceled && result.assets?.[0]) {
-                setSelectedFile(result.assets[0]);
+                const asset = result.assets[0];
+
+                setSelectedFile({
+                    ...asset,
+                    uri: asset.uri,
+                    name: asset.name,
+                    mimeType: asset.mimeType || 'application/octet-stream',
+                });
             }
         } catch (error) {
         }
@@ -103,7 +140,12 @@ const WeeklySectionBottomSheet = forwardRef<
     }, []);
 
     const handleSubmit = useCallback(() => {
+        if (!validateWeekNumber(weekNumber)) {
+            return;
+        }
+
         const formData: WeeklySectionFormData = {
+            weekNumber: parseInt(weekNumber),
             title,
             description,
             videoUrl: videoUrl || undefined,
@@ -116,7 +158,7 @@ const WeeklySectionBottomSheet = forwardRef<
 
         onSubmit(formData, isEditMode ? editingWeekId || undefined : undefined);
         handleClose();
-    }, [title, description, videoUrl, selectedFile, onSubmit, isEditMode, editingWeekId, handleClose]);
+    }, [weekNumber, title, description, videoUrl, selectedFile, onSubmit, isEditMode, editingWeekId, handleClose, validateWeekNumber]);
 
     const renderBackdrop = useCallback(
         (props: BottomSheetBackdropProps) => (
@@ -136,7 +178,7 @@ const WeeklySectionBottomSheet = forwardRef<
         openForEdit: handleOpenForEdit
     }));
 
-    const isFormValid = title.trim() && description.trim();
+    const isFormValid = weekNumber.trim() && title.trim() && description.trim() && !weekNumberError;
 
     return (
         <BottomSheetModal
@@ -166,6 +208,23 @@ const WeeklySectionBottomSheet = forwardRef<
                         </ThemedText>
                     </View>
                     <View style={{ gap: 8 }}>
+                        <View>
+                            <ThemedBottomSheetTextInput
+                                label="Week Number"
+                                placeholder="Enter week number"
+                                value={weekNumber}
+                                onChangeText={handleWeekNumberChange}
+                                keyboardType="numeric"
+                            />
+                            {weekNumberError && (
+                                <View style={styles.errorContainer}>
+                                    <ThemedText style={styles.errorText}>
+                                        {weekNumberError}
+                                    </ThemedText>
+                                </View>
+                            )}
+                        </View>
+
                         <ThemedBottomSheetTextInput
                             label="Title"
                             placeholder="Enter section title"
@@ -187,7 +246,6 @@ const WeeklySectionBottomSheet = forwardRef<
                             onChangeText={setVideoUrl}
                         />
 
-                        {/* File Upload Section */}
                         <View style={styles.fileSection}>
                             <ThemedText style={styles.fileLabel}>Attachment (optional)</ThemedText>
                             {selectedFile ? (
@@ -227,6 +285,14 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         marginBottom: 16,
         gap: 4,
+    },
+    errorContainer: {
+        marginTop: 2,
+    },
+    errorText: {
+        color: '#ff4444',
+        fontSize: 12,
+        fontFamily: "Poppins-Regular",
     },
     fileSection: {
         marginVertical: 8,

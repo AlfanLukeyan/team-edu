@@ -1,6 +1,7 @@
 import { Button } from "@/components/Button";
 import { Dropdown } from "@/components/Dropdown";
 import { ThemedText } from "@/components/ThemedText";
+import UserActivityBottomSheet, { UserActivityBottomSheetRef } from "@/components/UserActivityBottomSheet";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { ModalEmitter } from "@/services/modalEmitter";
@@ -22,7 +23,6 @@ import {
     useState,
 } from "react";
 import { Platform, StyleSheet, View } from "react-native";
-
 export interface UserBottomSheetRef {
     open: (user: UserByRole) => void;
     close: () => void;
@@ -47,9 +47,16 @@ const UserBottomSheet = forwardRef<
     const { dismiss } = useBottomSheetModal();
     const theme = useColorScheme() || "light";
     const snapPoints = useMemo(() => ["40%", "70%"], []);
+    const userActivityRef = useRef<UserActivityBottomSheetRef>(null);
 
     const [selectedUser, setSelectedUser] = useState<UserByRole | null>(null);
     const isChangingRole = changingRoleUserId === selectedUser?.uuid;
+
+    const handleOpenUserActivity = useCallback(() => {
+        if (selectedUser) {
+            userActivityRef.current?.open(selectedUser.uuid);
+        }
+    }, [selectedUser]);
 
     const handleClose = useCallback(() => {
         setSelectedUser(null);
@@ -132,131 +139,146 @@ const UserBottomSheet = forwardRef<
     if (!selectedUser) return null;
 
     return (
-        <BottomSheetModal
-            ref={bottomSheetModalRef}
-            index={1}
-            snapPoints={snapPoints}
-            backdropComponent={renderBackdrop}
-            enablePanDownToClose={false}
-            enableContentPanningGesture={true}
-            enableHandlePanningGesture={true}
-            handleIndicatorStyle={{
-                backgroundColor: Colors[theme].text,
-                opacity: 0.5,
-            }}
-            backgroundStyle={{
-                backgroundColor: Colors[theme].background,
-            }}
-            keyboardBehavior="extend"
-            style={Platform.OS === 'web' ? { zIndex: 10000 } : undefined}
-        >
-            <BottomSheetView style={styles.contentContainer}>
-                <View style={styles.innerContainer}>
-                    <View style={styles.header}>
-                        <ThemedText style={styles.headerTitle}>
-                            User Actions
-                        </ThemedText>
-                        <ThemedText style={styles.headerSubtitle}>
-                            {selectedUser.name}
-                        </ThemedText>
-                    </View>
-
-                    <View style={[styles.section, styles.dropdownSection]}>
-                        <ThemedText style={styles.sectionTitle}>Change Role</ThemedText>
-                        <View style={styles.dropdownContainer}>
-                            <Dropdown
-                                items={roleDropdownItems}
-                                selectedValue={selectedUser.role_id.toString()}
-                                onSelect={handleRoleSelect}
-                                placeholder="Select role"
-                                searchable={false}
-                                disabled={isChangingRole}
-                                loading={isChangingRole}
-                                maxHeight={200}
-                                style={styles.dropdown}
-                            />
-                        </View>
-                    </View>
-
-                    <View style={styles.section}>
-                        <ThemedText style={styles.sectionTitle}>User Information</ThemedText>
-
-                        <View style={styles.infoRow}>
-                            <ThemedText style={styles.infoLabel}>Email:</ThemedText>
-                            <ThemedText style={styles.infoValue} numberOfLines={1}>
-                                {selectedUser.email}
+        <>
+            <BottomSheetModal
+                ref={bottomSheetModalRef}
+                index={1}
+                snapPoints={snapPoints}
+                backdropComponent={renderBackdrop}
+                enablePanDownToClose={false}
+                enableContentPanningGesture={true}
+                enableHandlePanningGesture={true}
+                handleIndicatorStyle={{
+                    backgroundColor: Colors[theme].text,
+                    opacity: 0.5,
+                }}
+                backgroundStyle={{
+                    backgroundColor: Colors[theme].background,
+                }}
+                keyboardBehavior="extend"
+                style={Platform.OS === 'web' ? { zIndex: 10000 } : undefined}
+            >
+                <BottomSheetView style={styles.contentContainer}>
+                    <View style={styles.innerContainer}>
+                        <View style={styles.header}>
+                            <ThemedText style={styles.headerTitle}>
+                                User Actions
+                            </ThemedText>
+                            <ThemedText style={styles.headerSubtitle}>
+                                {selectedUser?.name}
                             </ThemedText>
                         </View>
 
-                        <View style={styles.infoRow}>
-                            <ThemedText style={styles.infoLabel}>Phone:</ThemedText>
-                            <ThemedText style={styles.infoValue}>
-                                {selectedUser.phone || "Not provided"}
-                            </ThemedText>
-                        </View>
-
-                        <View style={styles.infoRow}>
-                            <ThemedText style={styles.infoLabel}>Current Role:</ThemedText>
-                            <ThemedText style={styles.infoValue}>
-                                {userService.getRoleText(selectedUser.role_id)}
-                            </ThemedText>
-                        </View>
-
-                        <View style={styles.infoRow}>
-                            <ThemedText style={styles.infoLabel}>Status:</ThemedText>
-                            <View style={styles.statusContainer}>
-                                <ThemedText style={[
-                                    styles.infoValue,
-                                    { color: selectedUser.is_verified ? "#4CAF50" : "#FF9800" }
-                                ]}>
-                                    {selectedUser.is_verified ? "Verified" : "Unverified"}
-                                </ThemedText>
-                                {!selectedUser.is_verified && onVerifyEmailUser && (
-                                    <Button
-                                        type="secondary"
-                                        onPress={handleVerifyEmailUser}
-                                    >
-                                        Verify Email
-                                    </Button>
-                                )}
+                        <View style={[styles.section, styles.dropdownSection]}>
+                            <ThemedText style={styles.sectionTitle}>Change Role</ThemedText>
+                            <View style={styles.dropdownContainer}>
+                                <Dropdown
+                                    items={roleDropdownItems}
+                                    selectedValue={selectedUser?.role_id.toString() || ''}
+                                    onSelect={handleRoleSelect}
+                                    placeholder="Select role"
+                                    searchable={false}
+                                    disabled={isChangingRole}
+                                    loading={isChangingRole}
+                                    maxHeight={200}
+                                    style={styles.dropdown}
+                                />
                             </View>
                         </View>
 
-                        <View style={styles.infoRow}>
-                            <ThemedText style={styles.infoLabel}>Crucial Feature Token:</ThemedText>
-                            <View style={styles.tokenButtonsContainer}>
+                        <View style={styles.section}>
+                            <ThemedText style={styles.sectionTitle}>User Information</ThemedText>
+
+                            <View style={styles.infoRow}>
+                                <ThemedText style={styles.infoLabel}>Email:</ThemedText>
+                                <ThemedText style={styles.infoValue} numberOfLines={1}>
+                                    {selectedUser?.email}
+                                </ThemedText>
+                            </View>
+
+                            <View style={styles.infoRow}>
+                                <ThemedText style={styles.infoLabel}>Phone:</ThemedText>
+                                <ThemedText style={styles.infoValue}>
+                                    {selectedUser?.phone || "Not provided"}
+                                </ThemedText>
+                            </View>
+
+                            <View style={styles.infoRow}>
+                                <ThemedText style={styles.infoLabel}>Current Role:</ThemedText>
+                                <ThemedText style={styles.infoValue}>
+                                    {userService.getRoleText(selectedUser?.role_id)}
+                                </ThemedText>
+                            </View>
+
+                            <View style={styles.infoRow}>
+                                <ThemedText style={styles.infoLabel}>Status:</ThemedText>
+                                <View style={styles.statusContainer}>
+                                    <ThemedText style={[
+                                        styles.infoValue,
+                                        { color: selectedUser?.is_verified ? "#4CAF50" : "#FF9800" }
+                                    ]}>
+                                        {selectedUser?.is_verified ? "Verified" : "Unverified"}
+                                    </ThemedText>
+                                    {!selectedUser?.is_verified && onVerifyEmailUser && (
+                                        <Button
+                                            type="secondary"
+                                            onPress={handleVerifyEmailUser}
+                                        >
+                                            Verify Email
+                                        </Button>
+                                    )}
+                                </View>
+                            </View>
+
+                            <View style={styles.infoRow}>
+                                <ThemedText style={styles.infoLabel}>User Activity:</ThemedText>
                                 <Button
                                     type="secondary"
-                                    onPress={handleInjectCrucialToken}
+                                    onPress={handleOpenUserActivity}
                                     style={styles.tokenButton}
                                 >
-                                    Inject
-                                </Button>
-                                <Button
-                                    type="delete"
-                                    onPress={handleDeleteCrucialToken}
-                                    style={styles.tokenButton}
-                                >
-                                    Remove
+                                    View Logs
                                 </Button>
                             </View>
-                        </View>
-                    </View>
 
-                    {onDeleteUser && (
-                        <View style={styles.section}>
-                            <Button
-                                type="delete"
-                                onPress={handleDeletePress}
-                                style={styles.deleteButton}
-                            >
-                                Delete User
-                            </Button>
+                            <View style={styles.infoRow}>
+                                <ThemedText style={styles.infoLabel}>Crucial Feature Token:</ThemedText>
+                                <View style={styles.tokenButtonsContainer}>
+                                    <Button
+                                        type="secondary"
+                                        onPress={handleInjectCrucialToken}
+                                        style={styles.tokenButton}
+                                    >
+                                        Inject
+                                    </Button>
+                                    <Button
+                                        type="delete"
+                                        onPress={handleDeleteCrucialToken}
+                                        style={styles.tokenButton}
+                                    >
+                                        Remove
+                                    </Button>
+                                </View>
+                            </View>
                         </View>
-                    )}
-                </View>
-            </BottomSheetView>
-        </BottomSheetModal>
+
+                        {onDeleteUser && (
+                            <View style={styles.section}>
+                                <Button
+                                    type="delete"
+                                    onPress={handleDeletePress}
+                                    style={styles.deleteButton}
+                                >
+                                    Delete User
+                                </Button>
+                            </View>
+                        )}
+                    </View>
+                </BottomSheetView>
+            </BottomSheetModal>
+
+            <UserActivityBottomSheet ref={userActivityRef} />
+        </>
     );
 });
 

@@ -9,7 +9,7 @@ interface AttachmentCardProps {
     name: string;
     url: string;
     downloadable?: boolean;
-    onDownload?: (url: string) => Promise<void>;
+    onDownload?: (url: string, filename: string) => Promise<void>;
     onOpen?: (url: string) => Promise<void>;
 }
 
@@ -30,7 +30,7 @@ export function AttachmentCard({
             setLoading(true);
 
             if (downloadable && onDownload) {
-                await onDownload(url);
+                await onDownload(url, name);
             } else if (onOpen) {
                 await onOpen(url);
             }
