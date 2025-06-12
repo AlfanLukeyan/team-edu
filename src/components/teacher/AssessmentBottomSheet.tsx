@@ -109,7 +109,7 @@ const AssessmentBottomSheet = forwardRef<
             description: assessment.description,
             start_date: assessment.start_time,
             end_date: assessment.end_time,
-            duration: (assessment.duration / 60).toString(), // Convert seconds to minutes
+            duration: (assessment.duration / 60).toString(),
         });
         validateDates(assessment.start_time, assessment.end_time);
         bottomSheetModalRef.current?.present();
@@ -299,7 +299,6 @@ const AssessmentBottomSheet = forwardRef<
                                 {isEditMode ? "Update Assessment" : "Create Assessment"}
                             </Button>
                         </View>
-
                     </View>
                 </BottomSheetView>
             </BottomSheetModal>
@@ -308,6 +307,7 @@ const AssessmentBottomSheet = forwardRef<
                 title="Select Start Date & Time"
                 selected={formData.start_date ? new Date(formData.start_date) : new Date()}
                 onDateChange={handleStartDateChange}
+                minDate={new Date()}
                 maxDate={getMaxStartDate()}
             />
 

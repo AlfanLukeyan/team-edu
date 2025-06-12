@@ -57,6 +57,7 @@ const AssignmentBottomSheet = forwardRef<
     const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
     const [currentWeekId, setCurrentWeekId] = useState<string>("");
     const [selectedFile, setSelectedFile] = useState<any>(null);
+    const [deadlineError, setDeadlineError] = useState<string>("");
 
     const resetForm = useCallback(() => {
         setFormData({
@@ -69,6 +70,7 @@ const AssignmentBottomSheet = forwardRef<
         setEditingAssignmentId(null);
         setCurrentWeekId("");
         setSelectedFile(null);
+        setDeadlineError("");
     }, []);
 
     const handleClose = useCallback(() => {
@@ -103,6 +105,14 @@ const AssignmentBottomSheet = forwardRef<
     const handleDeadlineChange = (date: DateType) => {
         if (date) {
             const dateObj = date instanceof Date ? date : new Date(date as any);
+            const now = new Date();
+
+            if (dateObj <= now) {
+                setDeadlineError("Please select a future date and time");
+                return;
+            }
+
+            setDeadlineError("");
             setFormData(prev => ({
                 ...prev,
                 deadline: dateObj.toISOString()
@@ -183,7 +193,7 @@ const AssignmentBottomSheet = forwardRef<
         });
     };
 
-    const isFormValid = formData.title.trim() && formData.description.trim() && formData.deadline;
+    const isFormValid = formData.title.trim() && formData.description.trim() && formData.deadline && !deadlineError;
 
     useImperativeHandle(ref, () => ({
         open: handleOpen,
@@ -247,6 +257,11 @@ const AssignmentBottomSheet = forwardRef<
                                         {formData.deadline ? formatDate(formData.deadline) : 'Select deadline'}
                                     </ThemedText>
                                 </Pressable>
+                                {deadlineError ? (
+                                    <ThemedText style={styles.errorText}>
+                                        {deadlineError}
+                                    </ThemedText>
+                                ) : null}
                             </View>
 
                             <View>
@@ -285,6 +300,7 @@ const AssignmentBottomSheet = forwardRef<
                 title="Select Deadline"
                 selected={formData.deadline ? new Date(formData.deadline) : new Date()}
                 onDateChange={handleDeadlineChange}
+                minDate={new Date()}
             />
         </>
     );
@@ -342,6 +358,11 @@ const styles = StyleSheet.create({
     removeButtonText: {
         color: '#ff4444',
         fontSize: 12,
+    },
+    errorText: {
+        color: '#ff4444',
+        fontSize: 12,
+        marginTop: 4,
     },
 });
 
