@@ -15,6 +15,7 @@ import {
     useImperativeHandle,
     useMemo,
     useRef,
+    useState,
 } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
@@ -41,13 +42,26 @@ const CalendarBottomSheet = forwardRef<
     const theme = useColorScheme() || "light";
     const snapPoints = useMemo(() => ["75%"], []);
 
+    const [currentDate, setCurrentDate] = useState<DateType>(selected);
+
     const handleClose = useCallback(() => {
         if (onClose) onClose();
         dismiss();
     }, [onClose, dismiss]);
 
     const handleOpen = useCallback(() => {
+        setCurrentDate(selected);
         bottomSheetModalRef.current?.present();
+    }, [selected]);
+
+    const handleDone = useCallback(() => {
+        const dateToUse = currentDate || new Date();
+        onDateChange(dateToUse);
+        handleClose();
+    }, [currentDate, onDateChange, handleClose]);
+
+    const handleDateChange = useCallback((date: DateType) => {
+        setCurrentDate(date);
     }, []);
 
     const renderBackdrop = useCallback(
@@ -86,7 +100,7 @@ const CalendarBottomSheet = forwardRef<
                 <View style={styles.innerContainer}>
                     <View style={styles.header}>
                         <ThemedText type="defaultSemiBold">{title}</ThemedText>
-                        <Pressable onPress={handleClose}>
+                        <Pressable onPress={handleDone}>
                             <ThemedText
                                 style={{ color: Colors[theme].subtitle }}
                                 type="defaultSemiBold"
@@ -97,8 +111,8 @@ const CalendarBottomSheet = forwardRef<
                     </View>
 
                     <Calendar
-                        selected={selected}
-                        onDateChange={onDateChange}
+                        selected={currentDate}
+                        onDateChange={handleDateChange}
                         minDate={minDate}
                         maxDate={maxDate}
                     />
