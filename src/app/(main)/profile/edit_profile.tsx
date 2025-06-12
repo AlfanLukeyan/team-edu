@@ -175,11 +175,11 @@ export default function EditProfileScreen() {
         setChangingEmail(true);
 
         try {
-            await userService.updateEmail(emailData.email);
-            ModalEmitter.showSuccess("Email updated successfully!");
+            const response = await userService.updateEmail(emailData.email);
+            ModalEmitter.showSuccess(response.msg || "Confirmation have beed sent to your old email address!");
             await fetchProfile();
         } catch (error: any) {
-            ModalEmitter.showError(error.message || "Failed to update email");
+            
         } finally {
             setChangingEmail(false);
         }
