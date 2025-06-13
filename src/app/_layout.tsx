@@ -15,6 +15,7 @@ import {
     ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
+import { useURL } from "expo-linking";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
@@ -26,6 +27,20 @@ function NavigationHandler({ children }: { children: React.ReactNode }) {
     const { isAuthenticated, isLoading, isGuest } = useAuth();
     const segments = useSegments();
     const router = useRouter();
+    const url = useURL();
+
+    useEffect(() => {
+        if (url) {
+            
+            if (url.includes('verified=true') || url.includes('login')) {
+                ModalEmitter.showSuccess("Email verified successfully. You can now log in.");
+                
+                if (!isAuthenticated) {
+                    router.replace('/(auth)/login');
+                }
+            }
+        }
+    }, [url, isAuthenticated, router]);
 
     useEffect(() => {
         if (isLoading) return;

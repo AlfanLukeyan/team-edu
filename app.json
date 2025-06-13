@@ -8,9 +8,23 @@
         "scheme": "teamedu",
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
+        "linking": {
+            "prefixes": [
+                "teamedu://",
+                "https://team-edu.vercel.app"
+            ],
+            "config": {
+                "screens": {
+                    "(auth)/login": "login"
+                }
+            }
+        },
         "ios": {
             "supportsTablet": true,
             "bundleIdentifier": "com.alfanlukeyan.teamedu",
+            "associatedDomains": [
+                "applinks:team-edu.vercel.app"
+            ],
             "infoPlist": {
                 "NSDocumentsFolderUsageDescription": "This app needs access to save downloaded files",
                 "NSDownloadsUsageDescription": "This app downloads attachments files",
@@ -46,6 +60,22 @@
                 "android.permission.WRITE_EXTERNAL_STORAGE",
                 "android.permission.CAMERA",
                 "android.permission.RECORD_AUDIO"
+            ],
+            "intentFilters": [
+                {
+                    "action": "VIEW",
+                    "autoVerify": true,
+                    "data": [
+                        {
+                            "scheme": "https",
+                            "host": "team-edu.vercel.app"
+                        }
+                    ],
+                    "category": [
+                        "BROWSABLE",
+                        "DEFAULT"
+                    ]
+                }
             ]
         },
         "web": {
