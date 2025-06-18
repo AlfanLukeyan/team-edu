@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
     },
     scrollView: {
         flex: 1,
+        paddingHorizontal: 16,
     },
     todoList: {
         gap: 8,
