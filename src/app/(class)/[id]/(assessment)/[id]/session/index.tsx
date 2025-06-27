@@ -12,7 +12,7 @@ import { ModalEmitter } from '@/services/modalEmitter';
 import { AssessmentQuestion, AssessmentSessionResponse } from '@/types/api';
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function AssessmentSessionScreen() {
@@ -33,15 +33,82 @@ export default function AssessmentSessionScreen() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const calculateTimeRemaining = (endedTime: string): number => {
+    const calculateTimeRemaining = useCallback((endedTime: string): number => {
         const endTime = new Date(endedTime);
         const currentTime = new Date();
         const remainingMs = endTime.getTime() - currentTime.getTime();
-
         const remainingSeconds = Math.floor(remainingMs / 1000);
-
         return Math.max(0, remainingSeconds);
-    };
+    }, []);
+
+    const setupExistingSession = useCallback(async (submissionId: string) => {
+        try {
+            const submissionSession = await assessmentService.getSubmissionSession(submissionId);
+
+            const transformedQuestions: AssessmentQuestion[] = submissionSession.questions.map(q => ({
+                assessment_id: q.assessment_id,
+                question_id: q.question_id,
+                question_text: q.question_text,
+                created_at: q.created_at,
+                updated_at: q.updated_at,
+                deleted_at: q.deleted_at,
+                choice: q.choices
+            }));
+
+            setQuestions(transformedQuestions);
+
+            const existingSessionData: AssessmentSessionResponse = {
+                assessment_id: submissionSession.assessment_id,
+                submission_id: submissionSession.submission_id,
+                user_id: submissionSession.user_id,
+                ended_time: submissionSession.ended_time,
+                question: transformedQuestions
+            };
+            setSessionData(existingSessionData);
+
+            const answersMap: { [key: string]: string } = {};
+            const answerIdsMap: { [key: string]: string } = {};
+
+            submissionSession.questions.forEach(question => {
+                if (question.submitted_answers) {
+                    answersMap[question.question_id] = question.submitted_answers.choice_id;
+                    answerIdsMap[question.question_id] = question.submitted_answers.answer_id;
+                }
+            });
+
+            setSelectedAnswers(answersMap);
+            setAnswerIds(answerIdsMap);
+
+            const remaining = calculateTimeRemaining(submissionSession.ended_time);
+            setTimeRemaining(remaining);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }, [calculateTimeRemaining]);
+
+    const startNewSession = useCallback(async (assessmentId: string) => {
+        try {
+            const sessionResponse = await assessmentService.startAssessmentSession(assessmentId);
+            
+            if (!sessionResponse) {
+                throw new Error('Failed to start assessment session');
+            }
+            
+            setSessionData(sessionResponse);
+            
+            if (Array.isArray(sessionResponse.question)) {
+                setQuestions(sessionResponse.question);
+                const remaining = calculateTimeRemaining(sessionResponse.ended_time);
+                setTimeRemaining(remaining);
+                return true;
+            } else {
+                throw new Error('No questions found in session response');
+            }
+        } catch (error) {
+            return false;
+        }
+    }, [calculateTimeRemaining]);
 
     useEffect(() => {
         const initializeSession = async () => {
@@ -50,63 +117,19 @@ export default function AssessmentSessionScreen() {
             try {
                 setLoading(true);
                 setError(null);
+                let success = false;
 
                 if (assessmentInfo.submission_status === 'in_progress' && assessmentInfo.submission_id) {
-                    const submissionSession = await assessmentService.getSubmissionSession(assessmentInfo.submission_id);
-
-                    const transformedQuestions: AssessmentQuestion[] = submissionSession.questions.map(q => ({
-                        assessment_id: q.assessment_id,
-                        question_id: q.question_id,
-                        question_text: q.question_text,
-                        created_at: q.created_at,
-                        updated_at: q.updated_at,
-                        deleted_at: q.deleted_at,
-                        choice: q.choices
-                    }));
-
-                    setQuestions(transformedQuestions);
-
-                    const existingSessionData: AssessmentSessionResponse = {
-                        assessment_id: submissionSession.assessment_id,
-                        submission_id: submissionSession.submission_id,
-                        user_id: submissionSession.user_id,
-                        ended_time: submissionSession.ended_time,
-                        question: transformedQuestions
-                    };
-                    setSessionData(existingSessionData);
-
-                    const answersMap: { [key: string]: string } = {};
-                    const answerIdsMap: { [key: string]: string } = {};
-
-                    submissionSession.questions.forEach(question => {
-                        if (question.submitted_answers) {
-                            answersMap[question.question_id] = question.submitted_answers.choice_id;
-                            answerIdsMap[question.question_id] = question.submitted_answers.answer_id;
-                        }
-                    });
-
-                    setSelectedAnswers(answersMap);
-                    setAnswerIds(answerIdsMap);
-
-                    const remaining = calculateTimeRemaining(submissionSession.ended_time);
-                    setTimeRemaining(remaining);
-
+                    success = await setupExistingSession(assessmentInfo.submission_id);
                 } else {
-                    const sessionResponse = await assessmentService.startAssessmentSession(id);
-                    setSessionData(sessionResponse);
+                    success = await startNewSession(id);
+                }
 
-                    if (sessionResponse.question && Array.isArray(sessionResponse.question)) {
-                        setQuestions(sessionResponse.question);
-                    } else {
-                        throw new Error('No questions found in session response');
-                    }
-
-                    const remaining = calculateTimeRemaining(sessionResponse.ended_time);
-                    setTimeRemaining(remaining);
+                if (!success) {
+                    throw new Error('Failed to initialize assessment session');
                 }
 
                 setHasStarted(true);
-
             } catch (error) {
                 setError(
                     `Failed to start assessment session: ${error instanceof Error ? error.message : String(error)}`
@@ -117,7 +140,7 @@ export default function AssessmentSessionScreen() {
         };
 
         initializeSession();
-    }, [id, assessmentInfo]);
+    }, [id, assessmentInfo, setupExistingSession, startNewSession]);
 
     useEffect(() => {
         if (hasStarted && timeRemaining !== null && timeRemaining > 0) {
@@ -215,11 +238,8 @@ export default function AssessmentSessionScreen() {
 
                 try {
                     setSubmitting(true);
-
                     await assessmentService.submitAssessment(sessionData.submission_id);
-
                     ModalEmitter.showSuccess('Your assessment has been submitted successfully.');
-
                     setTimeout(() => {
                         router.back();
                     }, 1500);
@@ -229,8 +249,7 @@ export default function AssessmentSessionScreen() {
                     setSubmitting(false);
                 }
             },
-            onCancel: () => {
-            }
+            onCancel: () => { }
         });
     };
 

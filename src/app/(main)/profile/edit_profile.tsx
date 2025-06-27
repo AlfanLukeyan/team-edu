@@ -273,19 +273,6 @@ export default function EditProfileScreen() {
     useLayoutEffect(() => {
         navigation.setOptions({
             headerTitle: "Edit Profile",
-            headerLeft: () => (
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    style={styles.headerButton}
-                    disabled={isFormDisabled}
-                >
-                    <Ionicons
-                        name="arrow-back"
-                        size={24}
-                        color={Colors[colorScheme ?? 'light'].tint}
-                    />
-                </TouchableOpacity>
-            ),
             headerRight: () => (
                 <TouchableOpacity
                     onPress={handleSave}

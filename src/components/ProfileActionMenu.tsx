@@ -6,6 +6,7 @@ interface ProfileActionMenuProps {
     onClose: () => void;
     onEditProfile: () => void;
     onChangeFaceReference: () => void;
+    onResetPassword: () => void;
     onLogout: () => void;
     isLoggingOut: boolean;
 }
@@ -15,6 +16,7 @@ const ProfileActionMenu: React.FC<ProfileActionMenuProps> = ({
     onClose,
     onEditProfile,
     onChangeFaceReference,
+    onResetPassword,
     onLogout,
     isLoggingOut
 }) => {
@@ -30,6 +32,12 @@ const ProfileActionMenu: React.FC<ProfileActionMenuProps> = ({
             title: 'Change Face Reference',
             icon: 'camera-outline',
             onPress: onChangeFaceReference,
+        },
+        {
+            id: 'reset-password',
+            title: 'Reset Password',
+            icon: 'lock-closed-outline',
+            onPress: onResetPassword,
         },
         {
             id: 'logout',

@@ -8,14 +8,12 @@ import { ButtonWithDescription } from "@/components/ButtonWithDescription";
 import { RegistrationProgress } from "@/components/RegistrationProgress";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ModalEmitter } from '@/services/modalEmitter';
 import { userService } from '@/services/userService';
 import { restoreBrightness, setMaxBrightness } from "@/utils/utils";
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
-import { ActivityIndicator, TouchableOpacity } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 
 const FACE_REFERENCE_CONFIG = {
     TOTAL_STEPS: 3,
@@ -66,28 +64,6 @@ export default function ChangeFaceReferenceScreen() {
             handleUpdateComplete();
         }
     }, [capturedPhotos]);
-
-    // Header setup
-    useEffect(() => {
-        if (!isWeb) {
-            navigation.setOptions({
-                headerTitle: "Change Face Reference",
-                headerLeft: () => (
-                    <TouchableOpacity
-                        onPress={() => router.back()}
-                        style={styles.headerButton}
-                        disabled={isUpdating}
-                    >
-                        <Ionicons
-                            name="arrow-back"
-                            size={24}
-                            color={Colors[colorScheme ?? 'light'].tint}
-                        />
-                    </TouchableOpacity>
-                ),
-            });
-        }
-    }, [navigation, colorScheme, isUpdating, router]);
 
     const handleUpdateComplete = useCallback(async () => {
         if (capturedPhotos.length !== FACE_REFERENCE_CONFIG.TOTAL_STEPS) return;

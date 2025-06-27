@@ -97,6 +97,11 @@ export default function ProfileScreen() {
         router.push('/(main)/profile/change_face_reference');
     };
 
+    const handleResetPassword = () => {
+        setShowActionMenu(false);
+        router.push('/(main)/profile/reset_password');
+    };
+
     useLayoutEffect(() => {
         navigation.setOptions({
             headerRight: () => (
@@ -248,6 +253,7 @@ export default function ProfileScreen() {
                 onClose={() => setShowActionMenu(false)}
                 onEditProfile={handleEditProfile}
                 onChangeFaceReference={handleChangeFaceReference}
+                onResetPassword={handleResetPassword}
                 onLogout={handleLogout}
                 isLoggingOut={isLoggingOut}
             />

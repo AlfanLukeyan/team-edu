@@ -46,7 +46,7 @@ class CrucialAuthManager {
                     'X-Crucial-Verified': 'true'
                 }
             });
-            this.pendingRequest.resolve(response.data);
+            this.pendingRequest.resolve(response);
         } catch (error) {
             this.pendingRequest.reject(error);
         } finally {
