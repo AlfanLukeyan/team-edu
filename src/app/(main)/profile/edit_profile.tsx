@@ -12,7 +12,7 @@ import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface SaveData {
     name: string;
@@ -157,14 +157,14 @@ export default function EditProfileScreen() {
             return;
         }
 
-        Alert.alert(
-            "Change Email",
-            "Are you sure you want to change your email address?",
-            [
-                { text: "Cancel", style: "cancel" },
-                { text: "Change", style: "destructive", onPress: initiateEmailChange },
-            ]
-        );
+        ModalEmitter.showAlert({
+            title: "Change Email",
+            message: "Are you sure you want to change your email address?",
+            confirmText: "Change",
+            cancelText: "Cancel",
+            type: "danger",
+            onConfirm: initiateEmailChange,
+        });
     }, [formData.email, userProfile]);
 
     const initiateEmailChange = useCallback(async () => {
@@ -179,7 +179,7 @@ export default function EditProfileScreen() {
             ModalEmitter.showSuccess(response.msg || "Confirmation have beed sent to your old email address!");
             await fetchProfile();
         } catch (error: any) {
-            
+
         } finally {
             setChangingEmail(false);
         }
@@ -305,46 +305,52 @@ export default function EditProfileScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-                {/* Profile Image Section */}
-                <ProfileImageSection
-                    imageUri={`${apiURL}/${formData.profileImage}` || `${apiURL}/${userProfile?.profile_picture}`}
-                    onImagePress={handleImagePicker}
-                    isChanging={changingImage}
-                    colorScheme={colorScheme === 'dark' ? 'dark' : 'light'}
-                />
-
-                {/* Form Section */}
-                <View style={styles.section}>
-                    <TextInput
-                        label="Name"
-                        placeholder="Latin alphabet, no emoji or symbols"
-                        value={formData.name}
-                        onChangeText={(value) => updateFormField('name', value)}
-                        leftIcon="person.fill"
-                        editable={!isFormDisabled}
+            <KeyboardAvoidingView
+                style={styles.keyboardAvoid}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+            >
+                <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+                    {/* Profile Image Section */}
+                    <ProfileImageSection
+                        imageUri={`${apiURL}/${formData.profileImage}` || `${apiURL}/${userProfile?.profile_picture}`}
+                        onImagePress={handleImagePicker}
+                        isChanging={changingImage}
+                        colorScheme={colorScheme === 'dark' ? 'dark' : 'light'}
                     />
 
-                    <TextInput
-                        label="Phone Number"
-                        placeholder="Enter your phone number"
-                        value={formData.phone}
-                        onChangeText={(value) => updateFormField('phone', value)}
-                        leftIcon="phone.fill"
-                        keyboardType="phone-pad"
-                        editable={!isFormDisabled}
-                    />
+                    {/* Form Section */}
+                    <View style={styles.section}>
+                        <TextInput
+                            label="Name"
+                            placeholder="Latin alphabet, no emoji or symbols"
+                            value={formData.name}
+                            onChangeText={(value) => updateFormField('name', value)}
+                            leftIcon="person.fill"
+                            editable={!isFormDisabled}
+                        />
 
-                    <EmailSection
-                        email={formData.email}
-                        onEmailChange={(value) => updateFormField('email', value)}
-                        onChangePress={handleEmailChange}
-                        isChanging={changingEmail}
-                        isDisabled={isFormDisabled}
-                        colorScheme={colorScheme}
-                    />
-                </View>
-            </ScrollView>
+                        <TextInput
+                            label="Phone Number"
+                            placeholder="Enter your phone number"
+                            value={formData.phone}
+                            onChangeText={(value) => updateFormField('phone', value)}
+                            leftIcon="phone.fill"
+                            keyboardType="phone-pad"
+                            editable={!isFormDisabled}
+                        />
+
+                        <EmailSection
+                            email={formData.email}
+                            onEmailChange={(value) => updateFormField('email', value)}
+                            onChangePress={handleEmailChange}
+                            isChanging={changingEmail}
+                            isDisabled={isFormDisabled}
+                            colorScheme={colorScheme}
+                        />
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
 
             <ImagePickerBottomSheet
                 ref={bottomSheetModalRef}
@@ -499,6 +505,9 @@ const ImagePickerBottomSheet = React.forwardRef<BottomSheetModal, {
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
+    },
+    keyboardAvoid: {
         flex: 1,
     },
     centered: {
